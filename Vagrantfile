@@ -67,5 +67,6 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update
     sudo apt-get install -y libapr1 libaprutil1 libdbd-mysql-perl libdbi-perl libnet-daemon-perl libplrpc-perl libpq5 mysql-client-5.5 mysql-common mysql-server mysql-server-5.5 php5-common php5-mysql htop
+    sudo wget -O /etc/nginx/sites-available/default https://gist.githubusercontent.com/adamrunner/94b495a993c20a5e264bd1c4df81c396/raw/05b0162d89fcf6f9b91a7d8708f37d3ebc0dd484/default.conf
   SHELL
 end
