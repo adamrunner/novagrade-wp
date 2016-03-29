@@ -1,0 +1,258 @@
+/*-
+
+StoreKit for Layers
+---------------------
+Description: WooCommerce extension designed to integrate with the Layers framework
+Version: 1.2.2
+Developers: Obox Themes
+Developer URI: http://oboxthemes.com
+
+-*/
+
+/*-----------------------------*/
+/*- WOOCOMMERCE - CART --------*/
+.header-cart .cart-count{
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+    padding: 4px;
+}
+.header-cart .cart-total{
+    padding: 0;
+    margin: 0;
+}
+.header-mini-cart{
+    display: none;
+}
+
+
+.new-badge{
+    padding: 0 8px;
+    background: #93B25E;
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 600;
+    border-radius: 100px;
+    position: relative;
+    display: inline-block;
+    margin: 10px 4px 6px 0;
+}
+
+.img-wrap.layers-storekit-thumbnail-flip {
+    position: relative;
+    overflow: hidden;
+}
+.img-wrap.layers-storekit-thumbnail-flip img {
+    position: relative;
+}
+.img-wrap.layers-storekit-thumbnail-flip img:not(.storekit-thumbnail-flip){
+    opacity: 0;
+}
+.img-wrap.layers-storekit-thumbnail-flip img.thumbnail-flip-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: .3s cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+.img-wrap:hover img.thumbnail-flip-slide{
+    opacity: 1;
+}
+
+.img-wrap.layers-storekit-thumbnail-flip img.thumbnail-flip-slide.prev-slide{
+    left: -100%;
+    top: 0;
+    opacity: 1;
+}
+.img-wrap.layers-storekit-thumbnail-flip img.thumbnail-flip-slide.current-slide{
+    top: 0;
+    left: 0;
+    opacity: 1;
+}
+.img-wrap.layers-storekit-thumbnail-flip img.thumbnail-flip-slide.next-slide{
+    top: 0;
+    left: 100%;
+    opacity: 1;
+}
+
+.title-container.storekit-category-header-image {
+    position: relative;
+}
+.title-container.storekit-category-header-image:before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.25);
+    top: 0;
+    left: 0;
+}
+
+.title {
+    position: relative;
+}
+
+    /*---------------------------*/
+    /*- TITLE SIZES -------------*/
+    .title-container.small .title{
+        padding: 1%;
+    }
+    .title-container.large .title{
+        padding: 3%;
+    }
+    .title-container.extra-large .title{
+        padding-top: 10%;
+    }
+    .title-container.massive .title{
+        padding-top: 20%;
+    }
+
+/*-------------------------------*/
+/*- WOO WIDGETS IN PAGE BUILDER -*/
+.page-template-builder .wrapper-content .widget.woocommerce .section-title{
+    margin-bottom: 20px;
+}
+.page-template-builder .wrapper-content .widget.woocommerce{
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 2% 20px;
+}
+.page-template-builder .wrapper-content .widget.woocommerce > ul{
+    display: table;
+    width: 100%;
+}
+.page-template-builder .wrapper-content .widget.woocommerce > ul li{
+    display: table-cell;
+    vertical-align: middle;
+    padding: 20px;
+    background: #f3f3f3;
+}
+.page-template-builder .wrapper-content .widget.woocommerce .product_list_widget img{
+    float: left;
+    margin-left: 0;
+    margin-right: 10px;
+}
+
+/*-------------------------------*/
+/*- WOOCOMMERCE - SUPER SINGLE --*/
+/*-------------------------------*/
+
+    .special.product-images{
+        padding: 500px 0 0;
+        overflow: hidden;
+    }
+    .special.product-images .woocommerce-main-image{
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+    }
+    .special.product-images .thumbnails{
+        overflow: hidden;
+        margin-left: 510px;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 2;
+    }
+    .special.product-images .thumbnails a{
+        display: block;
+        float: left;
+        max-width: 120px;
+        margin-right: 20px;
+    }
+    .special.product-images .thumbnails img{
+        display: block;
+        border: 4px solid #fff;
+    }
+
+
+@media only screen and (max-width: 480px){}
+@media only screen and (min-width: 481px) and (max-width: 640px){}
+
+@media only screen and (min-width: 769px) {
+
+    .header-center .header-cart,
+    .nav-clear .header-cart{
+        line-height: 25px;
+    }
+    .header-center .header-cart .cart-count,
+    .nav-clear .header-cart .cart-count{
+        padding: 0 4px;
+    }
+
+    .page-template-builder .wrapper-content .widget.woocommerce > ul li{
+        display: table-cell;
+        width: 15%;
+        padding: 20px;
+    }
+
+    /*-----------------------*/
+    /*- CART DROP DOWN ------*/
+    .header-mini-cart{
+        display: block;
+        position: absolute;
+        top: 45px;
+        right: 0;
+        width: 250px;
+        background: #fff;
+        border: 2px solid #DDD;
+        font-size: 1.2rem;
+        line-height: normal;
+        opacity: 0;
+        visibility: hidden;
+        z-index: 2;
+
+        -webkit-transform: translate3d(0, 3px, 0);
+        transform: translate3d(0, 3px, 0);
+        transition: 0.1s all ease-in-out;
+    }
+    .header-cart:hover .header-mini-cart{
+        opacity: 1;
+        visibility: visible;
+
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        transition: 0.1s all ease-in-out 0.2s;
+    }
+    .header-cart .mini_cart_item{
+        float: none;
+        padding: 0 0 10px;
+        margin: 0 0 10px;
+    }
+    .header-cart .header-mini-cart ul{
+        display: block;
+    }
+    .header-cart .header-mini-cart li{
+        float: none;
+        margin: 0;
+        padding: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .header-cart .header-mini-cart .empty{
+        border: 0;
+    }
+    .header-cart .mini_cart_item span{
+        padding: 0;
+    }
+    .header-cart .mini_cart_item a{
+        text-align: left;
+    }
+    .header-cart .mini_cart_item a:hover{
+        color: inherit;
+    }
+    .header-mini-cart .total{
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        font-size: 1.5rem;
+    }
+    .header-mini-cart .buttons{
+        padding: 10px;
+    }
+    .header-mini-cart .button{
+        display: block;
+        padding: 5px;
+        color: #fff;
+    }
+    .header-mini-cart .button:last-child{
+        margin-top: 10px;
+    }
+
+}

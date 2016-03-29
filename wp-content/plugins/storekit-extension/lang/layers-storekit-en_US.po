@@ -1,0 +1,514 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: StoreKit - WooCommerce for Layers\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: Tue Sep 01 2015 14:34:22 GMT+0200 (Central European "
+"Daylight Time)\n"
+"PO-Revision-Date: Tue Sep 01 2015 14:37:13 GMT+0200 (Central European "
+"Daylight Time)\n"
+"Last-Translator: vail <vail@obox.co.za>\n"
+"Language-Team: \n"
+"Language: English\n"
+"Plural-Forms: nplurals=2; plural=n != 1\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ..\n"
+"X-Poedit-KeywordsList: _:1;gettext:1;dgettext:2;ngettext:1,2;dngettext:2,3;"
+"__:1;_e:1;_c:1;_n:1,2;_n_noop:1,2;_nc:1,2;__ngettext:1,2;__ngettext_noop:1,2;"
+"_x:1,2c;_ex:1,2c;_nx:1,2,4c;_nx_noop:1,2,3c;_n_js:1,2;_nx_js:1,2,3c;"
+"esc_attr__:1;esc_html__:1;esc_attr_e:1;esc_html_e:1;esc_attr_x:1,2c;"
+"esc_html_x:1,2c;comments_number_link:2,3;t:1;st:1;trans:1;transChoice:1,2\n"
+"X-Loco-Target-Locale: en_US\n"
+"X-Generator: Loco - https://localise.biz/"
+
+#: ../controls/controls.php:61 ../includes/onboarding.php:20 ..
+#: includes/onboarding.php:50
+msgid "StoreKit"
+msgstr ""
+
+#: ../controls/controls.php:73
+msgid "General"
+msgstr ""
+
+#: ../controls/controls.php:78
+msgid "Product List"
+msgstr ""
+
+#: ../controls/controls.php:83
+msgid "Product Page"
+msgstr ""
+
+#: ../controls/controls.php:101 ../controls/controls.php:106
+msgid "Menu Cart"
+msgstr ""
+
+#: ../controls/controls.php:102
+msgid "Choose what display in your menu cart"
+msgstr ""
+
+#: ../controls/controls.php:111
+msgid "Cart Icon"
+msgstr ""
+
+#: ../controls/controls.php:120
+msgid "Amount"
+msgstr ""
+
+#: ../controls/controls.php:129 ../controls/controls.php:216
+msgid "Product Count"
+msgstr ""
+
+#: ../controls/controls.php:143
+msgid "Header"
+msgstr ""
+
+#: ../controls/controls.php:147
+msgid "Category Image in Header"
+msgstr ""
+
+#: ../controls/controls.php:149
+#, php-format
+msgid "Show associated category image in the header. %s"
+msgstr ""
+
+#: ../controls/controls.php:150
+msgid "Customize images here."
+msgstr ""
+
+#: ../controls/controls.php:157
+msgid "Header Size"
+msgstr ""
+
+#: ../controls/controls.php:160
+msgid "Small"
+msgstr ""
+
+#: ../controls/controls.php:161
+msgid "Medium"
+msgstr ""
+
+#: ../controls/controls.php:162
+msgid "Large"
+msgstr ""
+
+#: ../controls/controls.php:176 ../controls/controls.php:306
+msgid "Sidebar(s)"
+msgstr ""
+
+#: ../controls/controls.php:193
+msgid "List"
+msgstr ""
+
+#: ../controls/controls.php:194
+msgid "These settings allow you to choose what to display on your product list page."
+msgstr ""
+
+#: ../controls/controls.php:198
+msgid "Products Per Row"
+msgstr ""
+
+#: ../controls/controls.php:202
+msgid "1"
+msgstr ""
+
+#: ../controls/controls.php:203
+msgid "2"
+msgstr ""
+
+#: ../controls/controls.php:204
+msgid "3"
+msgstr ""
+
+#: ../controls/controls.php:205
+msgid "4"
+msgstr ""
+
+#: ../controls/controls.php:210
+msgid "Products Per Page"
+msgstr ""
+
+#: ../controls/controls.php:221
+msgid "\"Products Per Page\" Dropdown"
+msgstr ""
+
+#: ../controls/controls.php:226
+msgid "Product Sorting"
+msgstr ""
+
+#: ../controls/controls.php:231 ../controls/controls.php:349
+msgid "Sale Badges"
+msgstr ""
+
+#: ../controls/controls.php:236 ../controls/controls.php:354
+msgid "Add To Cart Buttons"
+msgstr ""
+
+#: ../controls/controls.php:241 ../controls/controls.php:359
+msgid "Prices"
+msgstr ""
+
+#: ../controls/controls.php:246 ../controls/controls.php:364
+msgid "Ratings"
+msgstr ""
+
+#: ../controls/controls.php:251 ../controls/controls.php:369
+msgid "Product Meta"
+msgstr ""
+
+#: ../controls/controls.php:256 ../controls/controls.php:374
+msgid "Stock Count"
+msgstr ""
+
+#: ../controls/controls.php:261
+msgid "\"New\" Badges"
+msgstr ""
+
+#: ../controls/controls.php:266 ../controls/controls.php:384
+msgid "\"New\" Badge Period"
+msgstr ""
+
+#: ../controls/controls.php:267 ../controls/controls.php:385
+msgid "Number of days to show the \"New\" badge"
+msgstr ""
+
+#: ../controls/controls.php:281
+msgid "Thumbnail Image"
+msgstr ""
+
+#: ../controls/controls.php:286
+msgid "Thumbnails"
+msgstr ""
+
+#: ../controls/controls.php:291
+msgid "Thumbnail Flip"
+msgstr ""
+
+#: ../controls/controls.php:292
+msgid ""
+"Choose this option to flip between the products featured image and the first "
+"image in the products gallery."
+msgstr ""
+
+#: ../controls/controls.php:321 ../widgets/modules/slider.php:415
+msgid "Layout"
+msgstr ""
+
+#: ../controls/controls.php:324
+msgid "Content Right"
+msgstr ""
+
+#: ../controls/controls.php:325
+msgid "Content Left"
+msgstr ""
+
+#: ../controls/controls.php:334 ../widgets/modules/category.php:341 ..
+#: widgets/modules/slider.php:664
+msgid "Display"
+msgstr ""
+
+#: ../controls/controls.php:335
+msgid ""
+"These settings allow you to choose what to display on your single product "
+"page."
+msgstr ""
+
+#: ../controls/controls.php:339
+msgid "Title"
+msgstr ""
+
+#: ../controls/controls.php:344
+msgid "Excerpt"
+msgstr ""
+
+#: ../controls/controls.php:379
+msgid "\"New\" Badge"
+msgstr ""
+
+#: ../controls/controls.php:635
+msgid "New"
+msgstr ""
+
+#: ../controls/controls.php:651
+#, php-format
+msgid "View all posts in %s"
+msgstr ""
+
+#: ../controls/controls.php:653
+msgid ", "
+msgstr ""
+
+#: ../includes/class-woocommerce.php:146 ../includes/class-woocommerce.php:147
+msgid "StoreKit Help"
+msgstr ""
+
+#: ../includes/onboarding.php:7
+msgid "Skip"
+msgstr ""
+
+#: ../includes/onboarding.php:24
+msgid "Thanks for choosing StoreKit!"
+msgstr ""
+
+#: ../includes/onboarding.php:28
+msgid ""
+"Start by choosing options and settings for Menu Cart, Product List and the "
+"Product Page."
+msgstr ""
+
+#: ../includes/onboarding.php:34
+msgid "Got it, Next Step &rarr;"
+msgstr ""
+
+#: ../includes/onboarding.php:54
+msgid "Curate your products"
+msgstr ""
+
+#: ../includes/onboarding.php:58
+msgid ""
+"StoreKit is packaged with 3 widgets, Product List, Product Slider and "
+"Product Categories. Add them to the page just like you would in Layers, to "
+"create dynamic layouts with your WooCommerce content."
+msgstr ""
+
+#: ../includes/onboarding.php:64
+msgid "Awesome, Let's Go &rarr;"
+msgstr ""
+
+#: ../widgets/modules/category.php:26 ../widgets/modules/category.php:43
+msgid "Product Categories"
+msgstr ""
+
+#: ../widgets/modules/category.php:33
+msgid "This widget is used to display your WooCommerce Product Categories in Layers."
+msgstr ""
+
+#: ../widgets/modules/category.php:49 ../widgets/modules/category.php:51
+msgid "View Category"
+msgstr ""
+
+#: ../widgets/modules/category.php:226
+msgid "Products:"
+msgstr ""
+
+#: ../widgets/modules/category.php:324 ../widgets/modules/product.php:363
+msgid "List Style"
+msgstr ""
+
+#: ../widgets/modules/category.php:333 ../widgets/modules/product.php:372
+msgid "Grid"
+msgstr ""
+
+#: ../widgets/modules/category.php:334 ../widgets/modules/product.php:373
+msgid "Masonry"
+msgstr ""
+
+#: ../widgets/modules/category.php:348 ../widgets/modules/product.php:387
+msgid "Title &amp; Excerpt Position"
+msgstr ""
+
+#: ../widgets/modules/category.php:350 ../widgets/modules/product.php:389
+msgid "Regular"
+msgstr ""
+
+#: ../widgets/modules/category.php:351 ../widgets/modules/product.php:390
+msgid "Overlay"
+msgstr ""
+
+#: ../widgets/modules/category.php:359
+msgid "Show Featured Images"
+msgstr ""
+
+#: ../widgets/modules/category.php:366
+msgid "Show Category Titles"
+msgstr ""
+
+#: ../widgets/modules/category.php:373
+msgid "Show Product Count"
+msgstr ""
+
+#: ../widgets/modules/category.php:380
+msgid "Show Category Description"
+msgstr ""
+
+#: ../widgets/modules/category.php:389
+msgid "Category Description Length"
+msgstr ""
+
+#: ../widgets/modules/category.php:397 ../widgets/modules/slider.php:704
+msgid "Show Button"
+msgstr ""
+
+#: ../widgets/modules/category.php:404
+msgid "Button Text"
+msgstr ""
+
+#: ../widgets/modules/category.php:435 ../widgets/modules/product.php:481
+msgid "Enter title here"
+msgstr ""
+
+#: ../widgets/modules/category.php:448 ../widgets/modules/product.php:494
+msgid "Short Excerpt"
+msgstr ""
+
+#: ../widgets/modules/category.php:465
+msgid "Select Which Categories to Display"
+msgstr ""
+
+#: ../widgets/modules/category.php:473
+msgid "eg. \"T-Shirts\""
+msgstr ""
+
+#: ../widgets/modules/product.php:398
+msgid "Show Feature Images"
+msgstr ""
+
+#: ../widgets/modules/product.php:405
+msgid "Show Titles"
+msgstr ""
+
+#: ../widgets/modules/product.php:412 ../widgets/modules/slider.php:683
+msgid "Show Short Description"
+msgstr ""
+
+#: ../widgets/modules/product.php:421
+msgid "Short Description Length"
+msgstr ""
+
+#: ../widgets/modules/product.php:429
+msgid "Show Prices"
+msgstr ""
+
+#: ../widgets/modules/product.php:436
+msgid "Show Sales Badges"
+msgstr ""
+
+#: ../widgets/modules/product.php:443
+msgid "Show Ratings"
+msgstr ""
+
+#: ../widgets/modules/product.php:450
+msgid "Show Buttons"
+msgstr ""
+
+#: ../widgets/modules/product.php:457
+msgid "Show Pagination"
+msgstr ""
+
+#: ../widgets/modules/product.php:468
+msgid "WooCommerce Product"
+msgstr ""
+
+#: ../widgets/modules/product.php:504
+msgid "Category to Display"
+msgstr ""
+
+#: ../widgets/modules/product.php:512
+msgid "Select a Category"
+msgstr ""
+
+#: ../widgets/modules/product.php:520
+msgid "Number of products to show"
+msgstr ""
+
+#: ../widgets/modules/product.php:521
+msgid "Show All"
+msgstr ""
+
+#: ../widgets/modules/product.php:536
+msgid "Sort by"
+msgstr ""
+
+#: ../widgets/modules/slider.php:27
+msgid "Product Slider"
+msgstr ""
+
+#: ../widgets/modules/slider.php:38
+msgid "This widget is used to show a Slider of your WooCommerce Products in Layers"
+msgstr ""
+
+#: ../widgets/modules/slider.php:425
+msgid "Boxed"
+msgstr ""
+
+#: ../widgets/modules/slider.php:426
+msgid "Full Width"
+msgstr ""
+
+#: ../widgets/modules/slider.php:427
+msgid "Full Screen"
+msgstr ""
+
+#: ../widgets/modules/slider.php:434
+msgid "Slider"
+msgstr ""
+
+#: ../widgets/modules/slider.php:441
+msgid "Show Slider Arrows"
+msgstr ""
+
+#: ../widgets/modules/slider.php:448
+msgid "Show Slider Dots"
+msgstr ""
+
+#: ../widgets/modules/slider.php:455
+msgid "Slider Controls Color"
+msgstr ""
+
+#: ../widgets/modules/slider.php:462
+msgid "Autoplay Slides"
+msgstr ""
+
+#: ../widgets/modules/slider.php:470
+msgid "Time in seconds, eg. 2"
+msgstr ""
+
+#: ../widgets/modules/slider.php:472
+msgid "Slide Interval"
+msgstr ""
+
+#: ../widgets/modules/slider.php:480
+msgid "Auto Height Slides"
+msgstr ""
+
+#: ../widgets/modules/slider.php:487
+msgid "Slider Height"
+msgstr ""
+
+#: ../widgets/modules/slider.php:513 ../widgets/modules/slider.php:537
+msgid "Search for Products to Add"
+msgstr ""
+
+#: ../widgets/modules/slider.php:520
+msgid "eg. \"Jersey\""
+msgstr ""
+
+#: ../widgets/modules/slider.php:529 ../widgets/modules/slider.php:535
+msgid "Create Slide"
+msgstr ""
+
+#: ../widgets/modules/slider.php:536
+msgid "Create Slides"
+msgstr ""
+
+#: ../widgets/modules/slider.php:637
+msgid "Slide"
+msgstr ""
+
+#: ../widgets/modules/slider.php:669
+msgid "Show Featured Image"
+msgstr ""
+
+#: ../widgets/modules/slider.php:676
+msgid "Show Title"
+msgstr ""
+
+#: ../widgets/modules/slider.php:690
+msgid "Show Price"
+msgstr ""
+
+#: ../widgets/modules/slider.php:700
+msgid "Show Sales Badge"
+msgstr ""
