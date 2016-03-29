@@ -1,0 +1,114 @@
+Version 2.4.10 - November 10, 2015
+
+	Removed deprecated action hook
+
+Version 2.4.9 - October 30, 2015
+
+	Added ajax action to ensure cart subtotal calculates when the mini-cart widget is in use
+
+Version 2.4.8 - October 1, 2015
+
+	Reworked role removal code to work for sites with large numbers of users to avoid memory exhaustion
+
+Version 2.4.7 - September 13, 2015
+
+	Updated HTML, CSS, and Ajax for WooCommerce 2.4 and newer
+
+Version 2.4.6 - May 28, 2015
+
+	Fixed incorrect variable name definition
+
+Version 2.4.5 - May 19, 2015
+
+	Updated variable price display for conditions where all variations have the same price
+
+Version 2.4.4 - February 18, 2015
+
+	Updated bulk price adjustment processing for variation product data
+
+Version 2.4.3 - February 18, 2015
+
+	Fixed typo in price field name definition
+
+Version 2.4.2 - February 17, 2015
+
+	WooCommerce 2.3 compatibility
+	
+	Updated price input fields and price display logic
+
+Version 2.4.1 November 20 , 2014
+
+	Updated function calls to avoid fatal errors in rare instances during activation
+
+Version 2.4 October 7, 2014
+
+	WooCommerce 2.2 compatibility
+
+Version 2.3.9 October 2, 2014
+
+	Added meta key display for reference, for importing prices via the CSV import tool of your choice
+
+Version 2.3.8 October 2, 2014
+
+	Tweaked savings display
+	
+	Tweaked currency symbol insertion
+
+Version 2.3.7 July 15, 2014
+
+	Removed test code
+
+Version 2.3.6 July 14, 2014
+
+	Fixed a typo
+
+Version 2.3.5 July 14, 2014
+
+	Surpress PHP warning when user is not logged in
+
+Version 2.3.4 June 16, 2014
+
+	Surpress PHP warnings
+
+Version 2.3.3 May 22, 2014
+
+	Removed unnecessary filters
+	
+	Updated to support Tiered Pricing Filters plugin
+	
+	Added new filter for allowing tiered pricing users to backorder products if that setting is enabled for their role. This filter requires WooCommerce 2.2 or newer
+
+Version 2.3.2 May 5, 2014
+
+	Updated to support price of zero for variations
+
+Version 2.3.1 May 1, 2014
+
+	Updated to support IgniteWoo's Product Add-on Forms plugin
+
+Version 2.3 February 7, 2014
+
+	Added new setting to enable/disable taxes for any role created with this plugin
+	
+	WooCommerce 2.1 compatibility
+
+Version 2.2.1 January 29, 2014
+
+	Tweak to remove sale price HTML if a user is a tier role buyer
+
+Version 2.2 January 28, 2014
+
+	Tweaked price display for variations
+	
+	WooCommerce 2.1 compatibility
+
+Version 2.1 August 14, 2013
+
+	Initial public release
+	
+Version 1.0
+
+	In-house development and private use
+
+
+

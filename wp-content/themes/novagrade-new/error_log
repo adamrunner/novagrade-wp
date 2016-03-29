@@ -1,0 +1,7 @@
+[01-Mar-2016 06:05:21 America/Chicago] PHP Fatal error:  Call to undefined function language_attributes() in /home3/doug6875/public_html/wp-content/themes/novagrade-new/header.php on line 3
+[01-Mar-2016 06:05:21 America/Chicago] PHP Fatal error:  Call to undefined function get_template_directory() in /home3/doug6875/public_html/wp-content/themes/novagrade-new/functions.php on line 3
+[01-Mar-2016 06:05:21 America/Chicago] PHP Fatal error:  Call to undefined function dynamic_sidebar() in /home3/doug6875/public_html/wp-content/themes/novagrade-new/footer.php on line 11
+[01-Mar-2016 06:05:23 America/Chicago] PHP Fatal error:  Call to undefined function get_header() in /home3/doug6875/public_html/wp-content/themes/novagrade-new/archive.php on line 1
+[01-Mar-2016 06:05:24 America/Chicago] PHP Fatal error:  Call to undefined function get_header() in /home3/doug6875/public_html/wp-content/themes/novagrade-new/404.php on line 1
+[12-Mar-2016 16:28:59 America/Chicago] PHP Fatal error:  Call to undefined function get_template_directory() in /home3/doug6875/public_html/wp-content/themes/novagrade-new/functions.php on line 3
+[12-Mar-2016 16:28:59 America/Chicago] PHP Fatal error:  Call to undefined function dynamic_sidebar() in /home3/doug6875/public_html/wp-content/themes/novagrade-new/footer.php on line 11

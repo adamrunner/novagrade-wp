@@ -1,0 +1,172 @@
+0000.045 (0) Opened log file at time: Mon, 14 Mar 2016 10:33:09 +0000 on http://novagrade.com
+0000.050 (0) UpdraftPlus WordPress backup plugin (https://updraftplus.com): 2.11.23.22 WP: 4.4.2 PHP: 5.4.45 (Linux gator4040.hostgator.com 3.12.35.1418868451 #1 SMP Wed Dec 17 20:10:32 CST 2014 x86_64) MySQL: 5.5.42 Server: Apache safe_mode: 0 max_execution_time: 900 memory_limit: 256M (used: 42.8M | 43.5M) multisite: N mcrypt: Y LANG:  ZipArchive::addFile: Y
+0000.281 (0) Free space on disk containing Updraft's temporary directory: 161785.6 Mb / Free disk space in account: 998535.6 Mb (0.1 % used)
+0000.288 (0) Tasks: Backup files:  (schedule: weekly) Backup DB: 1 (schedule: daily)
+0000.292 (0) Processed schedules. Tasks now: Backup files:  Backup DB: 1
+0000.314 (0) Requesting semaphore lock (d)
+0000.320 (0) Set semaphore last lock (d) time to 2016-03-14 10:33:09
+0000.323 (0) Semaphore lock (d) complete
+0000.336 (0) Backup run: resumption=0, nonce=e19b88760423, begun at=1457951589 (0s ago), job type=backup
+0000.343 (0) Scheduling a resumption (1) after 375 seconds (1457951964) in case this run gets aborted
+0000.379 (0) This backup run is not intended for files - skipping
+0000.383 (0) Beginning creation of database dump (WordPress DB)
+0000.403 (0) Testing: /usr/bin/mysqldump
+0000.447 (0) Working binary mysqldump found: /usr/bin/mysqldump
+0000.471 (0) Table wp_options: Total expected rows (approximate): 1384
+0000.635 (0) Table wp_options: Total rows added: 1218 in 0.16 seconds
+0000.639 (0) Table wp_options: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_options.table.gz - 231.5 Kb)
+0000.655 (0) Table wp_users: Total expected rows (approximate): 22
+0000.661 (0) Table wp_users: Total rows added: 22 in 0.00 seconds
+0000.669 (0) Table wp_users: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_users.table.gz - 1.9 Kb)
+0000.680 (0) Table wp_usermeta: Total expected rows (approximate): 791
+0000.705 (0) Table wp_usermeta: Total rows added: 791 in 0.02 seconds
+0000.709 (0) Table wp_usermeta: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_usermeta.table.gz - 10 Kb)
+0000.722 (0) Table wp_commentmeta: Total expected rows (approximate): 47
+0000.729 (0) Table wp_commentmeta: Total rows added: 47 in 0.00 seconds
+0000.733 (0) Table wp_commentmeta: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_commentmeta.table.gz - 0.7 Kb)
+0000.745 (0) Table wp_comments: Total expected rows (approximate): 404
+0000.789 (0) Table wp_comments: Total rows added: 409 in 0.04 seconds
+0000.795 (0) Table wp_comments: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_comments.table.gz - 9.7 Kb)
+0000.809 (0) Table wp_links: Total expected rows (approximate): 0
+0000.815 (0) Table wp_links: Total rows added: 0 in 0.00 seconds
+0000.820 (0) Table wp_links: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_links.table.gz - 0.4 Kb)
+0000.830 (0) Table wp_postmeta: Total expected rows (approximate): 18671
+0001.035 (0) Table wp_postmeta: binary mysqldump finished (writes: 34) in 0.20 seconds
+0001.040 (0) Table wp_postmeta: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_postmeta.table.gz - 324.8 Kb)
+0001.050 (0) Table wp_posts: Total expected rows (approximate): 733
+0001.189 (0) Table wp_posts: Total rows added: 790 in 0.14 seconds
+0001.193 (0) Table wp_posts: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_posts.table.gz - 67 Kb)
+0001.205 (0) Table wp_term_relationships: Total expected rows (approximate): 81
+0001.212 (0) Table wp_term_relationships: Total rows added: 81 in 0.00 seconds
+0001.216 (0) Table wp_term_relationships: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_term_relationships.table.gz - 0.6 Kb)
+0001.230 (0) Table wp_term_taxonomy: Total expected rows (approximate): 19
+0001.236 (0) Table wp_term_taxonomy: Total rows added: 19 in 0.00 seconds
+0001.240 (0) Table wp_term_taxonomy: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_term_taxonomy.table.gz - 0.6 Kb)
+0001.251 (0) Table wp_termmeta: Total expected rows (approximate): 0
+0001.255 (0) Table wp_termmeta: Total rows added: 0 in 0.00 seconds
+0001.259 (0) Table wp_termmeta: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_termmeta.table.gz - 0.4 Kb)
+0001.274 (0) Table wp_terms: Total expected rows (approximate): 19
+0001.280 (0) Table wp_terms: Total rows added: 19 in 0.00 seconds
+0001.285 (0) Table wp_terms: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_terms.table.gz - 0.6 Kb)
+0001.298 (0) Table wp_woocommerce_order_itemmeta: Total expected rows (approximate): 1626
+0001.356 (0) Table wp_woocommerce_order_itemmeta: Total rows added: 1599 in 0.05 seconds
+0001.360 (0) Table wp_woocommerce_order_itemmeta: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_order_itemmeta.table.gz - 10.2 Kb)
+0001.377 (0) Table wp_woocommerce_termmeta: Total expected rows (approximate): 24
+0001.388 (0) Table wp_woocommerce_termmeta: Total rows added: 24 in 0.00 seconds
+0001.393 (0) Table wp_woocommerce_termmeta: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_termmeta.table.gz - 0.6 Kb)
+0001.409 (0) Table wp_woocommerce_api_keys: Total expected rows (approximate): 0
+0001.415 (0) Table wp_woocommerce_api_keys: Total rows added: 0 in 0.00 seconds
+0001.418 (0) Table wp_woocommerce_api_keys: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_api_keys.table.gz - 0.4 Kb)
+0001.430 (0) Table wp_woocommerce_attribute_taxonomies: Total expected rows (approximate): 1
+0001.435 (0) Table wp_woocommerce_attribute_taxonomies: Total rows added: 1 in 0.00 seconds
+0001.439 (0) Table wp_woocommerce_attribute_taxonomies: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_attribute_taxonomies.table.gz - 0.4 Kb)
+0001.452 (0) Table wp_woocommerce_downloadable_product_permissions: Total expected rows (approximate): 0
+0001.458 (0) Table wp_woocommerce_downloadable_product_permissions: Total rows added: 0 in 0.00 seconds
+0001.462 (0) Table wp_woocommerce_downloadable_product_permissions: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_downloadable_product_permissions.table.gz - 0.5 Kb)
+0001.474 (0) Table wp_woocommerce_order_items: Total expected rows (approximate): 247
+0001.486 (0) Table wp_woocommerce_order_items: Total rows added: 269 in 0.01 seconds
+0001.490 (0) Table wp_woocommerce_order_items: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_order_items.table.gz - 2.2 Kb)
+0001.504 (0) Table wp_woocommerce_sessions: Total expected rows (approximate): 7
+0001.509 (0) Table wp_woocommerce_sessions: Total rows added: 7 in 0.00 seconds
+0001.513 (0) Table wp_woocommerce_sessions: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_sessions.table.gz - 1.9 Kb)
+0001.524 (0) Table wp_woocommerce_tax_rate_locations: Total expected rows (approximate): 0
+0001.530 (0) Table wp_woocommerce_tax_rate_locations: Total rows added: 0 in 0.00 seconds
+0001.533 (0) Table wp_woocommerce_tax_rate_locations: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_tax_rate_locations.table.gz - 0.4 Kb)
+0001.543 (0) Table wp_woocommerce_tax_rates: Total expected rows (approximate): 0
+0001.550 (0) Table wp_woocommerce_tax_rates: Total rows added: 0 in 0.00 seconds
+0001.553 (0) Table wp_woocommerce_tax_rates: finishing file (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_tax_rates.table.gz - 0.4 Kb)
+0001.565 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_options.table.gz (1/21): adding to final database dump
+0001.664 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_users.table.gz (2/21): adding to final database dump
+0001.680 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_usermeta.table.gz (3/21): adding to final database dump
+0001.692 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_commentmeta.table.gz (4/21): adding to final database dump
+0001.698 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_comments.table.gz (5/21): adding to final database dump
+0001.710 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_links.table.gz (6/21): adding to final database dump
+0001.714 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_postmeta.table.gz (7/21): adding to final database dump
+0001.843 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_posts.table.gz (8/21): adding to final database dump
+0001.869 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_term_relationships.table.gz (9/21): adding to final database dump
+0001.875 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_term_taxonomy.table.gz (10/21): adding to final database dump
+0001.879 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_termmeta.table.gz (11/21): adding to final database dump
+0001.883 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_terms.table.gz (12/21): adding to final database dump
+0001.887 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_order_itemmeta.table.gz (13/21): adding to final database dump
+0001.900 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_termmeta.table.gz (14/21): adding to final database dump
+0001.905 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_api_keys.table.gz (15/21): adding to final database dump
+0001.908 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_attribute_taxonomies.table.gz (16/21): adding to final database dump
+0001.911 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_downloadable_product_permissions.table.gz (17/21): adding to final database dump
+0001.914 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_order_items.table.gz (18/21): adding to final database dump
+0001.919 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_sessions.table.gz (19/21): adding to final database dump
+0001.923 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_tax_rate_locations.table.gz (20/21): adding to final database dump
+0001.926 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db-table-wp_woocommerce_tax_rates.table.gz (21/21): adding to final database dump
+0001.929 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db.gz: finished writing out complete database file (640 Kb)
+0001.945 (0) Total database tables backed up: 21 (backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db.gz, size: 678531, checksum (SHA1): c1c99eb6205590751bb47f7defa1a9db54e647b6)
+0001.952 (0) Saving backup history
+0001.968 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db.gz: db: This file has not yet been successfully uploaded: will queue
+0001.977 (0) Requesting upload of the files that have not yet been successfully uploaded (1)
+0001.992 (0) Cloud backup selection (1/1): googledrive (last)
+0001.996 (0) Beginning dispatch of backup to remote (googledrive)
+0002.205 (0) Google Drive: requesting access token: client_id=38205401580-s747egeei9g6fkaedc310n147hmm1038.apps.googleusercontent.com
+0003.619 (0) Google Drive: successfully obtained access token
+0005.985 (0) Google Drive quota usage: used=7697.1 Mb, total=30720 Mb, available=23022.9 Mb
+0005.990 (0) backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db.gz: Attempting to upload to Google Drive (into folder id: 0B7dn0jr8UTHxdVRaazk5T2s5Ykk)
+0007.695 (0) Googledrive chunked upload: 100 % uploaded
+0007.704 (0) OK: Archive backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db.gz uploaded to Google Drive in 1.71 seconds
+0007.710 (0) Recording as successfully uploaded: backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db.gz (8ba2d883b614adffd01ef7b17f4ac4d9)
+0007.725 (0) Deleting local file: backup_2016-03-14-0333_Novagrade_Digiscoping_Adapters_e19b88760423-db.gz: OK
+0007.732 (0) Retain: beginning examination of existing backup sets; user setting: retain_files=4, retain_db=14
+0007.735 (0) Number of backup sets in history: 21
+0007.739 (0) Examining backup set with datestamp: 1457951589 (Mar 14 2016 10:33:09)
+0007.743 (0) This backup set (1457951589) is the backup set just made, so will not be deleted.
+0007.746 (0) 1457951589: this backup set remains non-empty (0/1); will retain in history
+0007.750 (0) Examining backup set with datestamp: 1457933691 (Mar 14 2016 05:34:51)
+0007.755 (0) 1457933691: this backup set remains non-empty (1/0); will retain in history
+0007.759 (0) Examining backup set with datestamp: 1457866178 (Mar 13 2016 10:49:38)
+0007.762 (0) 1457866178: this backup set remains non-empty (0/1); will retain in history
+0007.765 (0) Examining backup set with datestamp: 1457778747 (Mar 12 2016 10:32:27)
+0007.768 (0) 1457778747: this backup set remains non-empty (0/1); will retain in history
+0007.772 (0) Examining backup set with datestamp: 1457692327 (Mar 11 2016 10:32:07)
+0007.775 (0) 1457692327: this backup set remains non-empty (0/1); will retain in history
+0007.778 (0) Examining backup set with datestamp: 1457605770 (Mar 10 2016 10:29:30)
+0007.781 (0) 1457605770: this backup set remains non-empty (0/1); will retain in history
+0007.784 (0) Examining backup set with datestamp: 1457519946 (Mar 09 2016 10:39:06)
+0007.787 (0) 1457519946: this backup set remains non-empty (0/1); will retain in history
+0007.791 (0) Examining backup set with datestamp: 1457432985 (Mar 08 2016 10:29:45)
+0007.794 (0) 1457432985: this backup set remains non-empty (0/1); will retain in history
+0007.796 (0) Examining backup set with datestamp: 1457346565 (Mar 07 2016 10:29:25)
+0007.800 (0) 1457346565: this backup set remains non-empty (0/1); will retain in history
+0007.803 (0) Examining backup set with datestamp: 1457328715 (Mar 07 2016 05:31:55)
+0007.806 (0) 1457328715: this backup set remains non-empty (1/0); will retain in history
+0007.809 (0) Examining backup set with datestamp: 1457261503 (Mar 06 2016 10:51:43)
+0007.813 (0) 1457261503: this backup set remains non-empty (0/1); will retain in history
+0007.817 (0) Examining backup set with datestamp: 1457174130 (Mar 05 2016 10:35:30)
+0007.820 (0) 1457174130: this backup set remains non-empty (0/1); will retain in history
+0007.823 (0) Examining backup set with datestamp: 1457087917 (Mar 04 2016 10:38:37)
+0007.826 (0) 1457087917: this backup set remains non-empty (0/1); will retain in history
+0007.829 (0) Examining backup set with datestamp: 1457000946 (Mar 03 2016 10:29:06)
+0007.832 (0) 1457000946: this backup set remains non-empty (0/1); will retain in history
+0007.836 (0) Examining backup set with datestamp: 1456914597 (Mar 02 2016 10:29:57)
+0007.839 (0) 1456914597: this backup set remains non-empty (0/1); will retain in history
+0007.843 (0) Examining backup set with datestamp: 1456828904 (Mar 01 2016 10:41:44)
+0007.846 (0) 1456828904: this backup set remains non-empty (0/1); will retain in history
+0007.849 (0) Examining backup set with datestamp: 1456741811 (Feb 29 2016 10:30:11)
+0007.852 (0) 1456741811: db: this set includes a database (backup_2016-02-29-0230_Novagrade_Digiscoping_Adapters_eec6f566b9e8-db.gz); db count is now 14
+0007.855 (0) 1456741811: db: over retain limit (14); will delete this database
+0007.858 (0) Delete file: backup_2016-02-29-0230_Novagrade_Digiscoping_Adapters_eec6f566b9e8-db.gz, service=googledrive
+0009.322 (0) backup_2016-02-29-0230_Novagrade_Digiscoping_Adapters_eec6f566b9e8-db.gz: Deletion successful
+0009.346 (0) 1456741811: this backup set is now empty; will remove from history
+0009.351 (0) 1456741811: deleting log file (log.eec6f566b9e8.txt)
+0009.370 (0) Examining backup set with datestamp: 1456724001 (Feb 29 2016 05:33:21)
+0009.374 (0) 1456724001: this backup set remains non-empty (1/0); will retain in history
+0009.378 (0) Examining backup set with datestamp: 1456119265 (Feb 22 2016 05:34:25)
+0009.382 (0) 1456119265: this backup set remains non-empty (1/0); will retain in history
+0009.386 (0) Examining backup set with datestamp: 1454442056 (Feb 02 2016 19:40:56)
+0009.389 (0) This backup set (1454442056) was an automatic backup, and we have not yet reached any retain limits, so it will not be counted or pruned. Skipping.
+0009.393 (0) 1454442056: this backup set remains non-empty (1/0); will retain in history
+0009.396 (0) Examining backup set with datestamp: 1452113544 (Jan 06 2016 20:52:24)
+0009.399 (0) This backup set (1452113544) was an automatic backup, and we have not yet reached any retain limits, so it will not be counted or pruned. Skipping.
+0009.403 (0) 1452113544: this backup set remains non-empty (1/0); will retain in history
+0009.406 (0) Retain: saving new backup history (sets now: 20) and finishing retain operation
+0009.418 (0) Resume backup (e19b88760423, 0): finish run
+0009.425 (0) Decremented the semaphore (d) by 1
+0009.430 (0) Semaphore (d) unlocked
+0009.434 (0) There were no errors in the uploads, so the 'resume' event (1) is being unscheduled
+0009.448 (0) No report will be sent to this address, as it is configured to receive them only when there are errors or warnings: tod@m...
+0009.462 (0) The backup apparently succeeded and is now complete

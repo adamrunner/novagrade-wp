@@ -1,0 +1,972 @@
+0000.056 (0) Opened log file at time: Mon, 29 Feb 2016 05:33:21 +0000 on https://novagrade.com
+0000.076 (0) UpdraftPlus WordPress backup plugin (https://updraftplus.com): 2.11.23.22 WP: 4.4.2 PHP: 5.4.45 (Linux gator4040.hostgator.com 3.12.35.1418868451 #1 SMP Wed Dec 17 20:10:32 CST 2014 x86_64) MySQL: 5.5.42 Server: Apache safe_mode: 0 max_execution_time: 900 memory_limit: 256M (used: 42.8M | 43.5M) multisite: N mcrypt: Y LANG:  ZipArchive::addFile: Y
+0000.639 (0) Free space on disk containing Updraft's temporary directory: 179551.5 Mb / Free disk space in account: 998539.5 Mb (0.1 % used)
+0000.648 (0) Tasks: Backup files: 1 (schedule: weekly) Backup DB:  (schedule: daily)
+0000.652 (0) Processed schedules. Tasks now: Backup files: 1 Backup DB: 
+0000.688 (0) Requesting semaphore lock (f)
+0000.693 (0) Set semaphore last lock (f) time to 2016-02-29 05:33:21
+0000.696 (0) Semaphore lock (f) complete
+0000.706 (0) Backup run: resumption=0, nonce=89061fc1b824, begun at=1456724001 (0s ago), job type=backup
+0000.712 (0) Scheduling a resumption (1) after 300 seconds (1456724301) in case this run gets aborted
+0000.771 (0) Checking if we have a zip executable available
+0000.890 (0) Testing: /usr/bin/zip
+0000.921 (0) Output: zip warning: binziptest/test.zip not found or empty
+0000.926 (0) Output: adding: binziptest/subdir1/	(in=0) (out=0) (stored 0%)
+0000.929 (0) Output: adding: binziptest/subdir1/subdir2/	(in=0) (out=0) (stored 0%)
+0000.932 (0) Output: adding: binziptest/subdir1/subdir2/test.html	(in=128) (out=105) (deflated 18%)
+0000.936 (0) Output: total bytes=128, compressed=105 -> 18% savings
+0000.949 (0) Output: adding: binziptest/subdir1/subdir2/test2.html	(in=135) (out=111) (deflated 18%)
+0000.954 (0) Output: total bytes=263, compressed=216 -> 18% savings
+0000.994 (0) Working binary zip found: /usr/bin/zip
+0001.000 (0) Zip engine: found/will use a binary zip: /usr/bin/zip
+0001.003 (0) Creation of backups of directories: beginning
+0001.014 (0) Beginning creation of dump of plugins (split every: 500 Mb)
+0001.296 (0) Free disk space in account: 998539.5 Mb (0.1 % used)
+0002.465 (0) Total entities for the zip file: 603 directories, 3747 files (0 skipped as non-modified), 53 Mb
+0002.473 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 100 files added (on-disk size: 0 Kb)
+0002.479 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 200 files added (on-disk size: 0 Kb)
+0002.484 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 300 files added (on-disk size: 0 Kb)
+0002.490 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 400 files added (on-disk size: 0 Kb)
+0002.495 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 500 files added (on-disk size: 0 Kb)
+0002.498 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (6.9 Mb, 3747 files batched, 501 (501) added so far); re-opening (prior size: 0 Kb)
+0004.020 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: size is now: 2.90 Mb
+0004.030 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 600 files added (on-disk size: 2934 Kb)
+0004.035 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 700 files added (on-disk size: 2934 Kb)
+0004.041 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 800 files added (on-disk size: 2934 Kb)
+0004.046 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 900 files added (on-disk size: 2934 Kb)
+0004.052 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1000 files added (on-disk size: 2934 Kb)
+0004.055 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (18.6 Mb, 3747 files batched, 501 (1002) added so far); re-opening (prior size: 2934 Kb)
+0008.577 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: size is now: 8.70 Mb
+0008.592 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1100 files added (on-disk size: 8885.8 Kb)
+0008.599 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1200 files added (on-disk size: 8885.8 Kb)
+0008.606 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1300 files added (on-disk size: 8885.8 Kb)
+0008.614 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1400 files added (on-disk size: 8885.8 Kb)
+0008.624 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1500 files added (on-disk size: 8885.8 Kb)
+0008.629 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (7.5 Mb, 3747 files batched, 501 (1503) added so far); re-opening (prior size: 8885.8 Kb)
+0016.178 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1600 files added (on-disk size: 10241.3 Kb)
+0016.186 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1700 files added (on-disk size: 10241.3 Kb)
+0016.194 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1800 files added (on-disk size: 10241.3 Kb)
+0016.203 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 1900 files added (on-disk size: 10241.3 Kb)
+0016.210 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2000 files added (on-disk size: 10241.3 Kb)
+0016.215 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2 Mb, 3747 files batched, 501 (2004) added so far); re-opening (prior size: 10241.3 Kb)
+0016.776 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2100 files added (on-disk size: 10994.5 Kb)
+0016.784 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2200 files added (on-disk size: 10994.5 Kb)
+0016.791 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2300 files added (on-disk size: 10994.5 Kb)
+0016.799 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2400 files added (on-disk size: 10994.5 Kb)
+0016.807 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2500 files added (on-disk size: 10994.5 Kb)
+0016.812 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (7.2 Mb, 3747 files batched, 501 (2505) added so far); re-opening (prior size: 10994.5 Kb)
+0019.968 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2600 files added (on-disk size: 13096.5 Kb)
+0019.977 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2700 files added (on-disk size: 13096.5 Kb)
+0019.984 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2800 files added (on-disk size: 13096.5 Kb)
+0019.991 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 2900 files added (on-disk size: 13096.5 Kb)
+0019.997 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3000 files added (on-disk size: 13096.5 Kb)
+0020.001 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3.1 Mb, 3747 files batched, 501 (3006) added so far); re-opening (prior size: 13096.5 Kb)
+0021.254 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3100 files added (on-disk size: 14418.4 Kb)
+0021.262 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3200 files added (on-disk size: 14418.4 Kb)
+0021.270 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3300 files added (on-disk size: 14418.4 Kb)
+0021.280 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3400 files added (on-disk size: 14418.4 Kb)
+0021.289 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3500 files added (on-disk size: 14418.4 Kb)
+0021.293 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (5.2 Mb, 3747 files batched, 501 (3507) added so far); re-opening (prior size: 14418.4 Kb)
+0022.924 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3600 files added (on-disk size: 16326.9 Kb)
+0022.930 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip.tmp: 3700 files added (on-disk size: 16326.9 Kb)
+0023.763 (0) Created plugins zip (0) - 17026.2 Kb in 22.5 s (758 Kb/s) (SHA1 checksum: 22bb393108030697a921adefb88d32a327e4a921)
+0023.771 (0) Beginning creation of dump of themes (split every: 500 Mb)
+0023.929 (0) Free disk space in account: 998539.5 Mb (0.1 % used)
+0029.183 (0) Total entities for the zip file: 7009 directories, 30608 files (0 skipped as non-modified), 178.8 Mb
+0029.194 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 2.0 seconds have passed since the last write (0.1 Mb, 1 (1) files added so far); re-opening (prior size: 0 Kb)
+0029.506 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: size is now: 2.40 Mb
+0029.522 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 100 files added (on-disk size: 2421.5 Kb)
+0029.528 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 200 files added (on-disk size: 2421.5 Kb)
+0029.533 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 300 files added (on-disk size: 2421.5 Kb)
+0029.539 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 400 files added (on-disk size: 2421.5 Kb)
+0029.545 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 500 files added (on-disk size: 2421.5 Kb)
+0029.548 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1 Mb, 30608 files batched, 501 (502) added so far); re-opening (prior size: 2421.5 Kb)
+0030.715 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: size is now: 2.90 Mb
+0030.730 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 600 files added (on-disk size: 2925 Kb)
+0030.736 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 700 files added (on-disk size: 2925 Kb)
+0030.742 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 800 files added (on-disk size: 2925 Kb)
+0030.749 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 900 files added (on-disk size: 2925 Kb)
+0030.754 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1000 files added (on-disk size: 2925 Kb)
+0030.758 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2 Mb, 30608 files batched, 501 (1003) added so far); re-opening (prior size: 2925 Kb)
+0032.022 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: size is now: 3.60 Mb
+0032.037 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1100 files added (on-disk size: 3678.2 Kb)
+0032.044 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1200 files added (on-disk size: 3678.2 Kb)
+0032.051 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1300 files added (on-disk size: 3678.2 Kb)
+0032.057 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1400 files added (on-disk size: 3678.2 Kb)
+0032.064 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1500 files added (on-disk size: 3678.2 Kb)
+0032.067 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.3 Mb, 30608 files batched, 501 (1504) added so far); re-opening (prior size: 3678.2 Kb)
+0033.013 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1600 files added (on-disk size: 4330.2 Kb)
+0033.020 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1700 files added (on-disk size: 4330.2 Kb)
+0033.027 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1800 files added (on-disk size: 4330.2 Kb)
+0033.034 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 1900 files added (on-disk size: 4330.2 Kb)
+0033.041 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2000 files added (on-disk size: 4330.2 Kb)
+0033.045 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.6 Mb, 30608 files batched, 501 (2005) added so far); re-opening (prior size: 4330.2 Kb)
+0034.298 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: size is now: 5.20 Mb
+0034.313 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2100 files added (on-disk size: 5306.1 Kb)
+0034.320 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2200 files added (on-disk size: 5306.1 Kb)
+0034.327 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2300 files added (on-disk size: 5306.1 Kb)
+0034.334 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2400 files added (on-disk size: 5306.1 Kb)
+0034.340 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2500 files added (on-disk size: 5306.1 Kb)
+0034.344 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.6 Mb, 30608 files batched, 501 (2506) added so far); re-opening (prior size: 5306.1 Kb)
+0035.032 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2600 files added (on-disk size: 6310.6 Kb)
+0035.038 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2700 files added (on-disk size: 6310.6 Kb)
+0035.045 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2800 files added (on-disk size: 6310.6 Kb)
+0035.054 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 2900 files added (on-disk size: 6310.6 Kb)
+0035.061 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3000 files added (on-disk size: 6310.6 Kb)
+0035.066 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (5.7 Mb, 30608 files batched, 501 (3007) added so far); re-opening (prior size: 6310.6 Kb)
+0036.143 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: size is now: 7.90 Mb
+0036.158 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3100 files added (on-disk size: 8039 Kb)
+0036.164 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3200 files added (on-disk size: 8039 Kb)
+0036.171 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3300 files added (on-disk size: 8039 Kb)
+0036.177 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3400 files added (on-disk size: 8039 Kb)
+0036.184 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3500 files added (on-disk size: 8039 Kb)
+0036.187 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (5.5 Mb, 30608 files batched, 501 (3508) added so far); re-opening (prior size: 8039 Kb)
+0037.107 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3600 files added (on-disk size: 9486.5 Kb)
+0037.114 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3700 files added (on-disk size: 9486.5 Kb)
+0037.120 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3800 files added (on-disk size: 9486.5 Kb)
+0037.126 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 3900 files added (on-disk size: 9486.5 Kb)
+0037.133 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4000 files added (on-disk size: 9486.5 Kb)
+0037.137 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.9 Mb, 30608 files batched, 501 (4009) added so far); re-opening (prior size: 9486.5 Kb)
+0037.929 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4100 files added (on-disk size: 9989.4 Kb)
+0037.936 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4200 files added (on-disk size: 9989.4 Kb)
+0037.942 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4300 files added (on-disk size: 9989.4 Kb)
+0037.949 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4400 files added (on-disk size: 9989.4 Kb)
+0037.955 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4500 files added (on-disk size: 9989.4 Kb)
+0037.958 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.7 Mb, 30608 files batched, 501 (4510) added so far); re-opening (prior size: 9989.4 Kb)
+0038.761 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4600 files added (on-disk size: 10734.6 Kb)
+0038.767 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4700 files added (on-disk size: 10734.6 Kb)
+0038.773 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4800 files added (on-disk size: 10734.6 Kb)
+0038.779 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 4900 files added (on-disk size: 10734.6 Kb)
+0038.785 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5000 files added (on-disk size: 10734.6 Kb)
+0038.788 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.4 Mb, 30608 files batched, 501 (5011) added so far); re-opening (prior size: 10734.6 Kb)
+0039.166 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5100 files added (on-disk size: 11049 Kb)
+0039.172 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5200 files added (on-disk size: 11049 Kb)
+0039.178 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5300 files added (on-disk size: 11049 Kb)
+0039.184 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5400 files added (on-disk size: 11049 Kb)
+0039.190 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5500 files added (on-disk size: 11049 Kb)
+0039.194 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (4.7 Mb, 30608 files batched, 501 (5512) added so far); re-opening (prior size: 11049 Kb)
+0040.285 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5600 files added (on-disk size: 12087.1 Kb)
+0040.292 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5700 files added (on-disk size: 12087.1 Kb)
+0040.300 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5800 files added (on-disk size: 12087.1 Kb)
+0040.306 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 5900 files added (on-disk size: 12087.1 Kb)
+0040.314 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6000 files added (on-disk size: 12087.1 Kb)
+0040.318 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.6 Mb, 30608 files batched, 501 (6013) added so far); re-opening (prior size: 12087.1 Kb)
+0041.226 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6100 files added (on-disk size: 12962.3 Kb)
+0041.233 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6200 files added (on-disk size: 12962.3 Kb)
+0041.240 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6300 files added (on-disk size: 12962.3 Kb)
+0041.246 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6400 files added (on-disk size: 12962.3 Kb)
+0041.252 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6500 files added (on-disk size: 12962.3 Kb)
+0041.256 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3.3 Mb, 30608 files batched, 501 (6514) added so far); re-opening (prior size: 12962.3 Kb)
+0042.173 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6600 files added (on-disk size: 13984.7 Kb)
+0042.181 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6700 files added (on-disk size: 13984.7 Kb)
+0042.189 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6800 files added (on-disk size: 13984.7 Kb)
+0042.197 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 6900 files added (on-disk size: 13984.7 Kb)
+0042.205 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7000 files added (on-disk size: 13984.7 Kb)
+0042.210 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.3 Mb, 30608 files batched, 501 (7015) added so far); re-opening (prior size: 13984.7 Kb)
+0042.692 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7100 files added (on-disk size: 14313.5 Kb)
+0042.699 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7200 files added (on-disk size: 14313.5 Kb)
+0042.706 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7300 files added (on-disk size: 14313.5 Kb)
+0042.713 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7400 files added (on-disk size: 14313.5 Kb)
+0042.719 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7500 files added (on-disk size: 14313.5 Kb)
+0042.723 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.7 Mb, 30608 files batched, 501 (7516) added so far); re-opening (prior size: 14313.5 Kb)
+0043.650 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7600 files added (on-disk size: 14999.1 Kb)
+0043.662 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7700 files added (on-disk size: 14999.1 Kb)
+0043.670 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7800 files added (on-disk size: 14999.1 Kb)
+0043.678 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 7900 files added (on-disk size: 14999.1 Kb)
+0043.686 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8000 files added (on-disk size: 14999.1 Kb)
+0043.691 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.3 Mb, 30608 files batched, 501 (8017) added so far); re-opening (prior size: 14999.1 Kb)
+0044.295 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8100 files added (on-disk size: 15941 Kb)
+0044.315 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8200 files added (on-disk size: 15941 Kb)
+0044.322 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8300 files added (on-disk size: 15941 Kb)
+0044.328 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8400 files added (on-disk size: 15941 Kb)
+0044.334 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8500 files added (on-disk size: 15941 Kb)
+0044.338 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.6 Mb, 30608 files batched, 501 (8518) added so far); re-opening (prior size: 15941 Kb)
+0044.712 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8600 files added (on-disk size: 16314.5 Kb)
+0044.718 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8700 files added (on-disk size: 16314.5 Kb)
+0044.724 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8800 files added (on-disk size: 16314.5 Kb)
+0044.731 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 8900 files added (on-disk size: 16314.5 Kb)
+0044.736 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9000 files added (on-disk size: 16314.5 Kb)
+0044.741 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.5 Mb, 30608 files batched, 501 (9019) added so far); re-opening (prior size: 16314.5 Kb)
+0045.655 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9100 files added (on-disk size: 17273.8 Kb)
+0045.662 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9200 files added (on-disk size: 17273.8 Kb)
+0045.669 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9300 files added (on-disk size: 17273.8 Kb)
+0045.675 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9400 files added (on-disk size: 17273.8 Kb)
+0045.682 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9500 files added (on-disk size: 17273.8 Kb)
+0045.686 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3.3 Mb, 30608 files batched, 501 (9520) added so far); re-opening (prior size: 17273.8 Kb)
+0047.126 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9600 files added (on-disk size: 18282 Kb)
+0047.133 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9700 files added (on-disk size: 18282 Kb)
+0047.139 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9800 files added (on-disk size: 18282 Kb)
+0047.145 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 9900 files added (on-disk size: 18282 Kb)
+0047.152 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10000 files added (on-disk size: 18282 Kb)
+0047.156 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (5.3 Mb, 30608 files batched, 501 (10021) added so far); re-opening (prior size: 18282 Kb)
+0048.566 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10100 files added (on-disk size: 20315 Kb)
+0048.572 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10200 files added (on-disk size: 20315 Kb)
+0048.578 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10300 files added (on-disk size: 20315 Kb)
+0048.584 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10400 files added (on-disk size: 20315 Kb)
+0048.590 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10500 files added (on-disk size: 20315 Kb)
+0048.594 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (10.5 Mb, 30608 files batched, 501 (10522) added so far); re-opening (prior size: 20315 Kb)
+0049.901 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: size is now: 27.80 Mb
+0049.915 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10600 files added (on-disk size: 28483.8 Kb)
+0049.922 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10700 files added (on-disk size: 28483.8 Kb)
+0049.929 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10800 files added (on-disk size: 28483.8 Kb)
+0049.938 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 10900 files added (on-disk size: 28483.8 Kb)
+0049.947 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11000 files added (on-disk size: 28483.8 Kb)
+0049.951 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.8 Mb, 30608 files batched, 501 (11023) added so far); re-opening (prior size: 28483.8 Kb)
+0050.900 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11100 files added (on-disk size: 29003.5 Kb)
+0050.907 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11200 files added (on-disk size: 29003.5 Kb)
+0050.914 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11300 files added (on-disk size: 29003.5 Kb)
+0050.922 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11400 files added (on-disk size: 29003.5 Kb)
+0050.929 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11500 files added (on-disk size: 29003.5 Kb)
+0050.934 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.9 Mb, 30608 files batched, 501 (11524) added so far); re-opening (prior size: 29003.5 Kb)
+0051.675 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11600 files added (on-disk size: 29670.5 Kb)
+0051.681 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11700 files added (on-disk size: 29670.5 Kb)
+0051.687 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11800 files added (on-disk size: 29670.5 Kb)
+0051.693 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 11900 files added (on-disk size: 29670.5 Kb)
+0051.700 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12000 files added (on-disk size: 29670.5 Kb)
+0051.704 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.2 Mb, 30608 files batched, 501 (12025) added so far); re-opening (prior size: 29670.5 Kb)
+0052.266 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12100 files added (on-disk size: 30212.5 Kb)
+0052.272 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12200 files added (on-disk size: 30212.5 Kb)
+0052.278 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12300 files added (on-disk size: 30212.5 Kb)
+0052.283 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12400 files added (on-disk size: 30212.5 Kb)
+0052.290 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12500 files added (on-disk size: 30212.5 Kb)
+0052.294 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3.6 Mb, 30608 files batched, 501 (12526) added so far); re-opening (prior size: 30212.5 Kb)
+0053.317 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12600 files added (on-disk size: 31538.6 Kb)
+0053.324 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12700 files added (on-disk size: 31538.6 Kb)
+0053.330 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12800 files added (on-disk size: 31538.6 Kb)
+0053.337 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 12900 files added (on-disk size: 31538.6 Kb)
+0053.343 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13000 files added (on-disk size: 31538.6 Kb)
+0053.348 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (4.3 Mb, 30608 files batched, 501 (13027) added so far); re-opening (prior size: 31538.6 Kb)
+0055.286 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13100 files added (on-disk size: 32683.1 Kb)
+0055.293 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13200 files added (on-disk size: 32683.1 Kb)
+0055.299 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13300 files added (on-disk size: 32683.1 Kb)
+0055.305 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13400 files added (on-disk size: 32683.1 Kb)
+0055.311 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13500 files added (on-disk size: 32683.1 Kb)
+0055.315 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.2 Mb, 30608 files batched, 501 (13528) added so far); re-opening (prior size: 32683.1 Kb)
+0056.812 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13600 files added (on-disk size: 33263.5 Kb)
+0056.819 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13700 files added (on-disk size: 33263.5 Kb)
+0056.825 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13800 files added (on-disk size: 33263.5 Kb)
+0056.832 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 13900 files added (on-disk size: 33263.5 Kb)
+0056.839 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14000 files added (on-disk size: 33263.5 Kb)
+0056.844 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.7 Mb, 30608 files batched, 501 (14029) added so far); re-opening (prior size: 33263.5 Kb)
+0058.400 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14100 files added (on-disk size: 34012.6 Kb)
+0058.408 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14200 files added (on-disk size: 34012.6 Kb)
+0058.417 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14300 files added (on-disk size: 34012.6 Kb)
+0058.424 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14400 files added (on-disk size: 34012.6 Kb)
+0058.432 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14500 files added (on-disk size: 34012.6 Kb)
+0058.438 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.4 Mb, 30608 files batched, 501 (14530) added so far); re-opening (prior size: 34012.6 Kb)
+0059.632 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14600 files added (on-disk size: 34364.7 Kb)
+0059.640 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14700 files added (on-disk size: 34364.7 Kb)
+0059.648 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14800 files added (on-disk size: 34364.7 Kb)
+0059.655 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 14900 files added (on-disk size: 34364.7 Kb)
+0059.662 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15000 files added (on-disk size: 34364.7 Kb)
+0059.668 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.4 Mb, 30608 files batched, 501 (15031) added so far); re-opening (prior size: 34364.7 Kb)
+0061.759 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15100 files added (on-disk size: 35337.3 Kb)
+0061.766 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15200 files added (on-disk size: 35337.3 Kb)
+0061.773 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15300 files added (on-disk size: 35337.3 Kb)
+0061.780 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15400 files added (on-disk size: 35337.3 Kb)
+0061.788 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15500 files added (on-disk size: 35337.3 Kb)
+0061.792 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.9 Mb, 30608 files batched, 501 (15532) added so far); re-opening (prior size: 35337.3 Kb)
+0062.876 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15600 files added (on-disk size: 36103.4 Kb)
+0062.884 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15700 files added (on-disk size: 36103.4 Kb)
+0062.893 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15800 files added (on-disk size: 36103.4 Kb)
+0062.901 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 15900 files added (on-disk size: 36103.4 Kb)
+0062.910 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16000 files added (on-disk size: 36103.4 Kb)
+0062.916 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.9 Mb, 30608 files batched, 501 (16033) added so far); re-opening (prior size: 36103.4 Kb)
+0063.718 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16100 files added (on-disk size: 36590.8 Kb)
+0063.725 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16200 files added (on-disk size: 36590.8 Kb)
+0063.732 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16300 files added (on-disk size: 36590.8 Kb)
+0063.738 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16400 files added (on-disk size: 36590.8 Kb)
+0063.745 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16500 files added (on-disk size: 36590.8 Kb)
+0063.749 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2 Mb, 30608 files batched, 501 (16534) added so far); re-opening (prior size: 36590.8 Kb)
+0064.611 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16600 files added (on-disk size: 37367.2 Kb)
+0064.619 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16700 files added (on-disk size: 37367.2 Kb)
+0064.627 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16800 files added (on-disk size: 37367.2 Kb)
+0064.634 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 16900 files added (on-disk size: 37367.2 Kb)
+0064.642 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17000 files added (on-disk size: 37367.2 Kb)
+0064.648 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.3 Mb, 30608 files batched, 501 (17035) added so far); re-opening (prior size: 37367.2 Kb)
+0065.229 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17100 files added (on-disk size: 38037.7 Kb)
+0065.237 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17200 files added (on-disk size: 38037.7 Kb)
+0065.245 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17300 files added (on-disk size: 38037.7 Kb)
+0065.253 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17400 files added (on-disk size: 38037.7 Kb)
+0065.260 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17500 files added (on-disk size: 38037.7 Kb)
+0065.270 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.6 Mb, 30608 files batched, 501 (17536) added so far); re-opening (prior size: 38037.7 Kb)
+0066.209 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17600 files added (on-disk size: 39034 Kb)
+0066.216 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17700 files added (on-disk size: 39034 Kb)
+0066.222 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17800 files added (on-disk size: 39034 Kb)
+0066.228 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 17900 files added (on-disk size: 39034 Kb)
+0066.234 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18000 files added (on-disk size: 39034 Kb)
+0066.238 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.5 Mb, 30608 files batched, 501 (18037) added so far); re-opening (prior size: 39034 Kb)
+0067.116 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18100 files added (on-disk size: 40055.8 Kb)
+0067.124 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18200 files added (on-disk size: 40055.8 Kb)
+0067.132 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18300 files added (on-disk size: 40055.8 Kb)
+0067.140 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18400 files added (on-disk size: 40055.8 Kb)
+0067.152 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18500 files added (on-disk size: 40055.8 Kb)
+0067.157 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (8.3 Mb, 30608 files batched, 501 (18538) added so far); re-opening (prior size: 40055.8 Kb)
+0068.692 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18600 files added (on-disk size: 42451.2 Kb)
+0068.701 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18700 files added (on-disk size: 42451.2 Kb)
+0068.709 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18800 files added (on-disk size: 42451.2 Kb)
+0068.715 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 18900 files added (on-disk size: 42451.2 Kb)
+0068.721 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19000 files added (on-disk size: 42451.2 Kb)
+0068.726 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.6 Mb, 30608 files batched, 501 (19039) added so far); re-opening (prior size: 42451.2 Kb)
+0069.732 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19100 files added (on-disk size: 43140.7 Kb)
+0069.739 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19200 files added (on-disk size: 43140.7 Kb)
+0069.745 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19300 files added (on-disk size: 43140.7 Kb)
+0069.752 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19400 files added (on-disk size: 43140.7 Kb)
+0069.758 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19500 files added (on-disk size: 43140.7 Kb)
+0069.763 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1 Mb, 30608 files batched, 501 (19540) added so far); re-opening (prior size: 43140.7 Kb)
+0071.786 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19600 files added (on-disk size: 43785.7 Kb)
+0071.794 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19700 files added (on-disk size: 43785.7 Kb)
+0071.802 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19800 files added (on-disk size: 43785.7 Kb)
+0071.810 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 19900 files added (on-disk size: 43785.7 Kb)
+0071.818 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20000 files added (on-disk size: 43785.7 Kb)
+0071.823 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (11.1 Mb, 30608 files batched, 501 (20041) added so far); re-opening (prior size: 43785.7 Kb)
+0080.583 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20100 files added (on-disk size: 51833.1 Kb)
+0080.590 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20200 files added (on-disk size: 51833.1 Kb)
+0080.597 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20300 files added (on-disk size: 51833.1 Kb)
+0080.603 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20400 files added (on-disk size: 51833.1 Kb)
+0080.610 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20500 files added (on-disk size: 51833.1 Kb)
+0080.614 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.6 Mb, 30608 files batched, 501 (20542) added so far); re-opening (prior size: 51833.1 Kb)
+0084.721 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20600 files added (on-disk size: 52750.6 Kb)
+0084.728 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20700 files added (on-disk size: 52750.6 Kb)
+0084.736 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20800 files added (on-disk size: 52750.6 Kb)
+0084.742 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 20900 files added (on-disk size: 52750.6 Kb)
+0084.749 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21000 files added (on-disk size: 52750.6 Kb)
+0084.753 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3 Mb, 30608 files batched, 501 (21043) added so far); re-opening (prior size: 52750.6 Kb)
+0086.537 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21100 files added (on-disk size: 53841.1 Kb)
+0086.544 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21200 files added (on-disk size: 53841.1 Kb)
+0086.550 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21300 files added (on-disk size: 53841.1 Kb)
+0086.556 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21400 files added (on-disk size: 53841.1 Kb)
+0086.565 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21500 files added (on-disk size: 53841.1 Kb)
+0086.572 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (11.8 Mb, 30608 files batched, 501 (21544) added so far); re-opening (prior size: 53841.1 Kb)
+0089.822 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21600 files added (on-disk size: 54645.8 Kb)
+0089.830 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21700 files added (on-disk size: 54645.8 Kb)
+0089.836 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21800 files added (on-disk size: 54645.8 Kb)
+0089.843 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 21900 files added (on-disk size: 54645.8 Kb)
+0089.850 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22000 files added (on-disk size: 54645.8 Kb)
+0089.855 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3.6 Mb, 30608 files batched, 501 (22045) added so far); re-opening (prior size: 54645.8 Kb)
+0093.470 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22100 files added (on-disk size: 54936.7 Kb)
+0093.479 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22200 files added (on-disk size: 54936.7 Kb)
+0093.486 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22300 files added (on-disk size: 54936.7 Kb)
+0093.494 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22400 files added (on-disk size: 54936.7 Kb)
+0093.501 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22500 files added (on-disk size: 54936.7 Kb)
+0093.506 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.1 Mb, 30608 files batched, 501 (22546) added so far); re-opening (prior size: 54936.7 Kb)
+0094.365 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22600 files added (on-disk size: 55178.4 Kb)
+0094.372 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22700 files added (on-disk size: 55178.4 Kb)
+0094.379 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22800 files added (on-disk size: 55178.4 Kb)
+0094.387 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 22900 files added (on-disk size: 55178.4 Kb)
+0094.395 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23000 files added (on-disk size: 55178.4 Kb)
+0094.400 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.1 Mb, 30608 files batched, 501 (23047) added so far); re-opening (prior size: 55178.4 Kb)
+0095.235 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23100 files added (on-disk size: 55400.8 Kb)
+0095.242 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23200 files added (on-disk size: 55400.8 Kb)
+0095.250 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23300 files added (on-disk size: 55400.8 Kb)
+0095.257 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23400 files added (on-disk size: 55400.8 Kb)
+0095.264 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23500 files added (on-disk size: 55400.8 Kb)
+0095.270 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (6.5 Mb, 30608 files batched, 501 (23548) added so far); re-opening (prior size: 55400.8 Kb)
+0098.991 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23600 files added (on-disk size: 57215.2 Kb)
+0099.000 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23700 files added (on-disk size: 57215.2 Kb)
+0099.008 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23800 files added (on-disk size: 57215.2 Kb)
+0099.017 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 23900 files added (on-disk size: 57215.2 Kb)
+0099.024 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24000 files added (on-disk size: 57215.2 Kb)
+0099.034 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3.3 Mb, 30608 files batched, 501 (24049) added so far); re-opening (prior size: 57215.2 Kb)
+0102.608 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24100 files added (on-disk size: 58276.4 Kb)
+0102.615 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24200 files added (on-disk size: 58276.4 Kb)
+0102.621 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24300 files added (on-disk size: 58276.4 Kb)
+0102.627 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24400 files added (on-disk size: 58276.4 Kb)
+0102.633 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24500 files added (on-disk size: 58276.4 Kb)
+0102.638 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.2 Mb, 30608 files batched, 501 (24550) added so far); re-opening (prior size: 58276.4 Kb)
+0103.926 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24600 files added (on-disk size: 58855.3 Kb)
+0103.933 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24700 files added (on-disk size: 58855.3 Kb)
+0103.939 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24800 files added (on-disk size: 58855.3 Kb)
+0103.946 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 24900 files added (on-disk size: 58855.3 Kb)
+0103.952 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25000 files added (on-disk size: 58855.3 Kb)
+0103.957 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.9 Mb, 30608 files batched, 501 (25051) added so far); re-opening (prior size: 58855.3 Kb)
+0105.006 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25100 files added (on-disk size: 59405.8 Kb)
+0105.016 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25200 files added (on-disk size: 59405.8 Kb)
+0105.041 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25300 files added (on-disk size: 59405.8 Kb)
+0105.049 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25400 files added (on-disk size: 59405.8 Kb)
+0105.055 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25500 files added (on-disk size: 59405.8 Kb)
+0105.060 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1.5 Mb, 30608 files batched, 501 (25552) added so far); re-opening (prior size: 59405.8 Kb)
+0106.291 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25600 files added (on-disk size: 59901.5 Kb)
+0106.297 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25700 files added (on-disk size: 59901.5 Kb)
+0106.304 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25800 files added (on-disk size: 59901.5 Kb)
+0106.310 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 25900 files added (on-disk size: 59901.5 Kb)
+0106.317 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26000 files added (on-disk size: 59901.5 Kb)
+0106.322 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (5.2 Mb, 30608 files batched, 501 (26053) added so far); re-opening (prior size: 59901.5 Kb)
+0108.768 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26100 files added (on-disk size: 61163.6 Kb)
+0108.776 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26200 files added (on-disk size: 61163.6 Kb)
+0108.783 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26300 files added (on-disk size: 61163.6 Kb)
+0108.790 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26400 files added (on-disk size: 61163.6 Kb)
+0108.797 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26500 files added (on-disk size: 61163.6 Kb)
+0108.802 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (4 Mb, 30608 files batched, 501 (26554) added so far); re-opening (prior size: 61163.6 Kb)
+0110.565 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26600 files added (on-disk size: 62368.1 Kb)
+0110.574 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26700 files added (on-disk size: 62368.1 Kb)
+0110.582 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26800 files added (on-disk size: 62368.1 Kb)
+0110.589 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 26900 files added (on-disk size: 62368.1 Kb)
+0110.597 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27000 files added (on-disk size: 62368.1 Kb)
+0110.603 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.3 Mb, 30608 files batched, 501 (27055) added so far); re-opening (prior size: 62368.1 Kb)
+0112.055 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27100 files added (on-disk size: 62676 Kb)
+0112.063 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27200 files added (on-disk size: 62676 Kb)
+0112.070 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27300 files added (on-disk size: 62676 Kb)
+0112.076 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27400 files added (on-disk size: 62676 Kb)
+0112.086 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27500 files added (on-disk size: 62676 Kb)
+0112.092 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1 Mb, 30608 files batched, 501 (27556) added so far); re-opening (prior size: 62676 Kb)
+0113.615 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27600 files added (on-disk size: 63185.4 Kb)
+0113.621 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27700 files added (on-disk size: 63185.4 Kb)
+0113.627 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27800 files added (on-disk size: 63185.4 Kb)
+0113.633 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 27900 files added (on-disk size: 63185.4 Kb)
+0113.640 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28000 files added (on-disk size: 63185.4 Kb)
+0113.645 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.4 Mb, 30608 files batched, 501 (28057) added so far); re-opening (prior size: 63185.4 Kb)
+0114.876 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28100 files added (on-disk size: 64159.4 Kb)
+0114.883 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28200 files added (on-disk size: 64159.4 Kb)
+0114.890 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28300 files added (on-disk size: 64159.4 Kb)
+0114.897 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28400 files added (on-disk size: 64159.4 Kb)
+0114.905 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28500 files added (on-disk size: 64159.4 Kb)
+0114.912 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (1 Mb, 30608 files batched, 501 (28558) added so far); re-opening (prior size: 64159.4 Kb)
+0115.891 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28600 files added (on-disk size: 64649.8 Kb)
+0115.898 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28700 files added (on-disk size: 64649.8 Kb)
+0115.905 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28800 files added (on-disk size: 64649.8 Kb)
+0115.913 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 28900 files added (on-disk size: 64649.8 Kb)
+0115.919 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29000 files added (on-disk size: 64649.8 Kb)
+0115.924 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (0.8 Mb, 30608 files batched, 501 (29059) added so far); re-opening (prior size: 64649.8 Kb)
+0116.889 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29100 files added (on-disk size: 65120.3 Kb)
+0116.895 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29200 files added (on-disk size: 65120.3 Kb)
+0116.918 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29300 files added (on-disk size: 65120.3 Kb)
+0116.925 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29400 files added (on-disk size: 65120.3 Kb)
+0116.931 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29500 files added (on-disk size: 65120.3 Kb)
+0116.936 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (2.9 Mb, 30608 files batched, 501 (29560) added so far); re-opening (prior size: 65120.3 Kb)
+0118.306 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29600 files added (on-disk size: 66171.5 Kb)
+0118.315 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29700 files added (on-disk size: 66171.5 Kb)
+0118.323 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29800 files added (on-disk size: 66171.5 Kb)
+0118.331 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 29900 files added (on-disk size: 66171.5 Kb)
+0118.339 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 30000 files added (on-disk size: 66171.5 Kb)
+0118.344 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (3.4 Mb, 30608 files batched, 501 (30061) added so far); re-opening (prior size: 66171.5 Kb)
+0119.943 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 30100 files added (on-disk size: 67212 Kb)
+0119.951 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 30200 files added (on-disk size: 67212 Kb)
+0119.959 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 30300 files added (on-disk size: 67212 Kb)
+0119.966 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 30400 files added (on-disk size: 67212 Kb)
+0119.973 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 30500 files added (on-disk size: 67212 Kb)
+0119.978 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (4.7 Mb, 30608 files batched, 501 (30562) added so far); re-opening (prior size: 67212 Kb)
+0121.781 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip.tmp: 30600 files added (on-disk size: 69103.7 Kb)
+0125.992 (0) Created themes zip (0) - 75753.2 Kb in 102.1 s (742.3 Kb/s) (SHA1 checksum: cf4746b4cdac13825d46e1d5b83b90944cc6bf15)
+0126.011 (0) Exclusion option setting (uploads): backup*,*backups,backwpup*,wp-clone
+0126.016 (0) Looking for candidates to back up in: /home3/doug6875/public_html/wp-content/uploads
+0126.019 (0) finding files: wc-logs: adding to list (1)
+0126.022 (0) finding files: wsoe: adding to list (2)
+0126.025 (0) finding files: woocommerce_uploads: adding to list (3)
+0126.028 (0) finding files: 2016: adding to list (4)
+0126.031 (0) finding files: 2015: adding to list (5)
+0126.034 (0) finding files: GeoIPv6.dat: adding to list (6)
+0126.038 (0) finding files: GeoIP.dat: adding to list (7)
+0126.042 (0) finding files: wp-migrate-db: adding to list (8)
+0126.047 (0) Beginning creation of dump of uploads (split every: 500 Mb)
+0126.218 (0) Free disk space in account: 998539.5 Mb (0.1 % used)
+0126.378 (0) Total entities for the zip file: 15 directories, 790 files (0 skipped as non-modified), 91.5 Mb
+0126.384 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: 100 files added (on-disk size: 0 Kb)
+0126.389 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 25 Mb added on this batch (25.3 Mb, 790 files batched, 132 (132) added so far); re-opening (prior size: 0 Kb)
+0129.336 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: size is now: 25.00 Mb
+0129.348 (0) A useful amount of data was added after this amount of zip processing: 3.4 s (normalised: 3.4 s, rate: 7561.6 Kb/s)
+0129.355 (0) Performance is good - will increase the amount of data we attempt to batch (time=3.43010497093, normalised_time=3.3855209721, max_time=-1, data points known=0, old_max_bytes=26214400, new_max_bytes=46458551)
+0129.365 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: 200 files added (on-disk size: 25616 Kb)
+0129.372 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: 300 files added (on-disk size: 25616 Kb)
+0129.381 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: 400 files added (on-disk size: 25616 Kb)
+0129.389 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: 500 files added (on-disk size: 25616 Kb)
+0129.397 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: 600 files added (on-disk size: 25616 Kb)
+0129.402 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 500 files added on this batch (43.8 Mb, 790 files batched, 501 (633) added so far); re-opening (prior size: 25616 Kb)
+0135.328 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: size is now: 68.80 Mb
+0135.342 (0) Zip: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: 700 files added (on-disk size: 70401.4 Kb)
+0139.159 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip.tmp: size is now: 90.10 Mb
+0139.835 (0) Created uploads zip (0) - 92253.9 Kb in 13.6 s (6778.2 Kb/s) (SHA1 checksum: 92beae0b1256a67026c47a97175e04e81eb33c74)
+0139.842 (0) No backup of wpcore: excluded by user's options
+0139.851 (0) Beginning backup of other directories found in the content directory (index: 0)
+0139.855 (0) Exclusion option setting (others): upgrade,cache,updraft,backup*,*backups,mysql.sql
+0139.860 (0) Looking for candidates to back up in: /home3/doug6875/public_html/wp-content
+0139.864 (0) finding files: updraft: skipping: this is the updraft directory
+0139.869 (0) finding files: uploads: skipping: this is the uploads directory
+0139.873 (0) finding files: upgrade: skipping: excluded by options
+0139.877 (0) finding files: index.php: adding to list (1)
+0139.880 (0) finding files: plugins: skipping: this is the plugins directory
+0139.887 (0) finding files: themes: skipping: this is the themes directory
+0140.055 (0) Free disk space in account: 998539.5 Mb (0.1 % used)
+0140.066 (0) Total entities for the zip file: 0 directories, 1 files (0 skipped as non-modified), 0 Mb
+0140.094 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-others.zip.tmp: size is now: 0.00 Mb
+0140.141 (0) Created others zip (0) - 0.2 Kb in 0.1 s (2.4 Kb/s) (SHA1 checksum: 6ccc98f90b47c91e051010b7385292e0028c60ab)
+0140.200 (0) Looking for candidates to back up in: /home3/doug6875/public_html/assets
+0140.245 (0) finding files: DSLR-digiscoping-adapter.pdf: adding to list (1)
+0140.249 (0) finding files: camera-digiscoping-adapter.pdf: adding to list (2)
+0140.253 (0) finding files: direct-projection-digiscoping-tips.pdf: adding to list (3)
+0140.257 (0) finding files: scope-eyepiece-requirements.pdf: adding to list (4)
+0140.262 (0) finding files: dealer_questionnaire.pdf: adding to list (5)
+0140.284 (0) finding files: website-admin: adding to list (6)
+0140.293 (0) finding files: direct-projection-digiscoping-tips.docx: adding to list (7)
+0140.303 (0) finding files: compatible-tablets.html: adding to list (8)
+0140.308 (0) finding files: Novagrade-identity.zip: adding to list (9)
+0140.311 (0) finding files: novagrade1-2-3v2.tablet.pdf: adding to list (10)
+0140.325 (0) Beginning creation of dump of more (split every: 500 Mb)
+0140.483 (0) Free disk space in account: 998539.5 Mb (0.1 % used)
+0140.578 (0) Total entities for the zip file: 1 directories, 12 files (0 skipped as non-modified), 81.9 Mb
+0140.583 (0) Adding batch to zip file (UpdraftPlus_BinZip): over 44.3 Mb added on this batch (49.6 Mb, 12 files batched, 7 (7) added so far); re-opening (prior size: 0 Kb)
+0143.728 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-more.zip.tmp: size is now: 49.40 Mb
+0143.740 (0) A useful amount of data was added after this amount of zip processing: 3.8 s (normalised: 3.4 s, rate: 13279 Kb/s)
+0143.747 (0) Performance is good - will increase the amount of data we attempt to batch (time=3.82123303413, normalised_time=3.41664290417, max_time=-1, data points known=0, old_max_bytes=46458551, new_max_bytes=81586315)
+0146.451 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-more.zip.tmp: size is now: 81.20 Mb
+0147.089 (0) Created more zip (0) - 83127.9 Kb in 6.6 s (12624.5 Kb/s) (SHA1 checksum: dca2d83144b91f63d0be789f1f4a0bec76ca76e8)
+0147.115 (0) Saving backup status to database (elements: 10)
+0147.130 (0) No database backup (wp) - not part of this run
+0147.135 (0) Saving backup history
+0147.141 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip: plugins: This file has not yet been successfully uploaded: will queue
+0147.145 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip: themes: This file has not yet been successfully uploaded: will queue
+0147.149 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip: uploads: This file has not yet been successfully uploaded: will queue
+0147.153 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-others.zip: others: This file has not yet been successfully uploaded: will queue
+0147.157 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-more.zip: more: This file has not yet been successfully uploaded: will queue
+0147.172 (0) Requesting upload of the files that have not yet been successfully uploaded (5)
+0147.186 (0) Cloud backup selection (1/1): googledrive (last)
+0147.190 (0) Beginning dispatch of backup to remote (googledrive)
+0147.236 (0) Google Drive: requesting access token: client_id=38205401580-s747egeei9g6fkaedc310n147hmm1038.apps.googleusercontent.com
+0147.662 (0) Google Drive: successfully obtained access token
+0149.915 (0) Google Drive quota usage: used=7635.4 Mb, total=30720 Mb, available=23084.6 Mb
+0149.920 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip: Attempting to upload to Google Drive (into folder id: 0B7dn0jr8UTHxdVRaazk5T2s5Ykk)
+0151.258 (0) Googledrive chunked upload: 6 % uploaded (1048576)
+0152.184 (0) Googledrive chunked upload: 12 % uploaded (2097152)
+0153.199 (0) Googledrive chunked upload: 18 % uploaded (3145728)
+0154.174 (0) Googledrive chunked upload: 24.1 % uploaded (4194304)
+0155.148 (0) Googledrive chunked upload: 30.1 % uploaded (5242880)
+0156.097 (0) Googledrive chunked upload: 36.1 % uploaded (6291456)
+0157.158 (0) Googledrive chunked upload: 42.1 % uploaded (7340032)
+0158.128 (0) Googledrive chunked upload: 48.1 % uploaded (8388608)
+0159.065 (0) Googledrive chunked upload: 54.1 % uploaded (9437184)
+0160.049 (0) Googledrive chunked upload: 60.1 % uploaded (10485760)
+0160.993 (0) Googledrive chunked upload: 66.2 % uploaded (11534336)
+0161.920 (0) Googledrive chunked upload: 72.2 % uploaded (12582912)
+0162.893 (0) Googledrive chunked upload: 78.2 % uploaded (13631488)
+0163.873 (0) Googledrive chunked upload: 84.2 % uploaded (14680064)
+0164.830 (0) Googledrive chunked upload: 90.2 % uploaded (15728640)
+0165.775 (0) Googledrive chunked upload: 96.2 % uploaded (16777216)
+0167.245 (0) Googledrive chunked upload: 100 % uploaded (16777216)
+0167.257 (0) OK: Archive backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip uploaded to Google Drive in 17.33 seconds
+0167.266 (0) Recording as successfully uploaded: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip (0392641630136008dc245a713c59dfb1)
+0167.297 (0) Deleting local file: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-plugins.zip: OK
+0167.688 (0) Google Drive quota usage: used=7652 Mb, total=30720 Mb, available=23068 Mb
+0167.692 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip: Attempting to upload to Google Drive (into folder id: 0B7dn0jr8UTHxdVRaazk5T2s5Ykk)
+0169.062 (0) Googledrive chunked upload: 1.4 % uploaded (1048576)
+0169.965 (0) Googledrive chunked upload: 2.7 % uploaded (2097152)
+0170.889 (0) Googledrive chunked upload: 4.1 % uploaded (3145728)
+0172.008 (0) Googledrive chunked upload: 5.4 % uploaded (4194304)
+0172.794 (0) Googledrive chunked upload: 6.8 % uploaded (5242880)
+0173.634 (0) Googledrive chunked upload: 8.1 % uploaded (6291456)
+0174.461 (0) Googledrive chunked upload: 9.5 % uploaded (7340032)
+0175.320 (0) Googledrive chunked upload: 10.8 % uploaded (8388608)
+0176.162 (0) Googledrive chunked upload: 12.2 % uploaded (9437184)
+0177.049 (0) Googledrive chunked upload: 13.5 % uploaded (10485760)
+0177.921 (0) Googledrive chunked upload: 14.9 % uploaded (11534336)
+0178.799 (0) Googledrive chunked upload: 16.2 % uploaded (12582912)
+0179.645 (0) Googledrive chunked upload: 17.6 % uploaded (13631488)
+0180.592 (0) Googledrive chunked upload: 18.9 % uploaded (14680064)
+0181.457 (0) Googledrive chunked upload: 20.3 % uploaded (15728640)
+0182.461 (0) Googledrive chunked upload: 21.6 % uploaded (16777216)
+0183.377 (0) Googledrive chunked upload: 23 % uploaded (17825792)
+0184.258 (0) Googledrive chunked upload: 24.3 % uploaded (18874368)
+0185.190 (0) Googledrive chunked upload: 25.7 % uploaded (19922944)
+0186.141 (0) Googledrive chunked upload: 27 % uploaded (20971520)
+0187.090 (0) Googledrive chunked upload: 28.4 % uploaded (22020096)
+0187.935 (0) Googledrive chunked upload: 29.7 % uploaded (23068672)
+0188.796 (0) Googledrive chunked upload: 31.1 % uploaded (24117248)
+0189.667 (0) Googledrive chunked upload: 32.4 % uploaded (25165824)
+0191.082 (0) Googledrive chunked upload: 33.8 % uploaded (26214400)
+0192.059 (0) Googledrive chunked upload: 35.1 % uploaded (27262976)
+0192.895 (0) Googledrive chunked upload: 36.5 % uploaded (28311552)
+0193.750 (0) Googledrive chunked upload: 37.8 % uploaded (29360128)
+0194.555 (0) Googledrive chunked upload: 39.2 % uploaded (30408704)
+0195.455 (0) Googledrive chunked upload: 40.6 % uploaded (31457280)
+0196.261 (0) Googledrive chunked upload: 41.9 % uploaded (32505856)
+0197.069 (0) Googledrive chunked upload: 43.3 % uploaded (33554432)
+0197.918 (0) Googledrive chunked upload: 44.6 % uploaded (34603008)
+0198.719 (0) Googledrive chunked upload: 46 % uploaded (35651584)
+0199.539 (0) Googledrive chunked upload: 47.3 % uploaded (36700160)
+0200.341 (0) Googledrive chunked upload: 48.7 % uploaded (37748736)
+0201.153 (0) Googledrive chunked upload: 50 % uploaded (38797312)
+0201.946 (0) Googledrive chunked upload: 51.4 % uploaded (39845888)
+0202.756 (0) Googledrive chunked upload: 52.7 % uploaded (40894464)
+0203.571 (0) Googledrive chunked upload: 54.1 % uploaded (41943040)
+0204.403 (0) Googledrive chunked upload: 55.4 % uploaded (42991616)
+0205.220 (0) Googledrive chunked upload: 56.8 % uploaded (44040192)
+0206.100 (0) Googledrive chunked upload: 58.1 % uploaded (45088768)
+0206.916 (0) Googledrive chunked upload: 59.5 % uploaded (46137344)
+0207.785 (0) Googledrive chunked upload: 60.8 % uploaded (47185920)
+0208.641 (0) Googledrive chunked upload: 62.2 % uploaded (48234496)
+0209.457 (0) Googledrive chunked upload: 63.5 % uploaded (49283072)
+0212.233 (0) Googledrive chunked upload: 64.9 % uploaded (50331648)
+0213.744 (0) Googledrive chunked upload: 66.2 % uploaded (51380224)
+0214.867 (0) Googledrive chunked upload: 67.6 % uploaded (52428800)
+0216.042 (0) Googledrive chunked upload: 68.9 % uploaded (53477376)
+0216.971 (0) Googledrive chunked upload: 70.3 % uploaded (54525952)
+0217.995 (0) Googledrive chunked upload: 71.6 % uploaded (55574528)
+0218.923 (0) Googledrive chunked upload: 73 % uploaded (56623104)
+0219.786 (0) Googledrive chunked upload: 74.3 % uploaded (57671680)
+0220.646 (0) Googledrive chunked upload: 75.7 % uploaded (58720256)
+0221.478 (0) Googledrive chunked upload: 77.1 % uploaded (59768832)
+0222.420 (0) Googledrive chunked upload: 78.4 % uploaded (60817408)
+0223.410 (0) Googledrive chunked upload: 79.8 % uploaded (61865984)
+0224.864 (0) Googledrive chunked upload: 81.1 % uploaded (62914560)
+0225.851 (0) Googledrive chunked upload: 82.5 % uploaded (63963136)
+0226.848 (0) Googledrive chunked upload: 83.8 % uploaded (65011712)
+0227.799 (0) Googledrive chunked upload: 85.2 % uploaded (66060288)
+0228.888 (0) Googledrive chunked upload: 86.5 % uploaded (67108864)
+0229.808 (0) Googledrive chunked upload: 87.9 % uploaded (68157440)
+0230.747 (0) Googledrive chunked upload: 89.2 % uploaded (69206016)
+0231.630 (0) Googledrive chunked upload: 90.6 % uploaded (70254592)
+0232.608 (0) Googledrive chunked upload: 91.9 % uploaded (71303168)
+0233.495 (0) Googledrive chunked upload: 93.3 % uploaded (72351744)
+0234.385 (0) Googledrive chunked upload: 94.6 % uploaded (73400320)
+0235.384 (0) Googledrive chunked upload: 96 % uploaded (74448896)
+0236.267 (0) Googledrive chunked upload: 97.3 % uploaded (75497472)
+0237.874 (0) Googledrive chunked upload: 98.7 % uploaded (76546048)
+0239.389 (0) Googledrive chunked upload: 100 % uploaded (76546048)
+0239.411 (0) OK: Archive backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip uploaded to Google Drive in 71.72 seconds
+0239.420 (0) Recording as successfully uploaded: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip (b7af4fe7cd3913763914eda62eea826f)
+0239.463 (0) Deleting local file: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-themes.zip: OK
+0239.923 (0) Google Drive quota usage: used=7726 Mb, total=30720 Mb, available=22994 Mb
+0239.928 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip: Attempting to upload to Google Drive (into folder id: 0B7dn0jr8UTHxdVRaazk5T2s5Ykk)
+0241.239 (0) Googledrive chunked upload: 1.1 % uploaded (1048576)
+0242.959 (0) Googledrive chunked upload: 2.2 % uploaded (2097152)
+0245.581 (0) Googledrive chunked upload: 3.3 % uploaded (3145728)
+0246.408 (0) Googledrive chunked upload: 4.4 % uploaded (4194304)
+0247.232 (0) Googledrive chunked upload: 5.5 % uploaded (5242880)
+0248.033 (0) Googledrive chunked upload: 6.7 % uploaded (6291456)
+0248.879 (0) Googledrive chunked upload: 7.8 % uploaded (7340032)
+0249.689 (0) Googledrive chunked upload: 8.9 % uploaded (8388608)
+0250.420 (0) Googledrive chunked upload: 10 % uploaded (9437184)
+0251.207 (0) Googledrive chunked upload: 11.1 % uploaded (10485760)
+0252.009 (0) Googledrive chunked upload: 12.2 % uploaded (11534336)
+0252.783 (0) Googledrive chunked upload: 13.3 % uploaded (12582912)
+0253.573 (0) Googledrive chunked upload: 14.4 % uploaded (13631488)
+0254.420 (0) Googledrive chunked upload: 15.5 % uploaded (14680064)
+0255.254 (0) The scheduled resumption is within 45 seconds - will reschedule
+0255.262 (0) Rescheduling resumption 1: moving to 345 seconds from now (1456724601)
+0255.274 (0) To decrease the likelihood of overlaps, increasing resumption interval to: 300 + 45 = 345
+0255.277 (0) Googledrive chunked upload: 16.6 % uploaded (15728640)
+0256.154 (0) Googledrive chunked upload: 17.8 % uploaded (16777216)
+0256.933 (0) Googledrive chunked upload: 18.9 % uploaded (17825792)
+0257.733 (0) Googledrive chunked upload: 20 % uploaded (18874368)
+0258.749 (0) Googledrive chunked upload: 21.1 % uploaded (19922944)
+0259.590 (0) Googledrive chunked upload: 22.2 % uploaded (20971520)
+0260.450 (0) Googledrive chunked upload: 23.3 % uploaded (22020096)
+0261.202 (0) Googledrive chunked upload: 24.4 % uploaded (23068672)
+0261.960 (0) Googledrive chunked upload: 25.5 % uploaded (24117248)
+0262.975 (0) Googledrive chunked upload: 26.6 % uploaded (25165824)
+0263.738 (0) Googledrive chunked upload: 27.7 % uploaded (26214400)
+0264.518 (0) Googledrive chunked upload: 28.9 % uploaded (27262976)
+0265.311 (0) Googledrive chunked upload: 30 % uploaded (28311552)
+0266.687 (0) Googledrive chunked upload: 31.1 % uploaded (29360128)
+0267.441 (0) Googledrive chunked upload: 32.2 % uploaded (30408704)
+0268.209 (0) Googledrive chunked upload: 33.3 % uploaded (31457280)
+0269.104 (0) Googledrive chunked upload: 34.4 % uploaded (32505856)
+0269.911 (0) Googledrive chunked upload: 35.5 % uploaded (33554432)
+0270.710 (0) Googledrive chunked upload: 36.6 % uploaded (34603008)
+0271.512 (0) Googledrive chunked upload: 37.7 % uploaded (35651584)
+0272.315 (0) Googledrive chunked upload: 38.8 % uploaded (36700160)
+0273.109 (0) Googledrive chunked upload: 40 % uploaded (37748736)
+0273.962 (0) Googledrive chunked upload: 41.1 % uploaded (38797312)
+0274.801 (0) Googledrive chunked upload: 42.2 % uploaded (39845888)
+0275.620 (0) Googledrive chunked upload: 43.3 % uploaded (40894464)
+0276.598 (0) Googledrive chunked upload: 44.4 % uploaded (41943040)
+0277.445 (0) Googledrive chunked upload: 45.5 % uploaded (42991616)
+0278.280 (0) Googledrive chunked upload: 46.6 % uploaded (44040192)
+0279.127 (0) Googledrive chunked upload: 47.7 % uploaded (45088768)
+0280.045 (0) Googledrive chunked upload: 48.8 % uploaded (46137344)
+0280.858 (0) Googledrive chunked upload: 49.9 % uploaded (47185920)
+0282.088 (0) Googledrive chunked upload: 51.1 % uploaded (48234496)
+0283.080 (0) Googledrive chunked upload: 52.2 % uploaded (49283072)
+0283.916 (0) Googledrive chunked upload: 53.3 % uploaded (50331648)
+0284.890 (0) Googledrive chunked upload: 54.4 % uploaded (51380224)
+0285.675 (0) Googledrive chunked upload: 55.5 % uploaded (52428800)
+0286.499 (0) Googledrive chunked upload: 56.6 % uploaded (53477376)
+0287.407 (0) Googledrive chunked upload: 57.7 % uploaded (54525952)
+0288.214 (0) Googledrive chunked upload: 58.8 % uploaded (55574528)
+0289.035 (0) Googledrive chunked upload: 59.9 % uploaded (56623104)
+0289.913 (0) Googledrive chunked upload: 61 % uploaded (57671680)
+0290.719 (0) Googledrive chunked upload: 62.2 % uploaded (58720256)
+0291.536 (0) Googledrive chunked upload: 63.3 % uploaded (59768832)
+0292.327 (0) Googledrive chunked upload: 64.4 % uploaded (60817408)
+0293.128 (0) Googledrive chunked upload: 65.5 % uploaded (61865984)
+0293.937 (0) Googledrive chunked upload: 66.6 % uploaded (62914560)
+0294.729 (0) Googledrive chunked upload: 67.7 % uploaded (63963136)
+0296.425 (0) Googledrive chunked upload: 68.8 % uploaded (65011712)
+0297.839 (0) Googledrive chunked upload: 69.9 % uploaded (66060288)
+0299.413 (0) Googledrive chunked upload: 71 % uploaded (67108864)
+0300.189 (0) Googledrive chunked upload: 72.1 % uploaded (68157440)
+0301.060 (0) Googledrive chunked upload: 73.3 % uploaded (69206016)
+0301.978 (0) Googledrive chunked upload: 74.4 % uploaded (70254592)
+0302.801 (0) Googledrive chunked upload: 75.5 % uploaded (71303168)
+0303.667 (0) Googledrive chunked upload: 76.6 % uploaded (72351744)
+0304.476 (0) Googledrive chunked upload: 77.7 % uploaded (73400320)
+0305.365 (0) Googledrive chunked upload: 78.8 % uploaded (74448896)
+0306.162 (0) Googledrive chunked upload: 79.9 % uploaded (75497472)
+0306.920 (0) Googledrive chunked upload: 81 % uploaded (76546048)
+0307.836 (0) Googledrive chunked upload: 82.1 % uploaded (77594624)
+0308.697 (0) Googledrive chunked upload: 83.2 % uploaded (78643200)
+0309.815 (0) Googledrive chunked upload: 84.4 % uploaded (79691776)
+0310.600 (0) Googledrive chunked upload: 85.5 % uploaded (80740352)
+0311.400 (0) Googledrive chunked upload: 86.6 % uploaded (81788928)
+0312.379 (0) Googledrive chunked upload: 87.7 % uploaded (82837504)
+0313.281 (0) Googledrive chunked upload: 88.8 % uploaded (83886080)
+0314.083 (0) Googledrive chunked upload: 89.9 % uploaded (84934656)
+0314.888 (0) Googledrive chunked upload: 91 % uploaded (85983232)
+0315.832 (0) The time we have been running (315.8) is approaching the resumption interval (345) - increasing resumption interval to 346
+0315.839 (0) Googledrive chunked upload: 92.1 % uploaded (87031808)
+0316.662 (0) The time we have been running (316.6) is approaching the resumption interval (346) - increasing resumption interval to 347
+0316.673 (0) Googledrive chunked upload: 93.2 % uploaded (88080384)
+0317.476 (0) The time we have been running (317.4) is approaching the resumption interval (347) - increasing resumption interval to 348
+0317.484 (0) Googledrive chunked upload: 94.3 % uploaded (89128960)
+0318.337 (0) The time we have been running (318.3) is approaching the resumption interval (348) - increasing resumption interval to 349
+0318.345 (0) Googledrive chunked upload: 95.5 % uploaded (90177536)
+0319.181 (0) The time we have been running (319.1) is approaching the resumption interval (349) - increasing resumption interval to 350
+0319.191 (0) Googledrive chunked upload: 96.6 % uploaded (91226112)
+0320.107 (0) The time we have been running (320) is approaching the resumption interval (350) - increasing resumption interval to 351
+0320.115 (0) Googledrive chunked upload: 97.7 % uploaded (92274688)
+0320.915 (0) Googledrive chunked upload: 98.8 % uploaded (93323264)
+0321.736 (0) The time we have been running (321.7) is approaching the resumption interval (351) - increasing resumption interval to 352
+0321.745 (0) Googledrive chunked upload: 99.9 % uploaded (94371840)
+0323.337 (0) The time we have been running (323.3) is approaching the resumption interval (352) - increasing resumption interval to 354
+0323.346 (0) Googledrive chunked upload: 100 % uploaded (94371840)
+0323.365 (0) OK: Archive backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip uploaded to Google Drive in 83.43 seconds
+0323.374 (0) Recording as successfully uploaded: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip (d6c8a1a694e34f4680d00ea6b367c062)
+0323.439 (0) Deleting local file: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-uploads.zip: OK
+0324.629 (0) Google Drive quota usage: used=7816.1 Mb, total=30720 Mb, available=22903.9 Mb
+0324.635 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-others.zip: Attempting to upload to Google Drive (into folder id: 0B7dn0jr8UTHxdVRaazk5T2s5Ykk)
+0326.052 (0) The time we have been running (326) is approaching the resumption interval (354) - increasing resumption interval to 356
+0326.063 (0) Googledrive chunked upload: 100 % uploaded
+0326.080 (0) OK: Archive backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-others.zip uploaded to Google Drive in 1.44 seconds
+0326.090 (0) Recording as successfully uploaded: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-others.zip (0e25e15a2f0ff62ecbc1b16486e4b5c6)
+0326.106 (0) Deleting local file: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-others.zip: OK
+0326.520 (0) Google Drive quota usage: used=7816.1 Mb, total=30720 Mb, available=22903.9 Mb
+0326.527 (0) backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-more.zip: Attempting to upload to Google Drive (into folder id: 0B7dn0jr8UTHxdVRaazk5T2s5Ykk)
+0327.682 (0) The time we have been running (327.6) is approaching the resumption interval (356) - increasing resumption interval to 358
+0327.689 (0) Googledrive chunked upload: 1.2 % uploaded (1048576)
+0328.574 (0) The time we have been running (328.5) is approaching the resumption interval (358) - increasing resumption interval to 359
+0328.586 (0) Googledrive chunked upload: 2.5 % uploaded (2097152)
+0329.457 (0) The time we have been running (329.4) is approaching the resumption interval (359) - increasing resumption interval to 360
+0329.466 (0) Googledrive chunked upload: 3.7 % uploaded (3145728)
+0330.288 (0) The time we have been running (330.2) is approaching the resumption interval (360) - increasing resumption interval to 361
+0330.299 (0) Googledrive chunked upload: 4.9 % uploaded (4194304)
+0331.279 (0) The time we have been running (331.2) is approaching the resumption interval (361) - increasing resumption interval to 362
+0331.290 (0) Googledrive chunked upload: 6.2 % uploaded (5242880)
+0332.182 (0) The time we have been running (332) is approaching the resumption interval (362) - increasing resumption interval to 363
+0332.193 (0) Googledrive chunked upload: 7.4 % uploaded (6291456)
+0332.953 (0) Googledrive chunked upload: 8.6 % uploaded (7340032)
+0333.835 (0) The time we have been running (333.8) is approaching the resumption interval (363) - increasing resumption interval to 364
+0333.843 (0) Googledrive chunked upload: 9.9 % uploaded (8388608)
+0334.657 (0) The time we have been running (334.6) is approaching the resumption interval (364) - increasing resumption interval to 365
+0334.667 (0) Googledrive chunked upload: 11.1 % uploaded (9437184)
+0335.496 (0) The time we have been running (335.4) is approaching the resumption interval (365) - increasing resumption interval to 366
+0335.504 (0) Googledrive chunked upload: 12.3 % uploaded (10485760)
+0336.306 (0) The time we have been running (336.2) is approaching the resumption interval (366) - increasing resumption interval to 367
+0336.313 (0) Googledrive chunked upload: 13.6 % uploaded (11534336)
+0337.149 (0) The time we have been running (337.1) is approaching the resumption interval (367) - increasing resumption interval to 368
+0337.160 (0) Googledrive chunked upload: 14.8 % uploaded (12582912)
+0338.034 (0) Googledrive chunked upload: 16 % uploaded (13631488)
+0338.881 (0) The time we have been running (338.8) is approaching the resumption interval (368) - increasing resumption interval to 369
+0338.890 (0) Googledrive chunked upload: 17.2 % uploaded (14680064)
+0339.702 (0) The time we have been running (339.6) is approaching the resumption interval (369) - increasing resumption interval to 370
+0339.709 (0) Googledrive chunked upload: 18.5 % uploaded (15728640)
+0340.496 (0) The time we have been running (340.4) is approaching the resumption interval (370) - increasing resumption interval to 371
+0340.506 (0) Googledrive chunked upload: 19.7 % uploaded (16777216)
+0341.316 (0) The time we have been running (341.2) is approaching the resumption interval (371) - increasing resumption interval to 372
+0341.324 (0) Googledrive chunked upload: 20.9 % uploaded (17825792)
+0342.209 (0) The time we have been running (342.1) is approaching the resumption interval (372) - increasing resumption interval to 373
+0342.221 (0) Googledrive chunked upload: 22.2 % uploaded (18874368)
+0343.052 (0) Googledrive chunked upload: 23.4 % uploaded (19922944)
+0343.822 (0) The time we have been running (343.8) is approaching the resumption interval (373) - increasing resumption interval to 374
+0343.832 (0) Googledrive chunked upload: 24.6 % uploaded (20971520)
+0344.619 (0) The time we have been running (344.5) is approaching the resumption interval (374) - increasing resumption interval to 375
+0344.628 (0) Googledrive chunked upload: 25.9 % uploaded (22020096)
+0345.435 (0) The time we have been running (345.4) is approaching the resumption interval (375) - increasing resumption interval to 376
+0345.447 (0) Googledrive chunked upload: 27.1 % uploaded (23068672)
+0346.261 (0) The time we have been running (346.2) is approaching the resumption interval (376) - increasing resumption interval to 377
+0346.271 (0) Googledrive chunked upload: 28.3 % uploaded (24117248)
+0347.106 (0) The time we have been running (347) is approaching the resumption interval (377) - increasing resumption interval to 378
+0347.117 (0) Googledrive chunked upload: 29.6 % uploaded (25165824)
+0347.908 (0) Googledrive chunked upload: 30.8 % uploaded (26214400)
+0348.762 (0) The time we have been running (348.7) is approaching the resumption interval (378) - increasing resumption interval to 379
+0348.769 (0) Googledrive chunked upload: 32 % uploaded (27262976)
+0349.597 (0) The time we have been running (349.5) is approaching the resumption interval (379) - increasing resumption interval to 380
+0349.606 (0) Googledrive chunked upload: 33.3 % uploaded (28311552)
+0350.443 (0) The time we have been running (350.4) is approaching the resumption interval (380) - increasing resumption interval to 381
+0350.453 (0) Googledrive chunked upload: 34.5 % uploaded (29360128)
+0351.310 (0) The time we have been running (351.2) is approaching the resumption interval (381) - increasing resumption interval to 382
+0351.319 (0) Googledrive chunked upload: 35.7 % uploaded (30408704)
+0352.150 (0) The time we have been running (352.1) is approaching the resumption interval (382) - increasing resumption interval to 383
+0352.161 (0) Googledrive chunked upload: 37 % uploaded (31457280)
+0352.925 (0) Googledrive chunked upload: 38.2 % uploaded (32505856)
+0353.753 (0) The time we have been running (353.7) is approaching the resumption interval (383) - increasing resumption interval to 384
+0353.762 (0) Googledrive chunked upload: 39.4 % uploaded (33554432)
+0354.547 (0) The time we have been running (354.5) is approaching the resumption interval (384) - increasing resumption interval to 385
+0354.558 (0) Googledrive chunked upload: 40.7 % uploaded (34603008)
+0355.502 (0) The time we have been running (355.4) is approaching the resumption interval (385) - increasing resumption interval to 386
+0355.512 (0) Googledrive chunked upload: 41.9 % uploaded (35651584)
+0356.330 (0) The time we have been running (356.3) is approaching the resumption interval (386) - increasing resumption interval to 387
+0356.337 (0) Googledrive chunked upload: 43.1 % uploaded (36700160)
+0357.110 (0) The time we have been running (357) is approaching the resumption interval (387) - increasing resumption interval to 388
+0357.122 (0) Googledrive chunked upload: 44.3 % uploaded (37748736)
+0357.920 (0) Googledrive chunked upload: 45.6 % uploaded (38797312)
+0358.786 (0) The time we have been running (358.7) is approaching the resumption interval (388) - increasing resumption interval to 389
+0358.794 (0) Googledrive chunked upload: 46.8 % uploaded (39845888)
+0359.598 (0) The time we have been running (359.5) is approaching the resumption interval (389) - increasing resumption interval to 390
+0359.606 (0) Googledrive chunked upload: 48 % uploaded (40894464)
+0360.449 (0) The time we have been running (360.4) is approaching the resumption interval (390) - increasing resumption interval to 391
+0360.459 (0) Googledrive chunked upload: 49.3 % uploaded (41943040)
+0361.249 (0) The time we have been running (361.2) is approaching the resumption interval (391) - increasing resumption interval to 392
+0361.258 (0) Googledrive chunked upload: 50.5 % uploaded (42991616)
+0362.003 (0) Googledrive chunked upload: 51.7 % uploaded (44040192)
+0362.827 (0) The time we have been running (362.8) is approaching the resumption interval (392) - increasing resumption interval to 393
+0362.849 (0) Googledrive chunked upload: 53 % uploaded (45088768)
+0363.713 (0) The time we have been running (363.6) is approaching the resumption interval (393) - increasing resumption interval to 394
+0363.722 (0) Googledrive chunked upload: 54.2 % uploaded (46137344)
+0364.543 (0) The time we have been running (364.5) is approaching the resumption interval (394) - increasing resumption interval to 395
+0364.550 (0) Googledrive chunked upload: 55.4 % uploaded (47185920)
+0365.420 (0) The time we have been running (365.4) is approaching the resumption interval (395) - increasing resumption interval to 396
+0365.428 (0) Googledrive chunked upload: 56.7 % uploaded (48234496)
+0366.237 (0) The time we have been running (366.2) is approaching the resumption interval (396) - increasing resumption interval to 397
+0366.246 (0) Googledrive chunked upload: 57.9 % uploaded (49283072)
+0367.040 (0) Googledrive chunked upload: 59.1 % uploaded (50331648)
+0367.889 (0) The time we have been running (367.8) is approaching the resumption interval (397) - increasing resumption interval to 398
+0367.896 (0) Googledrive chunked upload: 60.4 % uploaded (51380224)
+0368.694 (0) The time we have been running (368.6) is approaching the resumption interval (398) - increasing resumption interval to 399
+0368.703 (0) Googledrive chunked upload: 61.6 % uploaded (52428800)
+0369.510 (0) The time we have been running (369.4) is approaching the resumption interval (399) - increasing resumption interval to 400
+0369.520 (0) Googledrive chunked upload: 62.8 % uploaded (53477376)
+0370.651 (0) The time we have been running (370.6) is approaching the resumption interval (400) - increasing resumption interval to 401
+0370.660 (0) Googledrive chunked upload: 64.1 % uploaded (54525952)
+0371.506 (0) The time we have been running (371.4) is approaching the resumption interval (401) - increasing resumption interval to 402
+0371.513 (0) Googledrive chunked upload: 65.3 % uploaded (55574528)
+0372.318 (0) The time we have been running (372.2) is approaching the resumption interval (402) - increasing resumption interval to 403
+0372.327 (0) Googledrive chunked upload: 66.5 % uploaded (56623104)
+0373.136 (0) The time we have been running (373.1) is approaching the resumption interval (403) - increasing resumption interval to 404
+0373.148 (0) Googledrive chunked upload: 67.8 % uploaded (57671680)
+0373.966 (0) Googledrive chunked upload: 69 % uploaded (58720256)
+0374.747 (0) The time we have been running (374.7) is approaching the resumption interval (404) - increasing resumption interval to 405
+0374.762 (0) Googledrive chunked upload: 70.2 % uploaded (59768832)
+0375.615 (0) The time we have been running (375.5) is approaching the resumption interval (405) - increasing resumption interval to 406
+0375.624 (0) Googledrive chunked upload: 71.4 % uploaded (60817408)
+0376.476 (0) The time we have been running (376.4) is approaching the resumption interval (406) - increasing resumption interval to 407
+0376.484 (0) Googledrive chunked upload: 72.7 % uploaded (61865984)
+0377.297 (0) The time we have been running (377.2) is approaching the resumption interval (407) - increasing resumption interval to 408
+0377.305 (0) Googledrive chunked upload: 73.9 % uploaded (62914560)
+0378.131 (0) The time we have been running (378.1) is approaching the resumption interval (408) - increasing resumption interval to 409
+0378.139 (0) Googledrive chunked upload: 75.1 % uploaded (63963136)
+0378.904 (0) Googledrive chunked upload: 76.4 % uploaded (65011712)
+0379.664 (0) The time we have been running (379.6) is approaching the resumption interval (409) - increasing resumption interval to 410
+0379.674 (0) Googledrive chunked upload: 77.6 % uploaded (66060288)
+0380.457 (0) The time we have been running (380.4) is approaching the resumption interval (410) - increasing resumption interval to 411
+0380.466 (0) Googledrive chunked upload: 78.8 % uploaded (67108864)
+0381.267 (0) The time we have been running (381.2) is approaching the resumption interval (411) - increasing resumption interval to 412
+0381.275 (0) Googledrive chunked upload: 80.1 % uploaded (68157440)
+0382.071 (0) The time we have been running (382) is approaching the resumption interval (412) - increasing resumption interval to 413
+0382.080 (0) Googledrive chunked upload: 81.3 % uploaded (69206016)
+0382.891 (0) Googledrive chunked upload: 82.5 % uploaded (70254592)
+0383.651 (0) The time we have been running (383.6) is approaching the resumption interval (413) - increasing resumption interval to 414
+0383.659 (0) Googledrive chunked upload: 83.8 % uploaded (71303168)
+0384.463 (0) The time we have been running (384.4) is approaching the resumption interval (414) - increasing resumption interval to 415
+0384.470 (0) Googledrive chunked upload: 85 % uploaded (72351744)
+0385.296 (0) The time we have been running (385.2) is approaching the resumption interval (415) - increasing resumption interval to 416
+0385.303 (0) Googledrive chunked upload: 86.2 % uploaded (73400320)
+0386.101 (0) The time we have been running (386) is approaching the resumption interval (416) - increasing resumption interval to 417
+0386.109 (0) Googledrive chunked upload: 87.5 % uploaded (74448896)
+0386.870 (0) Googledrive chunked upload: 88.7 % uploaded (75497472)
+0387.693 (0) The time we have been running (387.6) is approaching the resumption interval (417) - increasing resumption interval to 418
+0387.702 (0) Googledrive chunked upload: 89.9 % uploaded (76546048)
+0388.516 (0) The time we have been running (388.4) is approaching the resumption interval (418) - increasing resumption interval to 419
+0388.524 (0) Googledrive chunked upload: 91.2 % uploaded (77594624)
+0405.208 (0) The time we have been running (405.1) is approaching the resumption interval (419) - increasing resumption interval to 436
+0405.223 (0) Googledrive chunked upload: 92.4 % uploaded (78643200)
+0408.473 (0) The time we have been running (408.4) is approaching the resumption interval (436) - increasing resumption interval to 439
+0408.480 (0) Googledrive chunked upload: 93.6 % uploaded (79691776)
+0423.052 (0) The time we have been running (423) is approaching the resumption interval (439) - increasing resumption interval to 453
+0423.061 (0) Googledrive chunked upload: 94.9 % uploaded (80740352)
+0427.943 (0) The time we have been running (427.9) is approaching the resumption interval (453) - increasing resumption interval to 458
+0427.951 (0) Googledrive chunked upload: 96.1 % uploaded (81788928)
+0431.132 (0) The time we have been running (431.1) is approaching the resumption interval (458) - increasing resumption interval to 462
+0431.141 (0) Googledrive chunked upload: 97.3 % uploaded (82837504)
+0446.713 (0) The time we have been running (446.6) is approaching the resumption interval (462) - increasing resumption interval to 477
+0446.722 (0) Googledrive chunked upload: 98.5 % uploaded (83886080)
+0462.131 (0) The time we have been running (462) is approaching the resumption interval (477) - increasing resumption interval to 493
+0462.141 (0) Googledrive chunked upload: 99.8 % uploaded (84934656)
+0466.236 (0) The time we have been running (466.2) is approaching the resumption interval (493) - increasing resumption interval to 497
+0466.252 (0) Googledrive chunked upload: 100 % uploaded (84934656)
+0466.275 (0) OK: Archive backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-more.zip uploaded to Google Drive in 139.74 seconds
+0466.289 (0) Recording as successfully uploaded: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-more.zip (71dc93eba28047f4bee3a11f827d2357)
+0466.357 (0) Deleting local file: backup_2016-02-28-2133_Novagrade_Digiscoping_Adapters_89061fc1b824-more.zip: OK
+0466.383 (0) Retain: beginning examination of existing backup sets; user setting: retain_files=4, retain_db=14
+0466.388 (0) Number of backup sets in history: 21
+0466.393 (0) Examining backup set with datestamp: 1456724001 (Feb 29 2016 05:33:21)
+0466.397 (0) This backup set (1456724001) is the backup set just made, so will not be deleted, despite being over the retain limit.
+0466.401 (0) This backup set (1456724001) is the backup set just made, so will not be deleted, despite being over the retain limit.
+0466.402 (0) This backup set (1456724001) is the backup set just made, so will not be deleted, despite being over the retain limit.
+0466.402 (0) This backup set (1456724001) is the backup set just made, so will not be deleted, despite being over the retain limit.
+0466.403 (0) This backup set (1456724001) is the backup set just made, so will not be deleted, despite being over the retain limit.
+0466.403 (0) 1456724001: this backup set remains non-empty (1/0); will retain in history
+0466.408 (0) Examining backup set with datestamp: 1456655416 (Feb 28 2016 10:30:16)
+0466.412 (0) 1456655416: this backup set remains non-empty (0/1); will retain in history
+0466.417 (0) Examining backup set with datestamp: 1456569604 (Feb 27 2016 10:40:04)
+0466.421 (0) 1456569604: this backup set remains non-empty (0/1); will retain in history
+0466.426 (0) Examining backup set with datestamp: 1456482587 (Feb 26 2016 10:29:47)
+0466.431 (0) 1456482587: this backup set remains non-empty (0/1); will retain in history
+0466.436 (0) Examining backup set with datestamp: 1456396227 (Feb 25 2016 10:30:27)
+0466.441 (0) 1456396227: this backup set remains non-empty (0/1); will retain in history
+0466.446 (0) Examining backup set with datestamp: 1456310771 (Feb 24 2016 10:46:11)
+0466.451 (0) 1456310771: this backup set remains non-empty (0/1); will retain in history
+0466.456 (0) Examining backup set with datestamp: 1456223912 (Feb 23 2016 10:38:32)
+0466.460 (0) 1456223912: this backup set remains non-empty (0/1); will retain in history
+0466.471 (0) Examining backup set with datestamp: 1456137777 (Feb 22 2016 10:42:57)
+0466.486 (0) 1456137777: this backup set remains non-empty (0/1); will retain in history
+0466.508 (0) Examining backup set with datestamp: 1456119265 (Feb 22 2016 05:34:25)
+0466.514 (0) 1456119265: this backup set remains non-empty (1/0); will retain in history
+0466.518 (0) Examining backup set with datestamp: 1456050563 (Feb 21 2016 10:29:23)
+0466.522 (0) 1456050563: this backup set remains non-empty (0/1); will retain in history
+0466.526 (0) Examining backup set with datestamp: 1455964262 (Feb 20 2016 10:31:02)
+0466.530 (0) 1455964262: this backup set remains non-empty (0/1); will retain in history
+0466.534 (0) Examining backup set with datestamp: 1455877949 (Feb 19 2016 10:32:29)
+0466.538 (0) 1455877949: this backup set remains non-empty (0/1); will retain in history
+0466.542 (0) Examining backup set with datestamp: 1455791350 (Feb 18 2016 10:29:10)
+0466.549 (0) 1455791350: this backup set remains non-empty (0/1); will retain in history
+0466.553 (0) Examining backup set with datestamp: 1455705264 (Feb 17 2016 10:34:24)
+0466.561 (0) 1455705264: this backup set remains non-empty (0/1); will retain in history
+0466.566 (0) Examining backup set with datestamp: 1455618563 (Feb 16 2016 10:29:23)
+0466.570 (0) 1455618563: this backup set remains non-empty (0/1); will retain in history
+0466.573 (0) Examining backup set with datestamp: 1455532391 (Feb 15 2016 10:33:11)
+0466.578 (0) 1455532391: this backup set remains non-empty (0/1); will retain in history
+0466.582 (0) Examining backup set with datestamp: 1455514150 (Feb 15 2016 05:29:10)
+0466.586 (0) 1455514150: this backup set remains non-empty (1/0); will retain in history
+0466.590 (0) Examining backup set with datestamp: 1454910099 (Feb 08 2016 05:41:39)
+0466.595 (0) 1454910099: this backup set remains non-empty (1/0); will retain in history
+0466.599 (0) Examining backup set with datestamp: 1454456297 (Feb 02 2016 23:38:17)
+0466.603 (0) plugins: 1454456297: over retain limit (4); will delete this file entity
+0466.607 (0) themes: 1454456297: over retain limit (4); will delete this file entity
+0466.611 (0) uploads: 1454456297: over retain limit (4); will delete this file entity
+0466.614 (0) others: 1454456297: over retain limit (4); will delete this file entity
+0466.618 (0) more: 1454456297: over retain limit (4); will delete this file entity
+0466.629 (0) Delete file: backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-plugins.zip, service=googledrive
+0466.633 (0) Delete file: backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-themes.zip, service=googledrive
+0466.643 (0) Delete file: backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-uploads.zip, service=googledrive
+0466.648 (0) Delete file: backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-others.zip, service=googledrive
+0466.652 (0) Delete file: backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-more.zip, service=googledrive
+0469.634 (0) backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-more.zip: Deletion successful
+0472.898 (0) backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-others.zip: Deletion successful
+0473.965 (0) backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-uploads.zip: Deletion successful
+0475.036 (0) backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-themes.zip: Deletion successful
+0476.062 (0) backup_2016-02-02-1538_Novagrade_Digiscoping_Adapters_e5a245475dec-plugins.zip: Deletion successful
+0476.105 (0) The time we have been running (476) is approaching the resumption interval (497) - increasing resumption interval to 507
+0476.119 (0) 1454456297: this backup set is now empty; will remove from history
+0476.124 (0) 1454456297: deleting log file (log.e5a245475dec.txt)
+0476.175 (0) Examining backup set with datestamp: 1454442056 (Feb 02 2016 19:40:56)
+0476.181 (0) This backup set (1454442056) was an automatic backup, and we have not yet reached any retain limits, so it will not be counted or pruned. Skipping.
+0476.187 (0) 1454442056: this backup set remains non-empty (1/0); will retain in history
+0476.192 (0) Examining backup set with datestamp: 1452113544 (Jan 06 2016 20:52:24)
+0476.225 (0) This backup set (1452113544) was an automatic backup, and we have not yet reached any retain limits, so it will not be counted or pruned. Skipping.
+0476.232 (0) 1452113544: this backup set remains non-empty (1/0); will retain in history
+0476.238 (0) Retain: saving new backup history (sets now: 20) and finishing retain operation
+0476.261 (0) Resume backup (89061fc1b824, 0): finish run
+0476.282 (0) Decremented the semaphore (f) by 1
+0476.288 (0) Semaphore (f) unlocked
+0476.293 (0) There were no errors in the uploads, so the 'resume' event (1) is being unscheduled
+0476.308 (0) No report will be sent to this address, as it is configured to receive them only when there are errors or warnings: tod@m...
+0476.312 (0) The backup apparently succeeded and is now complete
