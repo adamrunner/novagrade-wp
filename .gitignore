@@ -1,3 +1,4 @@
+*log*
 *.log
 wp-content/advanced-cache.php
 wp-content/backup-db/
