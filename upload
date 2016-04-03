@@ -1,0 +1,19 @@
+#!/bin/sh
+if [ -z $1 ] || [ $1 == "dev" ]
+then
+  echo "Uploading to dev.novagrade.com"
+  rsync -avz --exclude-from=.gitignore ./ novagrade:~/dev.novagrade.com --progress
+  ssh novagrade ln -s ~/dev.novagrade.com/wp-config-dev.php ~/dev.novagrade.com/wp-config.php
+fi
+if [ $1 == "prod" ]
+then
+  read -p "Are you sure? You want to upload to www.novagrade.com (Y/[N])" -n 1 -r
+  echo    # (optional) move to a new line
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    echo "Uploading to www.novagrade.com"
+    rsync -avz --exclude-from=.gitignore ./ novagrade:~/public_html --progress
+    ssh novagrade ln -s ~/public_html/wp-config-production.php ~/public_html/wp-config.php
+  fi
+
+fi
