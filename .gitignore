@@ -26,3 +26,4 @@ wpdev
 /readme.html
 /sitemap.xml
 /sitemap.xml.gz
+wp-content/updraft/log.*
