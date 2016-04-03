@@ -130,7 +130,7 @@ function stats_map_meta_caps( $caps, $cap, $user_id, $args ) {
 }
 
 function stats_template_redirect() {
-	global $wp_the_query, $current_user, $stats_footer;
+	global $current_user, $stats_footer;
 
 	if ( is_feed() || is_robots() || is_trackback() || is_preview() )
 		return;
@@ -144,6 +144,24 @@ function stats_template_redirect() {
 
 	add_action( 'wp_footer', 'stats_footer', 101 );
 	add_action( 'wp_head', 'stats_add_shutdown_action' );
+
+	$script = set_url_scheme( '//stats.wp.com/e-' . gmdate( 'YW' ) . '.js' );
+	$data = stats_build_view_data();
+	$data_stats_array = stats_array( $data );
+
+	$stats_footer = <<<END
+<script type='text/javascript' src='{$script}' async defer></script>
+<script type='text/javascript'>
+	_stq = window._stq || [];
+	_stq.push([ 'view', {{$data_stats_array}} ]);
+	_stq.push([ 'clickTrackerInit', '{$data['blog']}', '{$data['post']}' ]);
+</script>
+
+END;
+}
+
+function stats_build_view_data() {
+	global $wp_the_query;
 
 	$blog = Jetpack_Options::get_option( 'id' );
 	$tz = get_option( 'gmt_offset' );
@@ -169,18 +187,7 @@ function stats_template_redirect() {
 		$post = '0';
 	}
 
-	$script = set_url_scheme( '//stats.wp.com/e-' . gmdate( 'YW' ) . '.js' );
-	$data = stats_array( compact( 'v', 'j', 'blog', 'post', 'tz', 'srv' ) );
-
-	$stats_footer = <<<END
-<script type='text/javascript' src='{$script}' async defer></script>
-<script type='text/javascript'>
-	_stq = window._stq || [];
-	_stq.push([ 'view', {{$data}} ]);
-	_stq.push([ 'clickTrackerInit', '{$blog}', '{$post}' ]);
-</script>
-
-END;
+	return compact( 'v', 'j', 'blog', 'post', 'tz', 'srv' );
 }
 
 function stats_add_shutdown_action() {
@@ -366,14 +373,14 @@ if ( -1 == document.location.href.indexOf( 'noheader' ) ) {
 <?php
 }
 
-function stats_reports_page() {
+function stats_reports_page( $main_chart_only = false ) {
 	if ( isset( $_GET['dashboard'] ) )
 		return stats_dashboard_widget_content();
 
 	$blog_id = stats_get_option( 'blog_id' );
 	$domain = Jetpack::build_raw_urls( get_home_url() );
 
-	if ( !isset( $_GET['noheader'] ) && empty( $_GET['nojs'] ) && empty( $_COOKIE['stnojs'] ) ) {
+	if ( ! $main_chart_only && !isset( $_GET['noheader'] ) && empty( $_GET['nojs'] ) && empty( $_COOKIE['stnojs'] ) ) {
 		$nojs_url = add_query_arg( 'nojs', '1' );
 		$http = is_ssl() ? 'https' : 'http';
 		// Loading message
@@ -409,6 +416,8 @@ echo esc_url( apply_filters( 'jetpack_static_url', "{$http}://en.wordpress.com/i
 	if ( get_locale() !== 'en_US' ) {
 		$q['jp_lang'] = get_locale();
 	}
+	// Only show the main chart, without extra header data, or metaboxes.
+	$q['main_chart_only'] = $main_chart_only;
 	$args = array(
 		'view' => array( 'referrers', 'postviews', 'searchterms', 'clicks', 'post', 'table' ),
 		'numdays' => 'int',

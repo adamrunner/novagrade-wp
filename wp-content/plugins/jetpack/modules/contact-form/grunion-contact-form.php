@@ -33,12 +33,32 @@ class Grunion_Contact_Form_Plugin {
 
 		if ( !$instance ) {
 			$instance = new Grunion_Contact_Form_Plugin;
+
+			// Schedule our daily cleanup
+			add_action( 'wp_scheduled_delete', array( $instance, 'daily_akismet_meta_cleanup' ) );
 		}
 
 		return $instance;
 	}
 
 	/**
+	 * Runs daily to clean up spam detection metadata after 15 days.  Keeps your DB squeaky clean.
+	 */
+	public function daily_akismet_meta_cleanup() {
+		global $wpdb;
+
+		$feedback_ids = $wpdb->get_col( "SELECT p.ID FROM {$wpdb->posts} as p INNER JOIN {$wpdb->postmeta} as m on m.post_id = p.ID WHERE p.post_type = 'feedback' AND m.meta_key = '_feedback_akismet_values'  > p.post_date_gmt LIMIT 10000" );
+
+		if ( empty( $feedback_ids ) ) {
+			return;
+		}
+
+		foreach ( $feedback_ids as $feedback_id ) {
+			delete_post_meta( $feedback_id, '_feedback_akismet_values' );
+		}
+	}
+
+		/**
 	 * Strips HTML tags from input.  Output is NOT HTML safe.
 	 *
 	 * @param mixed $data_with_tags
@@ -107,6 +127,7 @@ class Grunion_Contact_Form_Plugin {
 			'rewrite'           => FALSE,
 			'query_var'         => FALSE,
 			'capability_type'   => 'page',
+			'show_in_rest'      => true,
 			'capabilities'		=> array(
 				'create_posts'        => false,
 				'publish_posts'       => 'publish_pages',
@@ -391,11 +412,22 @@ class Grunion_Contact_Form_Plugin {
 		$form['referrer']     = $_SERVER['HTTP_REFERER'];
 		$form['blog']         = get_option( 'home' );
 
-		$ignore = array( 'HTTP_COOKIE' );
-
-		foreach ( $_SERVER as $k => $value )
-			if ( !in_array( $k, $ignore ) && is_string( $value ) )
-				$form["$k"] = $value;
+		foreach ( $_SERVER as $key => $value ) {
+			if ( ! is_string( $value ) ) {
+				continue;
+			}
+			if ( in_array( $key, array( 'HTTP_COOKIE', 'HTTP_COOKIE2', 'HTTP_USER_AGENT', 'HTTP_REFERER' ) ) ) {
+				// We don't care about cookies, and the UA and Referrer were caught above.
+				continue;
+			} elseif ( in_array( $key, array( 'REMOTE_ADDR', 'REQUEST_URI', 'DOCUMENT_URI' ) ) ) {
+				// All three of these are relevant indicators and should be passed along.
+				$form[ $key ] = $value;
+			} elseif ( wp_startswith( $key, 'HTTP_' ) ) {
+				// Any other HTTP header indicators.
+				// `wp_startswith()` is a wpcom helper function and is included in Jetpack via `functions.compat.php`
+				$form[ $key ] = $value;
+			}
+		}
 
 		return $form;
 	}
@@ -623,19 +655,6 @@ class Grunion_Contact_Form_Plugin {
 		foreach ( $post_ids as $post_id ) {
 
 			/**
-			 * Fetch post meta data.
-			 */
-			$post_meta_data = $this->get_post_meta_for_csv_export( $post_id );
-
-			/**
-			 * If `$post_meta_data` is not an array or if it is empty, then there is no
-			 * feedback to work with. Skip it.
-			 */
-			if ( ! is_array( $post_meta_data ) || empty( $post_meta_data ) ) {
-				continue;
-			}
-
-			/**
 			 * Fetch post main data, because we need the subject and author data for the feedback form.
 			 */
 			$post_real_data = $this->get_parsed_field_contents_of_post( $post_id );
@@ -661,6 +680,19 @@ class Grunion_Contact_Form_Plugin {
 			 * Map parsed fields to proper field names
 			 */
 			$mapped_fields = $this->map_parsed_field_contents_of_post_to_field_names( $post_real_data );
+
+			/**
+			 * Fetch post meta data.
+			 */
+			$post_meta_data = $this->get_post_meta_for_csv_export( $post_id );
+
+			/**
+			 * If `$post_meta_data` is not an array or if it is empty, then there is no
+			 * extra feedback to work with. Create an empty array.
+			 */
+			if ( ! is_array( $post_meta_data ) || empty( $post_meta_data ) ) {
+				$post_meta_data = array();
+			}
 
 			/**
 			 * Prepend the feedback subject to the list of fields.
@@ -1758,6 +1790,12 @@ class Grunion_Contact_Form extends Crunion_Contact_Form_Shortcode {
 		foreach ( array_merge( $field_ids['all'], $field_ids['extra'] ) as $field_id ) {
 			$field = $this->fields[$field_id];
 
+			// Skip any fields that are just a choice from a pre-defined list. They wouldn't have any value
+			// from a spam-filtering point of view.
+			if ( in_array( $field->get_attribute( 'type' ), array( 'select', 'checkbox', 'checkbox-multiple', 'radio' ) ) ) {
+				continue;
+			}
+
 			// Normalize the label into a slug.
 			$field_slug = trim( // Strip all leading/trailing dashes.
 				preg_replace(   // Normalize everything to a-z0-9_-
@@ -1867,7 +1905,10 @@ class Grunion_Contact_Form extends Crunion_Contact_Form_Shortcode {
 		remove_filter( 'wp_insert_post_data', array( $plugin, 'insert_feedback_filter' ), 10, 2 );
 
 		update_post_meta( $post_id, '_feedback_extra_fields', $this->addslashes_deep( $extra_values ) );
-		update_post_meta( $post_id, '_feedback_akismet_values', $this->addslashes_deep( $akismet_values ) );
+
+		if ( Jetpack::is_plugin_active( 'akismet/akismet.php' ) ) {
+			update_post_meta( $post_id, '_feedback_akismet_values', $this->addslashes_deep( $akismet_values ) );
+		}
 
 		$message = self::get_compiled_form( $post_id, $this );
 
@@ -1893,7 +1934,7 @@ class Grunion_Contact_Form extends Crunion_Contact_Form_Shortcode {
 			array_push( $message, __( 'Sent by an unverified visitor to your site.', 'jetpack' ) );
 		}
 
-		$message = join( $message, "" );
+		$message = join( $message, "\n" );
 		/**
 		 * Filters the message sent via email after a successfull form submission.
 		 *
