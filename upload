@@ -1,9 +1,10 @@
-#!/bin/sh
+#!/bin/bash
+#NOTE: Link configuration file to specified env before uploading
+./link_config $1
 if [ -z $1 ] || [ $1 == "dev" ]
 then
   echo "Uploading to dev.novagrade.com"
-  rsync -avz --exclude-from=.gitignore ./ novagrade:~/dev.novagrade.com --progress
-  ssh novagrade ln -s ~/dev.novagrade.com/wp-config-dev.php ~/dev.novagrade.com/wp-config.php
+  rsync -avz --exclude-from=.rsync-exclude ./ novagrade:~/dev.novagrade.com
 fi
 if [ $1 == "prod" ]
 then
@@ -12,8 +13,8 @@ then
   if [[ $REPLY =~ ^[Yy]$ ]]
   then
     echo "Uploading to www.novagrade.com"
-    rsync -avz --exclude-from=.gitignore ./ novagrade:~/public_html --progress
-    ssh novagrade ln -s ~/public_html/wp-config-production.php ~/public_html/wp-config.php
+    rsync -avz --exclude-from=.rsync-exclude ./ novagrade:~/public_html
   fi
-
 fi
+#NOTE: Always revert back to local configuration
+./link_config

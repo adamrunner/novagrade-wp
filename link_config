@@ -1,0 +1,16 @@
+#!/bin/bash
+rm wp-config.php
+case $1 in
+dev)
+  echo "linking wp-config-dev.php"
+  ln -s wp-config-dev.php wp-config.php
+;;
+prod)
+  echo "linking wp-config-production.php"
+  ln -s wp-config-production.php wp-config.php
+;;
+*)
+  echo "linking wp-config-local.php"
+  ln -s wp-config-local.php wp-config.php
+;;
+esac
