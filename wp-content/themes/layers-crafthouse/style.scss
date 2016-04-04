@@ -60,7 +60,7 @@
 
 
 */
-
+$darkBg: rgba(0,0,0,0.45);
 $brandPrimary: #456bb0;
 $price: darken($brandPrimary, 20%);
 @media only screen and (min-width: 769px){
@@ -83,7 +83,16 @@ a:hover, a:focus {
     font-size:4em;
     color:$brandPrimary;
   }
-
+}
+.primary-heading {
+  .heading {
+    color:$brandPrimary;
+  }
+}
+.dark-bg .copy-container {
+  background-color: $darkBg;
+  padding: 2em;
+  border-radius:5px;
 }
 /*---------------------------*/
 /*- #MAIN CSS ---------------*/

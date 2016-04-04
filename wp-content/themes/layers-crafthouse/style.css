@@ -82,6 +82,16 @@ a:hover, a:focus {
   color: #456bb0;
 }
 
+.primary-heading .heading {
+  color: #456bb0;
+}
+
+.dark-bg .copy-container {
+  background-color: rgba(0, 0, 0, 0.45);
+  padding: 2em;
+  border-radius: 5px;
+}
+
 /*---------------------------*/
 /*- #MAIN CSS ---------------*/
 /*---------------------------*/
