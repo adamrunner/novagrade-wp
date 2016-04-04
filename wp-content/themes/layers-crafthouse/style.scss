@@ -63,9 +63,12 @@
 
 $brandPrimary: #456bb0;
 $price: darken($brandPrimary, 20%);
-.site-logo-link .site-logo {
-  max-height:120px;
+@media only screen and (min-width: 769px){
+  .site-logo-link .site-logo {
+    max-height:120px;
+  }
 }
+
 .textwidget p {
   font-size: 2.2rem;
 }
@@ -78,7 +81,7 @@ a:hover, a:focus {
 .primary-large-heading {
   .heading {
     font-size:4em;
-    color:$brandPrimary;    
+    color:$brandPrimary;
   }
 
 }
