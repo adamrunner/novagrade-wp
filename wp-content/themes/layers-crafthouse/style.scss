@@ -75,6 +75,13 @@ a {
 a:hover, a:focus {
   color:$price;
 }
+.primary-large-heading {
+  .heading {
+    font-size:4em;
+    color:$brandPrimary;    
+  }
+
+}
 /*---------------------------*/
 /*- #MAIN CSS ---------------*/
 /*---------------------------*/

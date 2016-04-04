@@ -1,0 +1,3 @@
+#!/bin/bash
+vagrant ssh --command "mysqldump novagrade_development > /vagrant/novagrade_dev.sql"
+scp novagrade_dev.sql novagrade_hostname.sql novagrade:~/

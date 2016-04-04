@@ -76,6 +76,11 @@ a:hover, a:focus {
   color: #283e67;
 }
 
+.primary-large-heading .heading {
+  font-size: 4em;
+  color: #456bb0;
+}
+
 /*---------------------------*/
 /*- #MAIN CSS ---------------*/
 /*---------------------------*/

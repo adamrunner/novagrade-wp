@@ -1,5 +1,7 @@
 ## Novagrade Wordpress Site
 
+
+### Getting Up and Running
 1. Clone this repo
 1. Make sure that NFS file sharing for Vagrant is configured correctly. [Read](https://www.vagrantup.com/docs/synced-folders/nfs.html)
 1. You shouldn't need to do anything on OS X but it will need your `sudo` password to modify `/etc/exports`
@@ -18,5 +20,17 @@
 1. Move the generated certificate: `sudo mv novagrade.dev.crt /etc/ssl/certs/novagrade.dev.crt`
 1. Move the generated key: `sudo mv novagrade.dev.key /etc/ssl/prviate/novagrade.dev.key`
 1. Add `novagrade.dev 192.168.33.10` to `/etc/hosts` on your local OS X machine
-1. Modify your `wp-config.php` file in the root of the site. You'll need to fill in the database credentials and name here.
+1. Modify your `wp-config-local.php` file in the root of the site. You'll need to fill in the database credentials and name here.
 1. Restart nginx and php-fpm
+
+
+### Deploying to dev.novagrade.com
+
+Generally, some of your changes will happen in the database - because WordPress.
+
+Here are some scripts that will automate the majority of the work for you, they assume that your development environment is running locally on Vagrant, and that your local database name is `novagrade_development`. It also assumes that you have an SSH key copied to novagrade.com and you have a SSH Host entry so you can simply type `ssh novagrade` to connect.
+
+They also assume that your `.my.cnf` file is configured so that you can log directly into `mysql` or `mysqldump` without using usernames and passwords.
+
+1. `./upload_database` - This command will take the latest snapshot from your Vagrant machine and upload it to dev.novagrade.com, note that this will not import your database for you yet.
+2. `ssh novagrade 'bash -s' < restore` - This command will restore the database on the development server with the copy you just uploaded.

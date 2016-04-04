@@ -1,0 +1,4 @@
+#!/bin/bash
+#NOTE: This is ran on the remote server
+mysql doug6875_development < novagrade_dev.sql
+mysql doug6875_development < novagrade_hostname.sql
