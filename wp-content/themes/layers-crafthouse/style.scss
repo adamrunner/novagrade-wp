@@ -69,10 +69,10 @@ $price: darken($brandPrimary, 20%);
 .textwidget p {
   font-size: 2.2rem;
 }
-a, a:link, a:focus{
+a {
   color: $brandPrimary;
 }
-a:hover {
+a:hover, a:focus {
   color:$price;
 }
 /*---------------------------*/

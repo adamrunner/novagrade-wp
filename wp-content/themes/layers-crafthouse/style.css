@@ -68,11 +68,11 @@
   font-size: 2.2rem;
 }
 
-a, a:link, a:focus {
+a {
   color: #456bb0;
 }
 
-a:hover {
+a:hover, a:focus {
   color: #283e67;
 }
 

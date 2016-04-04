@@ -5,6 +5,7 @@ if [ -z $1 ] || [ $1 == "dev" ]
 then
   echo "Uploading to dev.novagrade.com"
   rsync -avz --exclude-from=.rsync-exclude ./ novagrade:~/dev.novagrade.com
+  ssh novagrade 'chmod +xr -R dev.novagrade.com'
 fi
 if [ $1 == "prod" ]
 then
