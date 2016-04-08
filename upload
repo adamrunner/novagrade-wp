@@ -1,7 +1,13 @@
 #!/bin/bash
 #NOTE: Link configuration file to specified env before uploading
-./link_config $1
-if [ -z $1 ] || [ $1 == "dev" ]
+if [ -z $1 ]
+then
+  echo "Usage: upload dev | prod "
+  exit 1
+else
+  ./link_config $1
+fi
+if [ $1 == "dev" ]
 then
   echo "Uploading to dev.novagrade.com"
   rsync -avz --exclude-from=.rsync-exclude ./ novagrade:~/dev.novagrade.com
