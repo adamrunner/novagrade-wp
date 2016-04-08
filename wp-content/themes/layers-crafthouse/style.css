@@ -65,6 +65,16 @@
     max-height: 120px;
   }
 }
+.homepage-hero .button {
+  background-color: #222;
+}
+.homepage-hero .button:hover {
+  background-color: #3c3c3c;
+}
+.homepage-hero .copy-container p {
+  color: #fff;
+}
+
 .textwidget p {
   font-size: 2.2rem;
 }
