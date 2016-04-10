@@ -60,6 +60,16 @@
 
 
 */
+#shipping_method label {
+  display: inline;
+}
+#shipping_method input {
+  vertical-align: middle;
+}
+#shipping_method li {
+  list-style: none;
+}
+
 @media only screen and (min-width: 769px) {
   .site-logo-link .site-logo {
     max-height: 120px;

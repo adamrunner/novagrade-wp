@@ -1,0 +1,19 @@
+// Custom CSS that is entered in various places around the site in the Layers interface
+// About Us Slider
+.dark-bg .copy-container {
+  background-color: rgba(0,0,0,0.45);
+  padding: 2em;
+  border-radius:5px;
+}
+.dark-bg .copy-container  .section-title.large .heading {
+  font-size:4.25em;
+}
+.dark-bg .copy-container p {
+  font-size:2.3rem;
+}
+
+// About Us Content Block #1
+.media.large h5.heading {
+  font-size: 4rem;
+  color:#456bb0;
+}

@@ -1,0 +1,2 @@
+#!/bin/bash
+scss --sourcemap=none --style expanded --watch wp-content/themes/layers-crafthouse/style.scss:wp-content/themes/layers-crafthouse/style.css
