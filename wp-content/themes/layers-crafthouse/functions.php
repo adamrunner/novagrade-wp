@@ -129,3 +129,13 @@ function crafthouse_set_content_width() {
 	}
 }
 add_action( 'template_redirect', 'crafthouse_set_content_width', 50 );
+//NOTE: Disable related products
+function woocommerce_output_related_products() {
+	return array();
+}
+remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15 );
+add_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_upsells', 15 );
+
+function woocommerce_output_upsells() {
+	woocommerce_upsell_display( 3,1 );
+}
