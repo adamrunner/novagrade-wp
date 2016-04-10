@@ -32,5 +32,5 @@ Here are some scripts that will automate the majority of the work for you, they 
 
 They also assume that your `.my.cnf` file is configured so that you can log directly into `mysql` or `mysqldump` without using usernames and passwords.
 
-1. `./upload_database` - This command will take the latest snapshot from your Vagrant machine and upload it to dev.novagrade.com, note that this will not import your database for you yet.
-2. `ssh novagrade 'bash -s' < restore` - This command will restore the database on the development server with the copy you just uploaded.
+1. `./upload_database [restore]` - This command will take the latest snapshot from your Vagrant machine and upload it to dev.novagrade.com, if you pass `restore` to the script, it will also restore it to the development database.
+2. If you'd like to restore later: `ssh novagrade 'bash -s' < restore` - This command will restore the database on the development server with the copy you just uploaded.
