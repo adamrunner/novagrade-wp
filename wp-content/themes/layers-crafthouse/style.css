@@ -70,6 +70,18 @@
   list-style: none;
 }
 
+.header-site .nav .sub-menu li:last-child li:first-child a:hover {
+  border-radius: 4px 4px 0 0;
+}
+
+.header-site .nav .sub-menu li:last-child li:last-child a:hover {
+  border-radius: 0 0 4px 4px;
+}
+
+.header-site .nav .sub-menu li:last-child li a {
+  border-radius: 0;
+}
+
 @media only screen and (min-width: 769px) {
   .site-logo-link .site-logo {
     max-height: 120px;
