@@ -60,38 +60,21 @@
 
 
 */
-@import "shipping";
-.header-site .nav .sub-menu li:last-child li:first-child a:hover {
-  border-radius: 4px 4px 0 0;
-}
-.header-site .nav .sub-menu li:last-child li:last-child a:hover {
-  border-radius: 0 0 4px 4px;
-}
-.header-site .nav .sub-menu li:last-child li a {
-  border-radius: 0;
-}
 $darkBg: rgba(0,0,0,0.45);
 $brandPrimary: #456bb0;
 $price: darken($brandPrimary, 20%);
+
+@import "shipping";
+@import "homepage-hero";
+@import "navigation";
+@import "faq";
+
 @media only screen and (min-width: 769px){
   .site-logo-link .site-logo {
     max-height:120px;
   }
 }
-.homepage-hero {
-  .button {
-    background-color:#222;
-    &:hover {
-      background-color: lighten(#222, 10%);
-    }
-  }
-  .copy-container p{
-    color: #fff;
-  }
-}
-.textwidget p {
-  font-size: 2.2rem;
-}
+
 a {
   color: $brandPrimary;
 }

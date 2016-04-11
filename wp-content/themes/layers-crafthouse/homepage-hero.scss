@@ -1,0 +1,14 @@
+.homepage-hero {
+  .button {
+    background-color:#222;
+    &:hover {
+      background-color: lighten(#222, 10%);
+    }
+  }
+  .copy-container p{
+    color: #fff;
+  }
+}
+.textwidget p {
+  font-size: 2.2rem;
+}

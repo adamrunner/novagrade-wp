@@ -1,0 +1,114 @@
+.faq {
+  .ui-tabs .ui-tabs-nav li {
+    list-style: none;
+    float: left;
+    position: relative;
+    top: 0;
+    margin: 1px .2em 0 0;
+    border-bottom-width: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+  .ui-helper-hidden {
+  	display: none;
+  }
+  .ui-helper-hidden-accessible {
+  	border: 0;
+  	clip: rect(0 0 0 0);
+  	height: 1px;
+  	margin: -1px;
+  	overflow: hidden;
+  	padding: 0;
+  	position: absolute;
+  	width: 1px;
+  }
+  .ui-helper-reset {
+  	margin: 0;
+  	padding: 0;
+  	border: 0;
+  	outline: 0;
+  	line-height: 1.3;
+  	text-decoration: none;
+  	font-size: 100%;
+  	list-style: none;
+  }
+  .ui-helper-clearfix:before,
+  .ui-helper-clearfix:after {
+  	content: "";
+  	display: table;
+  	border-collapse: collapse;
+  }
+  .ui-helper-clearfix:after {
+  	clear: both;
+  }
+
+  .ui-front {
+  	z-index: 100;
+  }
+
+  .ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+    float: left;
+    padding: .5em 1em;
+    text-decoration: none;
+  }
+  .ui-tabs .ui-tabs-nav {
+    margin: 0;
+    padding: .2em .2em 0;
+  }
+  h2 {
+    text-align: center;
+    color:$brandPrimary;
+    font-weight:bold;
+    margin:1em;
+  }
+
+  a:focus {
+    outline:none !important;
+  }
+  p {
+    font-size:1em;
+  }
+
+  .accordion .ui-accordion-header {
+    position: relative;
+    &:after{
+      content: "+";
+      position: absolute;
+      right: 10px;
+      font-size-adjust: +1;
+      top: 10px;
+      color:$brandPrimary;
+    }
+  }
+  .accordion .ui-accordion-header.ui-accordion-header-active {
+    background-color: aliceblue;
+      &:after{
+        content: "-";
+      }
+  }
+  .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
+    border: 1px solid #cccccc;
+    background: #f6f6f6;
+    &.ui-tabs-active {
+      border-color: darken($brandPrimary, 15%);
+      background-color:$brandPrimary;
+      a:link, a:visited {
+        color:#fff;
+      }
+      a:hover {
+        color:darken(#fff, 5%);
+      }
+    }
+  }
+  .accordion-item .accordion-title {
+    display: block;
+    padding: .75em;
+  }
+  #tabs .accordion-content {
+    padding: 1em;
+    li {
+      list-style:disc;
+      margin:1em;
+    }
+  }
+}
