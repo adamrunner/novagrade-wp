@@ -139,3 +139,9 @@ add_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_upse
 function woocommerce_output_upsells() {
 	woocommerce_upsell_display( 3,1 );
 }
+
+wp_enqueue_script('jquery-ui-tabs');
+wp_enqueue_script('jquery-ui-core');
+wp_enqueue_script('jquery-ui-widget');
+wp_enqueue_script('jquery-ui-accordion');
+wp_enqueue_script('jquery');
