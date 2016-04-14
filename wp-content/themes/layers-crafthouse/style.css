@@ -216,6 +216,10 @@
   margin: 1em;
 }
 
+.cross-sells .products .product {
+  margin-right: 1em;
+}
+
 #my_account_woocommerce .col2-set {
   width: 100%;
 }

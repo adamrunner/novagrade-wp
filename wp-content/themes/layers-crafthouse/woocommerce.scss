@@ -1,3 +1,7 @@
+.cross-sells .products .product {
+  margin-right: 1em;
+}
+
 #my_account_woocommerce {
   .col2-set {
     width:100%;
@@ -15,7 +19,6 @@
       width: 50%;
     }
   }
-
 }
 @media only screen and (max-width: 767px){
   #my_account_woocommerce {
