@@ -68,6 +68,7 @@ $price: darken($brandPrimary, 20%);
 @import "homepage-hero";
 @import "navigation";
 @import "faq";
+@import "woocommerce";
 
 @media only screen and (min-width: 769px){
   .site-logo-link .site-logo {

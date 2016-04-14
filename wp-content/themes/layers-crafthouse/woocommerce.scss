@@ -1,0 +1,40 @@
+#my_account_woocommerce {
+  .col2-set {
+    width:100%;
+  }
+  .register {
+    padding: 20px;
+  }
+  #customer_login {
+    .col-1 {
+      float: left;
+      width: 50%;
+    }
+    .col-2 {
+      float: right;
+      width: 50%;
+    }
+  }
+
+}
+@media only screen and (max-width: 767px){
+  #my_account_woocommerce {
+    .col2-set {
+      width:100%;
+    }
+    .register {
+      padding: 20px;
+    }
+    #customer_login {
+      .col-1 {
+        float: left;
+        width: 100%;
+      }
+      .col-2 {
+        float: right;
+        width: 100%;
+      }
+    }
+
+  }
+}

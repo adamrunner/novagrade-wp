@@ -216,6 +216,37 @@
   margin: 1em;
 }
 
+#my_account_woocommerce .col2-set {
+  width: 100%;
+}
+#my_account_woocommerce .register {
+  padding: 20px;
+}
+#my_account_woocommerce #customer_login .col-1 {
+  float: left;
+  width: 50%;
+}
+#my_account_woocommerce #customer_login .col-2 {
+  float: right;
+  width: 50%;
+}
+
+@media only screen and (max-width: 767px) {
+  #my_account_woocommerce .col2-set {
+    width: 100%;
+  }
+  #my_account_woocommerce .register {
+    padding: 20px;
+  }
+  #my_account_woocommerce #customer_login .col-1 {
+    float: left;
+    width: 100%;
+  }
+  #my_account_woocommerce #customer_login .col-2 {
+    float: right;
+    width: 100%;
+  }
+}
 @media only screen and (min-width: 769px) {
   .site-logo-link .site-logo {
     max-height: 120px;
