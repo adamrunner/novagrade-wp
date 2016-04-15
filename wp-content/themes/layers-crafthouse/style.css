@@ -107,7 +107,10 @@
   color: #fff;
 }
 
-.faq .ui-tabs .ui-tabs-nav li {
+#faq .flex-video {
+  text-align: center;
+}
+#faq .ui-tabs .ui-tabs-nav li {
   list-style: none;
   float: left;
   position: relative;
@@ -117,10 +120,10 @@
   padding: 0;
   white-space: nowrap;
 }
-.faq .ui-helper-hidden {
+#faq .ui-helper-hidden {
   display: none;
 }
-.faq .ui-helper-hidden-accessible {
+#faq .ui-helper-hidden-accessible {
   border: 0;
   clip: rect(0 0 0 0);
   height: 1px;
@@ -130,7 +133,7 @@
   position: absolute;
   width: 1px;
 }
-.faq .ui-helper-reset {
+#faq .ui-helper-reset {
   margin: 0;
   padding: 0;
   border: 0;
@@ -140,43 +143,43 @@
   font-size: 100%;
   list-style: none;
 }
-.faq .ui-helper-clearfix:before,
-.faq .ui-helper-clearfix:after {
+#faq .ui-helper-clearfix:before,
+#faq .ui-helper-clearfix:after {
   content: "";
   display: table;
   border-collapse: collapse;
 }
-.faq .ui-helper-clearfix:after {
+#faq .ui-helper-clearfix:after {
   clear: both;
 }
-.faq .ui-front {
+#faq .ui-front {
   z-index: 100;
 }
-.faq .ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+#faq .ui-tabs .ui-tabs-nav .ui-tabs-anchor {
   float: left;
   padding: .5em 1em;
   text-decoration: none;
 }
-.faq .ui-tabs .ui-tabs-nav {
+#faq .ui-tabs .ui-tabs-nav {
   margin: 0;
   padding: .2em .2em 0;
 }
-.faq h2 {
+#faq h2 {
   text-align: center;
   color: #456bb0;
   font-weight: bold;
   margin: 1em;
 }
-.faq a:focus {
+#faq a:focus {
   outline: none !important;
 }
-.faq p {
+#faq p {
   font-size: 1em;
 }
-.faq .accordion .ui-accordion-header {
+#faq .accordion .ui-accordion-header {
   position: relative;
 }
-.faq .accordion .ui-accordion-header:after {
+#faq .accordion .ui-accordion-header:after {
   content: "+";
   position: absolute;
   right: 10px;
@@ -184,34 +187,34 @@
   top: 10px;
   color: #456bb0;
 }
-.faq .accordion .ui-accordion-header.ui-accordion-header-active {
+#faq .accordion .ui-accordion-header.ui-accordion-header-active {
   background-color: aliceblue;
 }
-.faq .accordion .ui-accordion-header.ui-accordion-header-active:after {
+#faq .accordion .ui-accordion-header.ui-accordion-header-active:after {
   content: "-";
 }
-.faq .ui-state-default, .faq .ui-widget-content .ui-state-default, .faq .ui-widget-header .ui-state-default {
+#faq .ui-state-default, #faq .ui-widget-content .ui-state-default, #faq .ui-widget-header .ui-state-default {
   border: 1px solid #cccccc;
   background: #f6f6f6;
 }
-.faq .ui-state-default.ui-tabs-active, .faq .ui-widget-content .ui-state-default.ui-tabs-active, .faq .ui-widget-header .ui-state-default.ui-tabs-active {
+#faq .ui-state-default.ui-tabs-active, #faq .ui-widget-content .ui-state-default.ui-tabs-active, #faq .ui-widget-header .ui-state-default.ui-tabs-active {
   border-color: #2f4a79;
   background-color: #456bb0;
 }
-.faq .ui-state-default.ui-tabs-active a:link, .faq .ui-state-default.ui-tabs-active a:visited, .faq .ui-widget-content .ui-state-default.ui-tabs-active a:link, .faq .ui-widget-content .ui-state-default.ui-tabs-active a:visited, .faq .ui-widget-header .ui-state-default.ui-tabs-active a:link, .faq .ui-widget-header .ui-state-default.ui-tabs-active a:visited {
+#faq .ui-state-default.ui-tabs-active a:link, #faq .ui-state-default.ui-tabs-active a:visited, #faq .ui-widget-content .ui-state-default.ui-tabs-active a:link, #faq .ui-widget-content .ui-state-default.ui-tabs-active a:visited, #faq .ui-widget-header .ui-state-default.ui-tabs-active a:link, #faq .ui-widget-header .ui-state-default.ui-tabs-active a:visited {
   color: #fff;
 }
-.faq .ui-state-default.ui-tabs-active a:hover, .faq .ui-widget-content .ui-state-default.ui-tabs-active a:hover, .faq .ui-widget-header .ui-state-default.ui-tabs-active a:hover {
+#faq .ui-state-default.ui-tabs-active a:hover, #faq .ui-widget-content .ui-state-default.ui-tabs-active a:hover, #faq .ui-widget-header .ui-state-default.ui-tabs-active a:hover {
   color: #f2f2f2;
 }
-.faq .accordion-item .accordion-title {
+#faq .accordion-item .accordion-title {
   display: block;
   padding: .75em;
 }
-.faq #tabs .accordion-content {
+#faq .accordion-content {
   padding: 1em;
 }
-.faq #tabs .accordion-content li {
+#faq .accordion-content li {
   list-style: disc;
   margin: 1em;
 }

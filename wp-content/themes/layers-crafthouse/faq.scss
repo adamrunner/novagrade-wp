@@ -1,4 +1,7 @@
-.faq {
+#faq {
+  .flex-video {
+    text-align: center;
+  }
   .ui-tabs .ui-tabs-nav li {
     list-style: none;
     float: left;
@@ -104,7 +107,7 @@
     display: block;
     padding: .75em;
   }
-  #tabs .accordion-content {
+  .accordion-content {
     padding: 1em;
     li {
       list-style:disc;

@@ -3,263 +3,230 @@
 <script   src="https://code.jquery.com/ui/1.11.3/jquery-ui.min.js"   integrity="sha256-xI/qyl9vpwWFOXz7+x/9WkG5j/SVnSw21viy8fWwbeE="   crossorigin="anonymous"></script>
 <script>
 jQuery(function(){
-  jQuery('#tabs').tabs();
   jQuery(".accordion").accordion({
     heightStyle: 'content',
     collapsible: true
   });
 });
 </script>
-<div class="faq">
-  <div id="tabs">
-    <ul id="faq-menu" class="tabs">
-      <li class="tabs-title">
-           <a href="#panelgeneral">General Digiscoping Questions</a>
-      </li>
-
-
-      <li class="tabs-title">
-           <a href="#panelhelp">Novagrade Product Help</a>
-      </li>
-
-
-      <li class="tabs-title">
-           <a href="#panelspecialty">Specialty Digiscoping Products</a>
-      </li>
-    </ul>
-
-    <div class="tabs-panel" id="panelgeneral">
-      <h2>General Digiscoping Questions</h2>
-
-      <ul class="accordion" data-accordion role="tablist">
-        <li class="accordion-item">
-          <a href="#question1" role="tab" class="accordion-title" id="question1-heading" aria-controls="question1">
-            What are the important considerations when selecting a digiscoping adapter?
-          </a>
-          <div id="question1" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question1-heading">
+<div id="faq">
+  <ul class="accordion" data-accordion role="tablist">
+    <li class="accordion-item">
+      <a href="#questionsetup-adapter-for-eyepiece" role="tab" class="accordion-title" id="questionsetup-adapter-for-eyepiece-heading" aria-controls="questionsetup-adapter-for-eyepiece">
+        How to setup your adapter to fit your Spotting Scope or Binocular Eyepiece
+      </a>
+      <div id="questionsetup-adapter-for-eyepiece" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questionsetup-adapter-for-eyepiece-heading">
+        <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/DSjpvjR0SYY" width="800" height="400" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#questionset-up-phone-adapter" role="tab" class="accordion-title" id="questionset-up-phone-adapter-heading" aria-controls="questionset-up-phone-adapter">
+        How to setup your Phone Adapter
+      </a>
+      <div id="questionset-up-phone-adapter" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questionset-up-phone-adapter-heading">
+        <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/bbOkrP9VJu0" width="800" height="400" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question4" role="tab" class="accordion-title" id="question4-heading" aria-controls="question4">
+        How does the T-Mount adapter attach my camera to a spotting scope?
+      </a>
+      <div id="question4" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question4-heading">
+        <p>The Novagrade T-Mount adapter applies uniform pressure, 360 degrees around the spotting scope eyepiece.  On the camera side the T-Mount screws into a T-Mount Filter ring adapter. You use a filter ring adapter to connect the standard T-Mount fitting to your lens filter thread.</p>
+        <p>Read our <a href="/assets/scope-eyepiece-requirements.pdf" target="_blank">eyepiece size requirements document</a> to verify our adapter will work with your scope.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#questioncompatible-tablets" role="tab" class="accordion-title" id="questioncompatible-tablets-heading" aria-controls="questioncompatible-tablets">
+        What tablets are compatible with the Novagrade Tablet Adapter?
+      </a>
+      <div id="questioncompatible-tablets" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questioncompatible-tablets-heading">
+        <p style="text-align: center;"><a href="/assets/compatible-tablets.html" target="_blank">View this table in it&#8217;s own window.</a></p>
+        <div class="span-12  column flex-video widescreen"><iframe src="/assets/compatible-tablets.html" width="100%" height="900" frameborder="0"></iframe></div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#direct_projection" role="tab" class="accordion-title" id="direct_projection_heading">
+        What is direct eyepiece projection digiscoping?
+      </a>
+      <div id="direct_projection" class="accordion-content">
+        <p>Direct eyepiece projection digiscoping means that the camera lens has been eliminated and the image is shone directly onto the camera sensor element. Effectively, the spotting scope is acting as the camera lens. This means that the image will be in focus only at the center and the further away the more vignetting or blurring can be expected.  The advantages are greater magnification and lighter setup, the disadvantages are lower image quality and manual lens operation. Most digiscopers as result prefer the T-Mount Adapter that keeps the lens in the system.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question1" role="tab" class="accordion-title" id="question1-heading" aria-controls="question1">
+        What are the important considerations when selecting a digiscoping adapter?
+      </a>
+      <div id="question1" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question1-heading">
+        <ul>
+          <li>Universal fit and secure attachment to any eyepiece</li>
+          <li>Easy centering on both the scope and camera, phone or tablet</li>
+          <li>Secure attachment to a camera, phone or tablet</li>
+          <li>Ability to use the adapter when you upgrade your phone or share it with your friends</li>
+          <li>Lightweight</li>
+        </ul>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question2" role="tab" class="accordion-title" id="question2-heading" aria-controls="question2">
+          What DSLR camera lenses work best for digiscoping?
+      </a>
+      <div id="question2" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question2-heading">
+          <p>Short focal length lenses work best for digiscoping. Canon and Nikon make 50mm f/1.8 lenses that are not too expensive that are perfect for digiscoping. The Pentax 40mm f/2.8 lens works well if you have a Pentax camera.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question3" role="tab" class="accordion-title" id="question3-heading" aria-controls="question3">
+        What exposure settings should I use when using a Direct Projection digiscoping adapter?
+      </a>
+      <div id="question3" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question3-heading">
+        <p>Put the camera on its full manual settings, disable autofocus, and set the lens aperture wide open. Adjust your camera&#8217;s shutter speed to obtain the proper image exposure.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question8" role="tab" class="accordion-title" id="question8-heading" aria-controls="question8">
+        Why is there a black ring around my pictures and how do I get rid of it?
+      </a>
+      <div id="question8" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question8-heading">
+        <div class="row">
+          <div class="span-4 column"><a href="https://novagrade.com/wp-content/uploads/2015/07/vignetting-digiscoping-example1.jpg"><img class="alignnone wp-image-267 size-full" src="https://novagrade.com/wp-content/uploads/2015/07/vignetting-digiscoping-example1.jpg" alt="vignetting digiscoping example" width="1024" height="1024" /></a></div>
+          <div class="span-8 column">
+            <p>This black ring is referred to as vignetting and is to some extent inevitable when digiscoping. There are, however, a number of things that can be done to minimize it:</p>
             <ul>
-              <li>Universal fit and secure attachment to any eyepiece</li>
-              <li>Easy centering on both the scope and camera, phone or tablet</li>
-              <li>Secure attachment to a camera, phone or tablet</li>
-              <li>Ability to use the adapter when you upgrade your phone or share it with your friends</li>
-              <li>Lightweight</li>
+              <li>If you are using a phone, you can eliminate vignetting by simply zooming in with the phone&#8217;s camera.</li>
+              <li>Check the alignment of the adapter to make sure your phone or camera is looking straight into the eyepiece of your spotting-scope or binoculars.</li>
+              <li>Make sure your adapter is mounted as far forward on the eyepiece as possible, placing the camera as close to the eyepiece as possible. Some eyepieces have rubber eye-cups than can be removed to allow a better fit.</li>
             </ul>
           </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question2" role="tab" class="accordion-title" id="question2-heading" aria-controls="question2">
-              What DSLR camera lens work best for digiscoping?
-          </a>
-          <div id="question2" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question2-heading">
-              <p>Short focal length lenses work best for digiscoping. Canon and Nikon make 50mm f/1.8 lenses that are not too expensive that are perfect for digiscoping. The Pentax 40mm f/2.8 lens works well if you have a Pentax camera.</p>
+        </div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question10" role="tab" class="accordion-title" id="question10-heading" aria-controls="question10">
+        My tablet is heavy and causes the zoom to rotate when I am at 20X power. How do I prevent this?
+      </a>
+      <div id="question10" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question10-heading">
+        <p>Eyepieces vary greatly in how much rotational force is required to turn them.  A tablet with an offset camera will naturally induce a torque to the eyepiece.  If this torque is more than the frictional resistance of the eyepiece it can turn.  Fortunately camera software automatically rotates the image regardless of portrait or landscape mode.  To avoid this problem simply use the tablet adapter at either minimum or maximum zoom settings only then position the tablet so its self weight is acting against the zoom stop.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#questioneye-piece-zoom" role="tab" class="accordion-title" id="questioneye-piece-zoom-heading" aria-controls="questioneye-piece-zoom">
+        Understanding The Side Effects Of Eyepiece Zoom
+      </a>
+      <div id="questioneye-piece-zoom" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questioneye-piece-zoom-heading">
+        <div class="row">
+          <div class="span-6 column"><img class="alignnone size-full wp-image-263" src="/wp-content/uploads/2015/07/eyepiece_zoom.jpg" alt="eyepiece_zoom" /></div>
+          <div class="span-6 column">
+            <p>Many spotting-scopes have eyepieces that can be adjusted to add zoom. In addition to magnifying the image, changing the zoom will alter the focus and brightness of the image, as well as remove vignetting. The table above shows how zoom affects images taken at two different ISO settings, with focus corrected.</p>
+            <p>It should also be noted that too much zoom can cause visual aberrations around the edges of the image, depending on the performance of the eyepiece.</p>
+            <p>All pictures were taken at dusk, using a Canon EOS Rebel T3 mounted on a 20-60x80mm spotting scope.</p>
           </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question3" role="tab" class="accordion-title" id="question3-heading" aria-controls="question3">
-            What exposure settings should I use when using a Direct Projection digiscoping adapter?
-          </a>
-          <div id="question3" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question3-heading">
-            <p>Put the camera on its full manual settings, disable autofocus, and set the lens aperture wide open. Adjust your camera&#8217;s shutter speed to obtain the proper image exposure.</p>
+        </div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question15" role="tab" class="accordion-title" id="question15-heading" aria-controls="question15">
+        How do I adjust image brightness for my Direct Projection adapter?
+      </a>
+      <div id="question15" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question15-heading">
+        <div class="row">
+          <div class="span-6 column"><img class="alignnone size-full wp-image-261" src="/wp-content/uploads/2015/07/image_brightness.jpg" alt="adjust digiscoping image brightness using shutter speed and ISO settings" /></div>
+          <div class="span-6 column">
+            <p>Because less light reaches your camera&#8217;s sensor when using a large lens (or a spotting-scope, in this case) your camera will need to be adjusted to compensate. The table above shows the effect of various shutter speed and ISO settings on the brightness of the picture.</p>
+            <p>These settings can be adjusted by setting your camera to &#8220;Manual&#8221;. Refer to the camera&#8217;s instruction manual for further details.</p>
+            <p>All pictures were taken at dusk, using a Canon EOS Rebel T3 mounted on a 20-60x80mm spotting scope.</p>
+            <p>For a PDF of this and other direct project digiscoping tips get the <a href="/assets/direct-projection-digiscoping-tips.pdf" target="_blank">Direct Projection Digiscoping Tips</a> guide.</p>
           </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question4" role="tab" class="accordion-title" id="question4-heading" aria-controls="question4">
-            How does the T-Mount adapter attach my DSLR camera to a spotting scope?
-          </a>
-          <div id="question4" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question4-heading">
-            <p>The Novagrade T-Mount adapter applies uniform pressure, 360 degrees around the spotting scope eyepiece.  On the camera side the T-Mount screws into a T-Mount Filter ring adapter. You use a filter ring adapter to connect the standard T-Mount fitting to your lens filter thread.</p>
-            <p>Read our <a href="/assets/scope-eyepiece-requirements.pdf" target="_blank">eyepiece size requirements document</a> to verify our adapter will work with your scope.</p>
+        </div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question17" role="tab" class="accordion-title" id="question17-heading" aria-controls="question17">
+        Why does my camera show an error message when I attach my direct projection adapter?
+      </a>
+      <div id="question17" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question17-heading">
+          <div class="row">
+          <div class="span-5 column"><img class="alignnone size-full wp-image-264" src="/wp-content/uploads/2015/07/manual_focus.jpg" alt="DSLR manual focus" /></div>
+          <div class="span-7 column">
+            <p>In addition to setting your camera to manual on the feature wheel, some DSLR cameras have another switch that must be set to Manual, typically located by the lens.</p>
+            <p>If this is not set to manual, the camera will continue to search for an auto-focusing lens, causing an error.</p>
           </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question5" role="tab" class="accordion-title" id="question5-heading" aria-controls="question5">
-            Where can I get a T-Thread adapter for my lens?
-          </a>
-          <div id="question5" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question5-heading">
-            <p>Most large online camera accessories retailers will have the adapter you need, simply search for example: “52mm to T-Mount Adapter”.</p>
+        </div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question18" role="tab" class="accordion-title" id="question18-heading" aria-controls="question18">
+        I can see the subject with my spotting-scope/binoculars, but when I attached my camera it looks blurry and/or now I can&#039;t see anything.
+      </a>
+      <div id="question18" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question18-heading">
+        <p><img class="alignnone size-full wp-image-269" src="/wp-content/uploads/2015/07/focus_camera.jpg" alt="focus camera" /></p>
+        <p>Because the human eye focuses very differently than your camera, you will have to adjust the focus on your spotting-scope/binoculars upon mounting your camera. Sometimes the difference in focus can be significant, making the image appear all white.</p>
+        <p>&nbsp;</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question19" role="tab" class="accordion-title" id="question19-heading" aria-controls="question19">
+        I can see the subject through the viewfinder and/or on the rear-display, but my pictures come out black.
+      </a>
+      <div id="question19" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question19-heading">
+        <p>This is often the result of insufficient lighting and can be corrected by adjust the ISO and shutter speed settings. We recommend starting with 800 to 1600 ISO and 1/60th shutter speed, then adjusting from there.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question20" role="tab" class="accordion-title" id="question20-heading" aria-controls="question20">
+        The image on the phone looks good but when I take a picture it just captures the end of the eyepiece
+      </a>
+      <div id="question20" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question20-heading">
+        <div class="row">
+          <div class="span-6 column"><img class="alignnone size-full wp-image-270" src="/wp-content/uploads/2015/07/flash_on.jpg" alt="be sure your flash is turned off for digiscoping" /></div>
+          <div class="span-6 column">
+            <p>This is most likely due to the flash being set to ON or AUTO.</p>
+            <p>Make sure the FLASH is set to OFF and try again.</p>
           </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question6" role="tab" class="accordion-title" id="question6-heading" aria-controls="question6">
-            Where can I buy a Novagrade T-Thread Adapter?
-          </a>
-          <div id="question6" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question6-heading">
-            <p>You can purchase Novagrade adapters here on <a href="/">novagrade.com</a>, other online suppliers, and many local camera and optical dealers.</p>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question7" role="tab" class="accordion-title" id="question7-heading" aria-controls="question7">
-            What is the best digiscoping adapter for my (Canon, Nikon, Olympus, Pentax, Leica…) camera?
-          </a>
-          <div id="question7" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question7-heading">
-            <p>Most customers find that the <a href="https://novagrade.com/shop/t-mount/">Novagrade T-Mount Adapter</a> best fits their needs. It allows you to use your camera features such as through-the-lens focusing, automatic exposure, vibration compensation and automatic face recognition technology.</p>
-            <p>&nbsp;</p>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question8" role="tab" class="accordion-title" id="question8-heading" aria-controls="question8">
-            Why is there a black ring around my pictures and how do I get rid of it?
-          </a>
-          <div id="question8" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question8-heading">
-            <div class="row">
-              <div class="span-4 column"><a href="https://novagrade.com/wp-content/uploads/2015/07/vignetting-digiscoping-example1.jpg"><img class="alignnone wp-image-267 size-full" src="https://novagrade.com/wp-content/uploads/2015/07/vignetting-digiscoping-example1.jpg" alt="vignetting digiscoping example" width="1024" height="1024" /></a></div>
-              <div class="span-8 column">
-                <p>This black ring is referred to as vignetting and is to some extent inevitable when digiscoping. There are, however, a number of things that can be done to minimize it:</p>
-                <ul>
-                  <li>If you are using a phone, you can eliminate vignetting by simply zooming in with the phone&#8217;s camera.</li>
-                  <li>Check the alignment of the adapter to make sure your phone or camera is looking straight into the eyepiece of your spotting-scope or binoculars.</li>
-                  <li>Make sure your adapter is mounted as far forward on the eyepiece as possible, placing the camera as close to the eyepiece as possible. Some eyepieces have rubber eye-cups than can be removed to allow a better fit.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question10" role="tab" class="accordion-title" id="question10-heading" aria-controls="question10">
-            My tablet is heavy and causes the zoom to rotate when I am at 20X power. How do I prevent this?
-          </a>
-          <div id="question10" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question10-heading">
-            <p>Eyepieces vary greatly in how much rotational force is required to turn them.  A tablet with an offset camera will naturally induce a torque to the eyepiece.  If this torque is more than the frictional resistance of the eyepiece it can turn.  Fortunately camera software automatically rotates the image regardless of portrait or landscape mode.  To avoid this problem simply use the tablet adapter at either minimum or maximum zoom settings only then position the tablet so its self weight is acting against the zoom stop.</p>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#questioneye-piece-zoom" role="tab" class="accordion-title" id="questioneye-piece-zoom-heading" aria-controls="questioneye-piece-zoom">
-            Understanding The Side Effects Of Eyepiece Zoom
-          </a>
-          <div id="questioneye-piece-zoom" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questioneye-piece-zoom-heading">
-            <div class="row">
-              <div class="span-6 column"><img class="alignnone size-full wp-image-263" src="/wp-content/uploads/2015/07/eyepiece_zoom.jpg" alt="eyepiece_zoom" /></div>
-              <div class="span-6 column">
-                <p>Many spotting-scopes have eyepieces that can be adjusted to add zoom. In addition to magnifying the image, changing the zoom will alter the focus and brightness of the image, as well as remove vignetting. The table above shows how zoom affects images taken at two different ISO settings, with focus corrected.</p>
-                <p>It should also be noted that too much zoom can cause visual aberrations around the edges of the image, depending on the performance of the eyepiece.</p>
-                <p>All pictures were taken at dusk, using a Canon EOS Rebel T3 mounted on a 20-60x80mm spotting scope.</p>
-              </div>
-            </div>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#questioncompatible-tablets" role="tab" class="accordion-title" id="questioncompatible-tablets-heading" aria-controls="questioncompatible-tablets">
-            What tablets are compatible with the Novagrade Tablet Adapter?
-          </a>
-          <div id="questioncompatible-tablets" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questioncompatible-tablets-heading">
-            <p style="text-align: center;"><a href="/assets/compatible-tablets.html" target="_blank">View this table in it&#8217;s own window.</a></p>
-            <div class="span-12  column flex-video widescreen"><iframe src="/assets/compatible-tablets.html" width="100%" height="900" frameborder="0"></iframe></div>
-          </div>
-        </li>
-      </ul>
-    </div>
-    <div class="tabs-panel" id="panelhelp">
-      <h2>Novagrade Product Help</h2>
-      <ul class="accordion" data-accordion role="tablist">
-        <li class="accordion-item">
-          <a href="#questionsetup-adapter-for-eyepiece" role="tab" class="accordion-title" id="questionsetup-adapter-for-eyepiece-heading" aria-controls="questionsetup-adapter-for-eyepiece">
-            How to setup your adapter to fit your Spotting Scope or Binocular Eyepiece
-          </a>
-          <div id="questionsetup-adapter-for-eyepiece" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questionsetup-adapter-for-eyepiece-heading">
-            <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/DSjpvjR0SYY" width="560" height="315" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#questionset-up-phone-adapter" role="tab" class="accordion-title" id="questionset-up-phone-adapter-heading" aria-controls="questionset-up-phone-adapter">
-            How to setup your Phone Adapter
-          </a>
-          <div id="questionset-up-phone-adapter" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="questionset-up-phone-adapter-heading">
-            <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/bbOkrP9VJu0" width="560" height="315" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
-          </div>
-        </li>
-      </ul>
-    </div>
-    <div class="tabs-panel" id="panelspecialty">
-    <h2>Specialty Digiscoping Products</h2>
-      <ul class="accordion" data-accordion role="tablist">
-        <li class="accordion-item">
-          <a href="#question13" role="tab" class="accordion-title" id="question13-heading" aria-controls="question13">
-            How to Setup your Compact Phone Adapter
-          </a>
-          <div id="question13" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question13-heading">
-            <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/DSjpvjR0SYY" width="560" height="315" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question14" role="tab" class="accordion-title" id="question14-heading" aria-controls="question14">
-            How to Attach your Direct Projection Camera Adapter
-          </a>
-          <div id="question14" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question14-heading">
-            <p><img class="alignnone size-medium wp-image-260" src="/wp-content/uploads/2015/07/attach_camera_adapter-300x114.png" alt="attach camera digiscoping adapter" /></p>
-            <p>To attach your Canon or Nikon Camera Adapter to you Camera, simply line up the dots, insert the adapter and turn until it locks, just like a lens.</p>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question15" role="tab" class="accordion-title" id="question15-heading" aria-controls="question15">
-            How do I adjust image brightness for my Direct Projection adapter?
-          </a>
-          <div id="question15" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question15-heading">
-            <div class="row">
-              <div class="span-6 column"><img class="alignnone size-full wp-image-261" src="/wp-content/uploads/2015/07/image_brightness.jpg" alt="adjust digiscoping image brightness using shutter speed and ISO settings" /></div>
-              <div class="span-6 column">
-                <p>Because less light reaches your camera&#8217;s sensor when using a large lens (or a spotting-scope, in this case) your camera will need to be adjusted to compensate. The table above shows the effect of various shutter speed and ISO settings on the brightness of the picture.</p>
-                <p>These settings can be adjusted by setting your camera to &#8220;Manual&#8221;. Refer to the camera&#8217;s instruction manual for further details.</p>
-                <p>All pictures were taken at dusk, using a Canon EOS Rebel T3 mounted on a 20-60x80mm spotting scope.</p>
-                <p>For a PDF of this and other direct project digiscoping tips get the <a href="/assets/direct-projection-digiscoping-tips.pdf" target="_blank">Direct Projection Digiscoping Tips</a> guide.</p>
-              </div>
-            </div>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question17" role="tab" class="accordion-title" id="question17-heading" aria-controls="question17">
-            Why does my camera show an error message when I attach my direct projection adapter?
-          </a>
-          <div id="question17" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question17-heading">
-              <div class="row">
-              <div class="span-5 column"><img class="alignnone size-full wp-image-264" src="/wp-content/uploads/2015/07/manual_focus.jpg" alt="DSLR manual focus" /></div>
-              <div class="span-7 column">
-                <p>In addition to setting your camera to manual on the feature wheel, some DSLR cameras have another switch that must be set to Manual, typically located by the lens.</p>
-                <p>If this is not set to manual, the camera will continue to search for an auto-focusing lens, causing an error.</p>
-              </div>
-            </div>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question18" role="tab" class="accordion-title" id="question18-heading" aria-controls="question18">
-            I can see the subject with my spotting-scope/binoculars, but when I attached my camera it looks blurry and/or now I can&#039;t see anything.
-          </a>
-          <div id="question18" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question18-heading">
-            <p><img class="alignnone size-full wp-image-269" src="/wp-content/uploads/2015/07/focus_camera.jpg" alt="focus camera" /></p>
-            <p>Because the human eye focuses very differently than your camera, you will have to adjust the focus on your spotting-scope/binoculars upon mounting your camera. Sometimes the difference in focus can be significant, making the image appear all white.</p>
-            <p>&nbsp;</p>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question19" role="tab" class="accordion-title" id="question19-heading" aria-controls="question19">
-            I can see the subject through the viewfinder and/or on the rear-display, but my pictures come out black.
-          </a>
-          <div id="question19" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question19-heading">
-            <p>This is often the result of insufficient lighting and can be corrected by adjust the ISO and shutter speed settings. We recommend starting with 800 to 1600 ISO and 1/60th shutter speed, then adjusting from there.</p>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question20" role="tab" class="accordion-title" id="question20-heading" aria-controls="question20">
-            The image on the phone looks good but when I take a picture it just captures the end of the eyepiece
-          </a>
-          <div id="question20" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question20-heading">
-            <div class="row">
-              <div class="span-6 column"><img class="alignnone size-full wp-image-270" src="/wp-content/uploads/2015/07/flash_on.jpg" alt="be sure your flash is turned off for digiscoping" /></div>
-              <div class="span-6 column">
-                <p>This is most likely due to the flash being set to ON or AUTO.</p>
-                <p>Make sure the FLASH is set to OFF and try again.</p>
-              </div>
-            </div>
-          </div>
-        </li>
-        <li class="accordion-item">
-          <a href="#question21" role="tab" class="accordion-title" id="question21-heading" aria-controls="question21">
-            How to setup your Standard Phone Adapter
-          </a>
-          <div id="question21" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question21-heading">
-            <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/bbOkrP9VJu0" width="560" height="315" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
+        </div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question6" role="tab" class="accordion-title" id="question6-heading" aria-controls="question6">
+        Where can I buy a Novagrade T-Thread Adapter?
+      </a>
+      <div id="question6" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question6-heading">
+        <p>You can purchase Novagrade adapters here on <a href="/">novagrade.com</a>, other online suppliers, and many local camera and optical dealers.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question7" role="tab" class="accordion-title" id="question7-heading" aria-controls="question7">
+        What is the best digiscoping adapter for my (Canon, Nikon, Olympus, Pentax, Leica...) camera?
+      </a>
+      <div id="question7" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question7-heading">
+        <p>Most customers find that the <a href="https://novagrade.com/shop/t-mount/">Novagrade T-Mount Adapter</a> best fits their needs. It allows you to use your camera features such as through-the-lens focusing, automatic exposure, vibration compensation and automatic face recognition technology.</p>
+        <p>&nbsp;</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question13" role="tab" class="accordion-title" id="question13-heading" aria-controls="question13">
+        How to Setup your Compact Phone Adapter
+      </a>
+      <div id="question13" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question13-heading">
+        <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/DSjpvjR0SYY" width="560" height="315" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question14" role="tab" class="accordion-title" id="question14-heading" aria-controls="question14">
+        How to Attach your Direct Projection Camera Adapter
+      </a>
+      <div id="question14" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question14-heading">
+        <p><img class="alignnone size-medium wp-image-260" src="/wp-content/uploads/2015/07/attach_camera_adapter-300x114.png" alt="attach camera digiscoping adapter" /></p>
+        <p>To attach your Canon or Nikon Camera Adapter to you Camera, simply line up the dots, insert the adapter and turn until it locks, just like a lens.</p>
+      </div>
+    </li>
+    <li class="accordion-item">
+      <a href="#question21" role="tab" class="accordion-title" id="question21-heading" aria-controls="question21">
+        How to setup your Standard Phone Adapter
+      </a>
+      <div id="question21" class="accordion-content" role="tabpanel" data-tab-content aria-labelledby="question21-heading">
+        <div class="span-12  column flex-video widescreen"><iframe src="https://www.youtube.com/embed/bbOkrP9VJu0" width="560" height="315" frameborder="0" allowfullscreen="allowfullscreen"></iframe></div>
+      </div>
+    </li>
+  </ul>
 </div>
