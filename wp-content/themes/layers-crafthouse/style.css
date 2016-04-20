@@ -219,6 +219,14 @@
   margin: 1em;
 }
 
+.column.last {
+  margin-right: 0;
+}
+
+.woocommerce-variation-description {
+  margin-bottom: .5em;
+}
+
 .cross-sells .products .product {
   margin-right: 1em;
 }
