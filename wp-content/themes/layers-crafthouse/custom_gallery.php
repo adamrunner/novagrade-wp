@@ -142,27 +142,27 @@ function custom_gallery_shortcode( $attr ) {
 	 *                    Defaults to false if the theme supports HTML5 galleries.
 	 *                    Otherwise, defaults to true.
 	 */
-	if ( apply_filters( 'use_default_gallery_style', ! $html5 ) ) {
-		$gallery_style = "
-		<style type='text/css'>
-			#{$selector} {
-				margin: auto;
-			}
-			#{$selector} .gallery-item {
-				float: {$float};
-				margin-top: 10px;
-				text-align: center;
-				width: {$itemwidth}%;
-			}
-			#{$selector} img {
-				border: 2px solid #cfcfcf;
-			}
-			#{$selector} .gallery-caption {
-				margin-left: 0;
-			}
-			/* see gallery_shortcode() in wp-includes/media.php */
-		</style>\n\t\t";
-	}
+	// if ( apply_filters( 'use_default_gallery_style', ! $html5 ) ) {
+	// 	$gallery_style = "
+	// 	<style type='text/css'>
+	// 		#{$selector} {
+	// 			margin: auto;
+	// 		}
+	// 		#{$selector} .gallery-item {
+	// 			float: {$float};
+	// 			margin-top: 10px;
+	// 			text-align: center;
+	// 			width: {$itemwidth}%;
+	// 		}
+	// 		#{$selector} img {
+	// 			border: 2px solid #cfcfcf;
+	// 		}
+	// 		#{$selector} .gallery-caption {
+	// 			margin-left: 0;
+	// 		}
+	// 		/* see gallery_shortcode() in wp-includes/media.php */
+	// 	</style>\n\t\t";
+	// }
 
 	$size_class = sanitize_html_class( $atts['size'] );
 	$gallery_div = "<div id='$selector' class='gallery galleryid-{$id} gallery-columns-{$columns} gallery-size-{$size_class}' data-thing='this-thing-works'>";
