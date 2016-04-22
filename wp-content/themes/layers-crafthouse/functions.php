@@ -128,6 +128,7 @@ function crafthouse_set_content_width() {
 		$content_width = 800;
 	}
 }
+require_once('custom_gallery.php');
 add_action( 'template_redirect', 'crafthouse_set_content_width', 50 );
 //NOTE: Disable related products
 function woocommerce_output_related_products() {
