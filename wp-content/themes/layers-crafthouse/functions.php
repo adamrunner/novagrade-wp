@@ -143,9 +143,14 @@ add_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_upse
 function woocommerce_output_upsells() {
 	woocommerce_upsell_display( 3,1 );
 }
-
-wp_enqueue_script('jquery-ui-tabs');
+//TODO: determine how to conditionally output these scripts based on page... or maybe shortcode?
+// wp_enqueue_script('jquery-ui-tabs');
 wp_enqueue_script('jquery-ui-core');
 wp_enqueue_script('jquery-ui-widget');
 wp_enqueue_script('jquery-ui-accordion');
 wp_enqueue_script('jquery');
+$assets_path = '/wp-content/plugins/woocommerce/assets/';
+$suffix = '.min';
+wp_enqueue_script( 'prettyPhoto', $assets_path . 'js/prettyPhoto/jquery.prettyPhoto' . $suffix . '.js', array( 'jquery' ), '3.1.6', true );
+wp_enqueue_script( 'prettyPhoto-init', $assets_path . 'js/prettyPhoto/jquery.prettyPhoto.init' . $suffix . '.js', array( 'jquery','prettyPhoto' ) );
+wp_enqueue_style( 'woocommerce_prettyPhoto_css', $assets_path . 'css/prettyPhoto.css' );

@@ -1,0 +1,23 @@
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  height: 75vh;
+  .gallery-item {
+    flex: 0 1 14%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img.thumbnail {
+      -webkit-transition: border .2s ease-in-out;
+      -o-transition: border .2s ease-in-out;
+      transition: border .2s ease-in-out;
+      max-width: 100%;
+      border: 2px solid #ddd;
+      padding: 4px;
+      border-radius: 4px;
+    }
+    a:hover .thumbnail {
+      border-color: $brandPrimary;
+    }
+  }
+}

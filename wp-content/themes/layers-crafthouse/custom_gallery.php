@@ -81,8 +81,11 @@ function custom_gallery_shortcode( $attr ) {
 		'size'       => 'thumbnail',
 		'include'    => '',
 		'exclude'    => '',
-		'link'       => ''
+		'link'       => '',
+		'showtitles' => false
 	), $attr, 'gallery' );
+
+	$show_titles = filter_var($atts['showtitles'], FILTER_VALIDATE_BOOLEAN);
 
 	$id = intval( $atts['id'] );
 
@@ -142,30 +145,9 @@ function custom_gallery_shortcode( $attr ) {
 	 *                    Defaults to false if the theme supports HTML5 galleries.
 	 *                    Otherwise, defaults to true.
 	 */
-	// if ( apply_filters( 'use_default_gallery_style', ! $html5 ) ) {
-	// 	$gallery_style = "
-	// 	<style type='text/css'>
-	// 		#{$selector} {
-	// 			margin: auto;
-	// 		}
-	// 		#{$selector} .gallery-item {
-	// 			float: {$float};
-	// 			margin-top: 10px;
-	// 			text-align: center;
-	// 			width: {$itemwidth}%;
-	// 		}
-	// 		#{$selector} img {
-	// 			border: 2px solid #cfcfcf;
-	// 		}
-	// 		#{$selector} .gallery-caption {
-	// 			margin-left: 0;
-	// 		}
-	// 		/* see gallery_shortcode() in wp-includes/media.php */
-	// 	</style>\n\t\t";
-	// }
 
 	$size_class = sanitize_html_class( $atts['size'] );
-	$gallery_div = "<div id='$selector' class='gallery galleryid-{$id} gallery-columns-{$columns} gallery-size-{$size_class}' data-thing='this-thing-works'>";
+	$gallery_div = "<div id='$selector' class='gallery galleryid-{$id} gallery-columns-{$columns} gallery-size-{$size_class}'>";
 
 	/**
 	 * Filter the default gallery shortcode CSS styles.
@@ -179,15 +161,6 @@ function custom_gallery_shortcode( $attr ) {
 
 	$i = 0;
 	foreach ( $attachments as $id => $attachment ) {
-
-		$attr = ( trim( $attachment->post_excerpt ) ) ? array( 'aria-describedby' => "$selector-$id" ) : '';
-		if ( ! empty( $atts['link'] ) && 'file' === $atts['link'] ) {
-			$image_output = wp_get_attachment_link( $id, $atts['size'], false, false, false, $attr );
-		} elseif ( ! empty( $atts['link'] ) && 'none' === $atts['link'] ) {
-			$image_output = wp_get_attachment_image( $id, $atts['size'], false, $attr );
-		} else {
-			$image_output = wp_get_attachment_link( $id, $atts['size'], true, false, false, $attr );
-		}
 		$image_meta  = wp_get_attachment_metadata( $id );
 
 		$orientation = '';
@@ -197,7 +170,7 @@ function custom_gallery_shortcode( $attr ) {
 		$output .= "<{$itemtag} class='gallery-item'>";
 		$output .= "
 			<{$icontag} class='gallery-icon {$orientation}'>
-				$image_output
+				" . pretty_photo_thumb_link($id, $attachment, $show_titles) . "
 			</{$icontag}>";
 		if ( $captiontag && trim($attachment->post_excerpt) ) {
 			$output .= "
@@ -219,5 +192,25 @@ function custom_gallery_shortcode( $attr ) {
 	$output .= "
 		</div>\n";
 
+	return $output;
+}
+/**
+ * Filter whether to print default gallery styles.
+ *
+ * @param int  $id Attachment ID
+ * @param obj  $attachment attachment object to get the "post_title" attribute from it, only required if $showTitle is true
+ * @param bool $showTitle If the title of the image from the media library should be displayed
+ */
+function pretty_photo_thumb_link($id, $attachment = NULL, $showTitle = false) {
+	if($showTitle){
+		$title = $attachment->post_title;
+	}else{
+		$title='';
+	}
+	$images['full'] = wp_get_attachment_image_src($id, 'full');
+	$images['thumbnail'] = wp_get_attachment_image_src($id, 'thumbnail');
+	$output = "<a data-rel='prettyPhoto[gallery]' href='{$images['full'][0]}' title='{$title}'>";
+	$output .= "<img src='{$images['thumbnail'][0]}' class='thumbnail'/>";
+	$output .= "</a>";
 	return $output;
 }
