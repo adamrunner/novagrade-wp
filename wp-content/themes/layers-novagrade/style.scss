@@ -73,7 +73,7 @@ $price: darken($brandPrimary, 20%);
 @import "custom_gallery";
 
 @media only screen and (min-width: 769px){
-  .site-logo-link .site-logo {
+  .header-site .inline-site-logo .logo img {
     max-height:120px;
   }
 }
