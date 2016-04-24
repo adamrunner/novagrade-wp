@@ -27,3 +27,4 @@ wpdev
 /sitemap.xml
 /sitemap.xml.gz
 wp-content/updraft/log.*
+phpinfo.php
