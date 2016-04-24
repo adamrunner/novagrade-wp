@@ -1,2 +1,2 @@
 #!/bin/bash
-rsync -avz novagrade:~/public_html/wp-content/uploads/ ./wp-content/uploads/ --progress
+rsync -avz --delete-after novagrade:~/public_html/wp-content/uploads/ ./wp-content/uploads/ --progress

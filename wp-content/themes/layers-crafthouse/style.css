@@ -107,6 +107,13 @@
   color: #fff;
 }
 
+.row.copyright {
+  font-size: 1.5rem;
+}
+.row.copyright .nav-horizontal a {
+  font-size: 1.5rem;
+}
+
 #faq .flex-video {
   text-align: center;
 }
