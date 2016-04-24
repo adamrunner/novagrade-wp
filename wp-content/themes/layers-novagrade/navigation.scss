@@ -1,0 +1,27 @@
+.header-site .nav .sub-menu li:last-child li:first-child a:hover {
+  border-radius: 4px 4px 0 0;
+}
+.header-site .nav .sub-menu li:last-child li:last-child a:hover {
+  border-radius: 0 0 4px 4px;
+}
+.header-site .nav .sub-menu li:last-child li a {
+  border-radius: 0;
+}
+#footer .footer-about.widget .section-title {
+  border-bottom: none;
+}
+
+#footer .footer-about.widget {
+  .heading {
+    color:rgba(255,255,255,0.8);
+  }
+  .excerpt {
+    color:#fff;
+  }
+}
+.row.copyright {
+  font-size:1.5rem;
+  .nav-horizontal a {
+    font-size: 1.5rem;
+  }
+}

@@ -1,0 +1,27 @@
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  .gallery-item {
+      display: flex;
+      flex-grow: 2;
+      flex-basis: 170px;
+      padding: .5em;
+    img.thumbnail {
+      -webkit-transition: border .2s ease-in-out;
+      -o-transition: border .2s ease-in-out;
+      transition: border .2s ease-in-out;
+      max-width: 100%;
+      border: 2px solid #ddd;
+      padding: 4px;
+      border-radius: 4px;
+    }
+    a:hover .thumbnail {
+      border-color: $brandPrimary;
+    }
+  }
+}
+@media only screen and (max-width: 769px){
+  .gallery .gallery-item {
+    flex-basis: 140px;
+  }
+}
