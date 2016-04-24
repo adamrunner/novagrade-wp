@@ -7,7 +7,6 @@ class UpdraftPlus_AddonStorage_viastream {
 	public function __construct($method, $desc) {
 		$this->method = $method;
 		$this->desc = $desc;
-		add_action('updraft_'.$method.'_config_javascript', array($this, 'config_javascript'));
 		add_action('updraft_'.$method.'_credentials_test', array($this, 'credentials_test'));
 		add_filter('updraft_'.$method.'_upload_files', array($this, 'upload_files'), 10, 2);
 		add_filter('updraft_'.$method.'_delete_files', array($this, 'delete_files'), 10, 3);
@@ -67,7 +66,7 @@ class UpdraftPlus_AddonStorage_viastream {
 		}
 
 		$chunks = floor($orig_file_size / 2097152);
-		// There will be a remnant unless the file size was exactly on a 5Mb boundary
+		// There will be a remnant unless the file size was exactly on a 5MB boundary
 		if ($orig_file_size % 2097152 > 0 ) $chunks++;
 
 		if (!$fh = fopen($url, 'a')) {
@@ -202,25 +201,6 @@ class UpdraftPlus_AddonStorage_viastream {
 
 	}
 
-	public function config_javascript() {
-		?>
-		jQuery('#updraft-<?php echo $this->method;?>-test').click(function(){
-			jQuery('#updraft-<?php echo $this->method;?>-test').html('<?php echo esc_js(sprintf(__('Testing %s Settings...', 'updraftplus'), $this->desc)); ?>');
-			var data = {
-				action: 'updraft_ajax',
-				subaction: 'credentials_test',
-				method: '<?php echo $this->method;?>',
-				nonce: '<?php echo wp_create_nonce('updraftplus-credentialtest-nonce'); ?>',
-				url: jQuery('#updraft_<?php echo $this->method;?>_settings_url').val()
-			};
-			jQuery.post(ajaxurl, data, function(response) {
-				jQuery('#updraft-<?php echo $this->method;?>-test').html('<?php echo esc_js(sprintf(__('Test %s Settings', 'updraftplus'), $this->desc)); ?>');
-				alert('<?php echo esc_js(sprintf(__('%s settings test result:', 'updraftplus'), $this->desc));?> ' + response);
-			});
-		});
-		<?php
-	}
-
 	public function config_print() {
 
 		$options = UpdraftPlus_Options::get_updraft_option('updraft_'.$this->method.'_settings');
@@ -236,7 +216,7 @@ class UpdraftPlus_AddonStorage_viastream {
 
 			<tr class="updraftplusmethod <?php echo $this->method;?>">
 			<th></th>
-			<td><p><button id="updraft-<?php echo $this->method;?>-test" type="button" class="button-primary" style="font-size:18px !important"><?php printf(__('Test %s Settings','updraftplus'), $this->desc);?></button></p></td>
+			<td><p><button id="updraft-<?php echo $this->method;?>-test" type="button" class="button-primary updraft-test-button" data-method="<?php echo $this->method;?>" data-method_label="<?php esc_attr_e($this->desc);?>"><?php printf(__('Test %s Settings','updraftplus'), $this->desc);?></button></p></td>
 			</tr>
 
 		<?php
@@ -318,7 +298,7 @@ class UpdraftPlus_AddonStorage_viastream {
 			foreach ($storage->get_error_messages() as $key => $msg) {
 				echo "$msg\n";
 			}
-			die;
+			return;
 		}
 
 		$x = @mkdir($url);
@@ -331,6 +311,6 @@ class UpdraftPlus_AddonStorage_viastream {
 			_e("Failed: We were not able to place a file in that directory - please check your credentials.",'updraftplus');
 		}
 
-		die;
+		return;
 	}
 }

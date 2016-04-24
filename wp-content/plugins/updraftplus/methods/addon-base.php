@@ -10,10 +10,9 @@ do_listfiles($match)
 do_delete($file) - return true/false
 do_download($file, $fullpath, $start_offset) - return true/false
 do_config_print()
-do_config_javascript()
 do_credentials_test_parameters() - return an array: keys = required _POST parameters; values = description of each
-do_credentials_test($testfile) - return true/false
-do_credentials_test_deletefile($testfile)
+do_credentials_test($testfile, $posted_settings) - return true/false
+do_credentials_test_deletefile($testfile, $posted_settings)
 */
 
 # Uses job options: Yes
@@ -240,36 +239,20 @@ class UpdraftPlus_RemoteStorage_Addons_Base {
 
 		<tr class="updraftplusmethod <?php echo $method;?>">
 		<th></th>
-		<td><p><button id="updraft-<?php echo $method;?>-test" type="button" class="button-primary" style="font-size:18px !important"><?php printf(__('Test %s Settings','updraftplus'), $this->description);?></button></p></td>
+		<td><p><button id="updraft-<?php echo $method;?>-test" type="button" class="button-primary updraft-test-button" data-method="<?php echo $method;?>" data-method_label="<?php esc_attr_e($this->description);?>"><?php printf(__('Test %s Settings','updraftplus'), $this->description);?></button></p></td>
 		</tr>
 
 		<?php
 
 	}
 
+	public function config_javascript() {
+		$this->do_config_javascript();
+	}
+	
 	protected function do_config_javascript() {
 	}
-
-	public function config_javascript() {
-		if (!$this->test_button || (method_exists($this, 'should_print_test_button') && !$this->should_print_test_button())) return;
-		?>
-		jQuery('#updraft-<?php echo $this->method;?>-test').click(function(){
-			jQuery('#updraft-<?php echo $this->method; ?>-test').html('<?php echo esc_js(sprintf(__('Testing %s Settings...', 'updraftplus'), $this->description)); ?>');
-			var data = {
-				action: 'updraft_ajax',
-				subaction: 'credentials_test',
-				method: '<?php echo $this->method;?>',
-				nonce: '<?php echo wp_create_nonce('updraftplus-credentialtest-nonce'); ?>',
-				<?php $this->do_config_javascript(); ?>
-			};
-			jQuery.post(ajaxurl, data, function(response) {
-				jQuery('#updraft-<?php echo $this->method;?>-test').html('<?php echo esc_js(sprintf(__('Test %s Settings', 'updraftplus'), $this->description)); ?>');
-				alert('<?php echo esc_js(sprintf(__('%s settings test result:', 'updraftplus'), $this->description));?> ' + response);
-			});
-		});
-		<?php
-	}
-
+	
 	protected function options_exist($opts) {
 		if (is_array($opts) && !empty($opts)) return true;
 		return false;
@@ -283,34 +266,33 @@ class UpdraftPlus_RemoteStorage_Addons_Base {
 		return $this->do_bootstrap($opts, $connect);
 	}
 
-	public function credentials_test() {
+	public function credentials_test($posted_settings) {
+	
 		global $updraftplus;
 
 		$required_test_parameters = $this->do_credentials_test_parameters();
 
 		foreach ($required_test_parameters as $param => $descrip) {
-			if (empty($_POST[$param])) {
+			if (empty($posted_settings[$param])) {
 				printf(__("Failure: No %s was given.",'updraftplus'), $descrip);
 				return;
 			}
 		}
 
-		$this->storage = $this->bootstrap($_POST);
+		$this->storage = $this->bootstrap($posted_settings);
 		if (is_wp_error($this->storage)) {
 			echo __("Failed", 'updraftplus').": ";
 			foreach ($this->storage->get_error_messages() as $key => $msg) { echo "$msg\n"; }
-			die;
+			return;
 		}
 
 		$testfile = md5(time().rand()).'.txt';
-		if ($this->do_credentials_test($testfile)) {
+		if ($this->do_credentials_test($testfile, $posted_settings)) {
 			_e('Success', 'updraftplus');
-			$this->do_credentials_test_deletefile($testfile);
+			$this->do_credentials_test_deletefile($testfile, $posted_settings);
 		} else {
 			_e("Failed: We were not able to place a file in that directory - please check your credentials.", 'updraftplus');
 		}
-
-		die;
 
 	}
 

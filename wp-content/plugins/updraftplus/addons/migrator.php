@@ -2,9 +2,9 @@
 /*
 UpdraftPlus Addon: migrator:Migrate a WordPress site to a different location.
 Description: Import a backup into a different site, including database search-and-replace. Ideal for development and testing and cloning of sites.
-Version: 3.1
+Version: 3.2
 Shop: /shop/migrator/
-Latest Change: 1.11.22
+Latest Change: 1.12.3
 */
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
@@ -38,13 +38,14 @@ class UpdraftPlus_Addons_Migrator {
 		add_action('updraftplus_restore_db_record_old_uploads', array($this, 'updraftplus_restore_db_record_old_uploads'));
 		add_action('updraftplus_restored_plugins_one', array($this, 'restored_plugins_one'));
 		add_action('updraftplus_restored_themes_one', array($this, 'restored_themes_one'));
-		add_action('updraftplus_debugtools_dashboard', array($this, 'debugtools_dashboard'));
+		add_action('updraftplus_debugtools_dashboard', array($this, 'debugtools_dashboard'), 30);
 		add_action('updraftplus_adminaction_searchreplace', array($this, 'adminaction_searchreplace'));
 		add_action('updraftplus_migrate_modal_output', array($this, 'updraftplus_migrate_modal_output'));
 		add_filter('updraftplus_restore_set_table_prefix', array($this, 'restore_set_table_prefix'), 10, 2);
 		add_filter('updraftplus_dbscan_urlchange', array($this, 'dbscan_urlchange'), 10, 3);
 		add_filter('updraftplus_restorecachefiles', array($this, 'restorecachefiles'), 10, 2);
 		add_filter('updraftplus_restored_plugins', array($this, 'restored_plugins'));
+		add_filter('updraftplus_get_history_status_result', array($this, 'get_history_status_result'));
 		// Actions/filters that need UD to be fully loaded before we can consider adding them
 		add_action('plugins_loaded', array($this, 'plugins_loaded'));
 	}
@@ -149,6 +150,16 @@ class UpdraftPlus_Addons_Migrator {
 		return $restore_or_not;
 	}
 
+	public function get_history_status_result($result) {
+		if (!is_array($result)) return $result;
+		ob_start();
+		$this->updraftplus_migrate_modal_output();
+		$modal_output = ob_get_contents();
+		ob_end_clean();
+		$result['migrate_modal'] = $modal_output;
+		return $result;
+	}
+	
 	public function updraftplus_migrate_modal_output() {
 
 		echo '<div id="updraft_migrate_modal_main">';
@@ -641,7 +652,7 @@ class UpdraftPlus_Addons_Migrator {
 
 		# This array is for tables that a) we know don't need URL search/replacing and b) are likely to be sufficiently big that they could significantly delay the progress of the migrate (and increase the risk of timeouts on hosts that enforce them)
 		# The term_relationships table contains 3 columns, all integers. Therefore, we can skip it. It can easily get big, so this is a good time-saver.
-		$skip_tables = array('slim_stats', 'statpress', 'term_relationships', 'icl_languages_translations', 'icl_string_positions', 'icl_string_translations', 'icl_strings', 'redirection_logs', 'Counterize', 'Counterize_UserAgents', 'Counterize_Referers', 'adrotate_stats', 'login_security_solution_fail', 'wfHits', 'wbz404_logs', 'wbz404_redirects', 'wp_wfFileMods', 'tts_trafficstats', 'tts_referrer_stats', 'dmsguestbook', 'relevanssi', 'wponlinebackup_generations', 'svisitor_stat', 'simple_feed_stats', 'itsec_log', 'wp_rp_tags', 'woocommerce_order_items', 'relevanssi_log', 'blc_instances', 'wysija_email_user_stat');
+		$skip_tables = array('slim_stats', 'statpress', 'term_relationships', 'icl_languages_translations', 'icl_string_positions', 'icl_string_translations', 'icl_strings', 'redirection_logs', 'Counterize', 'Counterize_UserAgents', 'Counterize_Referers', 'adrotate_stats', 'login_security_solution_fail', 'wfHits', 'wbz404_logs', 'wbz404_redirects', 'wp_wfFileMods', 'tts_trafficstats', 'tts_referrer_stats', 'dmsguestbook', 'relevanssi', 'wponlinebackup_generations', 'svisitor_stat', 'simple_feed_stats', 'itsec_log', 'wp_rp_tags', 'woocommerce_order_items', 'relevanssi_log', 'blc_instances', 'wysija_email_user_stat', 'woocommerce_sessions');
 
 		if (in_array($stripped_table, $skip_tables)) {
 			$this->tables_replaced[$table] = true;
@@ -1555,7 +1566,9 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 		// fseek() returns 0 for success, or -1 for failure
 		if ($start != $existing_size && -1 == fseek($fhandle, $start))  return $this->return_rpc_message(array('response' => 'error', 'data' => 'fseek_failure'));
 
-		if (false === fwrite($fhandle, $data)) return $this->return_rpc_message(array('response' => 'error', 'data' => 'fwrite_failure'));
+		$write_status = fwrite($fhandle, $data);
+		
+		if (false === $write_status || (false == $write_status && !empty($data))) return $this->return_rpc_message(array('response' => 'error', 'data' => 'fwrite_failure'));
 
 		@fclose($fhandle);
 
@@ -1637,7 +1650,7 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 
 			array_push($initial_jobdata, 'remotesend_info', $remotesites[$site_id]);
 
-			// Reduce to 100Mb if it was above. Since the user isn't expected to directly manipulate these zip files, the potentially higher number of zip files doesn't matter.
+			// Reduce to 100MB if it was above. Since the user isn't expected to directly manipulate these zip files, the potentially higher number of zip files doesn't matter.
 			if ($split_every > 100) array_push($initial_jobdata, 'split_every', 100);
 
 		}
@@ -1667,6 +1680,12 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 		}
 
 		try {
+		
+			$updraftplus->error_reporting_stop_when_logged = true;
+			set_error_handler(array($updraftplus, 'php_error'), E_ALL & ~E_STRICT);
+			$this->php_events = array();
+			add_action('updraftplus_logline', array($this, 'updraftplus_logline'), 10, 4);
+		
 			$ud_rpc = $updraftplus->get_udrpc($remotesites[$_POST['id']]['name_indicator']);
 			$ud_rpc->set_message_format(1);
 			$ud_rpc->set_key_local($remotesites[$_POST['id']]['key']);
@@ -1674,6 +1693,8 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 			$ud_rpc->activate_replay_protection();
 			$response = $ud_rpc->send_message('ping');
 
+			restore_error_handler();
+			
 			if (is_wp_error($response)) {
 
 				$err_msg = __('Error:', 'updraftplus').' '.$response->get_error_message();
@@ -1703,6 +1724,9 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 
 				if (isset($err_data)) $res['data'] = $err_data;
 				if (isset($err_code)) $res['code'] = $err_code;
+				
+				if (!empty($this->php_events)) $res['php_events'] = $this->php_events;
+				
 				echo json_encode($res);
 				die;
 			}
@@ -1766,6 +1790,8 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 	public function updraft_migrate_key_create() {
 
 		if (empty($_POST['name'])) die;
+		
+		$size = (empty($_POST['size']) || !is_numeric($_POST['size']) || $_POST['size'] < 512) ? 2048 : (int)$_POST['size'];
 
 		$name_hash = md5($_POST['name']); // 32 characters
 		$indicator_name = $name_hash.'.migrator.updraftplus.com';
@@ -1781,7 +1807,7 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 		global $updraftplus;
 		$ud_rpc = $updraftplus->get_udrpc($indicator_name);
 
-		if (is_object($ud_rpc) && $ud_rpc->generate_new_keypair()) {
+		if (is_object($ud_rpc) && $ud_rpc->generate_new_keypair($size)) {
 			$local_bundle = $ud_rpc->get_portable_bundle('base64_with_count');
 
 			$our_keys[$name_hash] = array('name' => $_POST['name'], 'key' => $ud_rpc->get_key_local());
@@ -1887,7 +1913,8 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 		<script>
 			jQuery(document).ready(function($) {
 
-				$('#updraft_migrate_modal_main').on('click', '.updraft_migrate_local_key_delete', function() {
+				$('#updraft_migrate_modal_main').on('click', '.updraft_migrate_local_key_delete', function(e) {
+					e.preventDefault();
 					var $keylink = $(this);
 					var keyid = $keylink.data('keyid');
 					var data = {
@@ -1898,9 +1925,9 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 						keyid: keyid,
 					}
 					$keylink.html(updraftlion.deleting);
-					jQuery.post(ajaxurl, data, function(response) {
+					$.post(ajaxurl, data, function(response) {
 						try {
-							resp = jQuery.parseJSON(response);
+							resp = $.parseJSON(response);
 							if (resp.hasOwnProperty('ourkeys')) {
 								$('#updraft_migrate_our_keys_container').html(resp.ourkeys);
 							} else {
@@ -2007,13 +2034,8 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 				$('#updraft_migrate_receivingsites_createkey').click(function() {
 					// Remember to tell them that this key will never be shown again
 					
-					var currentdate = new Date(); 
-					var default_key_name = updraftlion.key+" - " + currentdate.getFullYear() + "/"
-								+ (currentdate.getMonth()+1)  + "/" 
-								+ currentdate.getDate();
-// 								+ " @ " + currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds();
-
-					var key_name = prompt(updraftlion.pleasenamekey, default_key_name);
+					var key_name = $('#updraft_migrate_receivingsites_keyname').val();
+					var key_size = $('#updraft_migrate_receivingsites_keysize').val();
 
 					if ('' == key_name || false == key_name || null == key_name) { alert(updraftlion.nokeynamegiven); return false; }
 
@@ -2025,12 +2047,14 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 						subaction: 'doaction',
 						subsubaction: 'updraft_migrate_key_create',
 						nonce: '<?php echo wp_create_nonce('updraftplus-credentialtest-nonce'); ?>',
-						name: key_name
+						name: key_name,
+						size: key_size
 					}
-					jQuery.post(ajaxurl, data, function(response) {
+					$.post(ajaxurl, data, function(response) {
 						try {
-							resp = jQuery.parseJSON(response);
+							resp = $.parseJSON(response);
 							if (resp.hasOwnProperty('bundle')) {
+								$('#updraft_migrate_receivingsites_keyname').val('');
 								$('#updraft_migrate_new_key').html(resp.bundle);
 								if (resp.hasOwnProperty('selector')) {
 									$('#updraft_migrate_receivingsites').html(resp.selector);
@@ -2103,27 +2127,49 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 
 	public function updraft_migrate_after_widget() {
 
-		echo '<div style="margin:8px 4px; padding: 0px 8px 8px; border: 1px dotted;">';
-
-		echo '<p style="clear:left; margin-top: 4px; padding-top: 4px;"><strong>'.__('Or, send a backup to another site', 'updraftplus').'</strong><br>';
-		echo __("To add a site as a destination for sending to, enter that site's key below.", 'updraftplus').' <a href="#" onclick="alert(\''.esc_js(__('Keys for this site are created in the section below the one you just pressed in.', 'updraftplus').' '.__("So, to get the key for the remote site, open the 'Migrate' window on that site, scroll down, and you can create one there.", 'updraftplus')).'\')">'.__("How do I get a site's key?", 'updraftplus').'</a></p>';
-
-		echo '<div style="clear:both;">';
-			echo '<input type="text" id="updraft_migrate_receiving_new" style="width:555px; height:30px;" placeholder="'.esc_attr(__('Paste key here', 'updraftplus')).'"> <button class="button-primary" style="height:30px; font-size:16px; width:85px;" id="updraft_migrate_receiving_makenew">'.__('Add site', 'updraftplus').'</button>';
-		echo '</div>';
-
-		echo '<div id="updraft_migrate_receivingsites" style="clear:both; margin-top:10px;">';
-			echo $this->get_remotesites_selector();
-		echo '</div>';
-
-		echo '</div>';
-
-		echo '<div style="margin:8px 4px; padding: 0px 8px 8px; border: 1px dotted;">';
-
-		echo '<p style="margin-top: 4px; padding-top: 4px;"><strong>'.__('Or, receive a backup from a remote site', 'updraftplus').'</strong><br>';
-		echo htmlspecialchars(__("To allow another site to send a backup to this site, create a key, and then press the 'Migrate' button on the sending site, and copy-and-paste the key there.", 'updraftplus')).' <a href="#" id="updraft_migrate_receivingsites_createkey">'.__("Create a key...", 'updraftplus').'</a></p>';
-
 		?>
+		<div style="margin:8px 4px; padding: 0px 8px 8px; border: 1px dotted;">
+
+		<p style="clear:left; margin-top: 4px; padding-top: 4px;"><strong><?php _e('Or, send a backup to another site', 'updraftplus');?></strong><br>
+		
+			<?php
+			echo __("To add a site as a destination for sending to, enter that site's key below.", 'updraftplus').' <a href="#" onclick="alert(\''.esc_js(__('Keys for this site are created in the section below the one you just pressed in.', 'updraftplus').' '.__("So, to get the key for the remote site, open the 'Migrate' window on that site, scroll down, and you can create one there.", 'updraftplus')).'\')">'.__("How do I get a site's key?", 'updraftplus').'</a>'; ?>
+
+		</p>
+		
+		<div style="clear:both;">
+			<input type="text" id="updraft_migrate_receiving_new" style="width:555px; height:30px;" placeholder="<?php esc_attr(__('Paste key here', 'updraftplus'));?>"> <button class="button-primary" style="height:30px; font-size:16px; width:85px;" id="updraft_migrate_receiving_makenew"><?php _e('Add site', 'updraftplus');?></button>
+		</div>
+
+		<div id="updraft_migrate_receivingsites" style="clear:both; margin-top:10px;">
+			<?php echo $this->get_remotesites_selector();?>
+		</div>
+
+		</div>
+
+		<div style="margin:8px 4px; padding: 0px 8px 8px; border: 1px dotted;">
+
+		<p style="margin-top: 4px; padding-top: 4px;"><strong><?php _e('Or, receive a backup from a remote site', 'updraftplus');?></strong><br>
+			<?php echo htmlspecialchars(__("To allow another site to send a backup to this site, create a key, and then press the 'Migrate' button on the sending site, and copy-and-paste the key there.", 'updraftplus')); ?>
+		</p>
+		
+		<p>
+			
+			<?php _e('Create a key: give this key a unique name (e.g. indicate the site it is for), then press "Create Key":', 'updraftplus'); ?><br>
+			<input id="updraft_migrate_receivingsites_keyname" type="text" placeholder="<?php _e('Enter your chosen name', 'updraftplus');?>" style="width:305px;" value="<?php echo __('Key', 'updraftplus').' - '.date('Y-m-d');?>">
+			
+			<?php _e('Encryption key size:', 'updraftplus');?>
+			<select style="width: 115px;" id="updraft_migrate_receivingsites_keysize">
+				<option value="512"><?php printf(__('%s bits', 'updraftplus').' - '.__('easy to break, fastest', 'updraftplus'), '512');?></option>
+				<option value="1024"><?php printf(__('%s bits', 'updraftplus').' - '.__('faster (possibility for slow PHP installs)', 'updraftplus'), '1024');?></option>
+				<option value="2048" selected="selected"><?php printf(__('%s bytes', 'updraftplus').' - '.__('recommended', 'updraftplus'), '2048');?></option>
+				<option value="4096"><?php printf(__('%s bits', 'updraftplus').' - '.__('slower, strongest', 'updraftplus'), '4096');?></option>
+			</select>
+			
+			<button id="updraft_migrate_receivingsites_createkey" class="button button-primary" style="height:30px; font-size:16px; margin-left: 3px; width:115px;"><?php _e('Create key', 'updraftplus');?></button>
+			
+		</p>
+
 		<div id="updraft_migrate_new_key_container" style="display:none;">
 			<?php _e('Your new key:', 'updraftplus'); ?><br>
 			<textarea id="updraft_migrate_new_key" onclick="this.select();" style="width:625px; height:235px; word-wrap:break-word; border: 1px solid #aaa; border-radius: 3px; padding:4px;"></textarea>

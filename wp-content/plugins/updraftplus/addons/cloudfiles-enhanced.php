@@ -2,10 +2,10 @@
 /*
 UpdraftPlus Addon: cloudfiles-enhanced:Rackspace Cloud Files, enhanced
 Description: Adds enhanced capabilities for Rackspace Cloud Files users
-Version: 1.3
+Version: 1.4
 RequiresPHP: 5.3.3
 Shop: /shop/cloudfiles-enhanced/
-Latest Change: 1.11.10
+Latest Change: 1.11.29
 */
 
 # Future possibility: sub-folders
@@ -27,11 +27,11 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 		$this->description = __('Adds enhanced capabilities for Rackspace Cloud Files users', 'updraftplus');
 		add_action('updraftplus_settings_page_init', array($this, 'updraftplus_settings_page_init'));
 		add_action('updraft_cloudfiles_newuser', array($this, 'newuser'));
+		add_filter('updraft_cloudfiles_apikeysetting', array($this, 'apikeysettings'));
 	}
 
 	public function updraftplus_settings_page_init() {
 		add_action('admin_footer', array($this, 'admin_footer'));
-		add_filter('updraft_cloudfiles_apikeysetting', array($this, 'apikeysettings'));
 	}
 
 	public function apikeysettings($msg) {
@@ -40,44 +40,47 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 	}
 
 	public function newuser() {
-		if (empty($_POST['adminuser'])) {
+	
+		$use_settings = $_POST;
+	
+		if (empty($use_settings['adminuser'])) {
 			echo json_encode(array('e' => 1, 'm' => __('You need to enter an admin username', 'updraftplus')));
 			return;
 		}
-		if (empty($_POST['adminapikey'])) {
+		if (empty($use_settings['adminapikey'])) {
 			echo json_encode(array('e' => 1, 'm' => __('You need to enter an admin API key', 'updraftplus')));
 			return;
 		}
-		if (empty($_POST['newuser'])) {
+		if (empty($use_settings['newuser'])) {
 			echo json_encode(array('e' => 1, 'm' => __('You need to enter a new username', 'updraftplus')));
 			return;
 		}
-		if (empty($_POST['container'])) {
+		if (empty($use_settings['container'])) {
 			echo json_encode(array('e' => 1, 'm' => __('You need to enter a container', 'updraftplus')));
 			return;
 		}
 		# Here, 0 == catches both 0 and false
-		if (empty($_POST['newemail']) || 0 == strpos($_POST['newemail'], '@')) {
+		if (empty($use_settings['newemail']) || 0 == strpos($use_settings['newemail'], '@')) {
 			echo json_encode(array('e' => 1, 'm' => __('You need to enter a valid new email address', 'updraftplus')));
 			return;
 		}
-		if (empty($_POST['location'])) $_POST['location'] = 'us';
-		if (empty($_POST['region'])) $_POST['region'] = 'DFW';
+		if (empty($use_settings['location'])) $use_settings['location'] = 'us';
+		if (empty($use_settings['region'])) $use_settings['region'] = 'DFW';
 
 
 		require_once(UPDRAFTPLUS_DIR.'/methods/cloudfiles.php');
 		require_once(UPDRAFTPLUS_DIR.'/vendor/autoload.php');
 		$method = new UpdraftPlus_BackupModule_cloudfiles;
-		$useservercerts = !empty($_POST['useservercerts']);
-		$disableverify = !empty($_POST['disableverify']);
-		$auth_url = ('uk' == $_POST['location']) ? Rackspace::UK_IDENTITY_ENDPOINT : Rackspace::US_IDENTITY_ENDPOINT;
+		$useservercerts = !empty($use_settings['useservercerts']);
+		$disableverify = !empty($use_settings['disableverify']);
+		$auth_url = ('uk' == $use_settings['location']) ? Rackspace::UK_IDENTITY_ENDPOINT : Rackspace::US_IDENTITY_ENDPOINT;
 
 		try {
 			$service = $method->get_service(array(
-				'user' => $_POST['adminuser'],
-				'apikey' => $_POST['adminapikey'],
+				'user' => $use_settings['adminuser'],
+				'apikey' => $use_settings['adminapikey'],
 				'authurl' => $auth_url,
-				'region' => $_POST['region']
+				'region' => $use_settings['region']
 			),
 			$useservercerts, $disableverify);
 		} catch(AuthenticationError $e) {
@@ -115,9 +118,9 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 		# Create the container (if necessary)
 		# Get the container
 		try {
-			$container_object = $service->getContainer($_POST['container']);
+			$container_object = $service->getContainer($use_settings['container']);
 		} catch(Guzzle\Http\Exception\ClientErrorResponseException $e) {
-			$container_object = $service->createContainer($_POST['container']);
+			$container_object = $service->createContainer($use_settings['container']);
 		} catch (Exception $e) {
 			echo json_encode(array('e' => 1, 'm' => __('Cloud Files authentication failed', 'updraftplus').' ('.get_class($e).', '.$e->getMessage().')'));
 			die;
@@ -130,8 +133,8 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 
 		# Create the new user
 		$json = json_encode(array( 'user' => array(
-			'username' => $_POST['newuser'],
-			'email' => $_POST['newemail'],
+			'username' => $use_settings['newuser'],
+			'email' => $use_settings['newemail'],
 			'enabled' => true
 		)));
 
@@ -201,9 +204,9 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 			'u' => htmlspecialchars($user),
 			'p' => htmlspecialchars($pass),
 			'k' => htmlspecialchars($apikey),
-			'a' => $auth_url = ('uk' == $_POST['location']) ? 'https://lon.auth.api.rackspacecloud.com' : 'https://auth.api.rackspacecloud.com',
-			'r' => $_POST['region'],
-			'c' => $_POST['container'],
+			'a' => $auth_url = ('uk' == $use_settings['location']) ? 'https://lon.auth.api.rackspacecloud.com' : 'https://auth.api.rackspacecloud.com',
+			'r' => $use_settings['region'],
+			'c' => $use_settings['container'],
 			'm' => htmlspecialchars(sprintf(__("Username: %s", 'updraftplus'), $user))."<br>".htmlspecialchars(sprintf(__("Password: %s", 'updraftplus'), $pass))."<br>".htmlspecialchars(sprintf(__("API Key: %s", 'updraftplus'), $apikey))));
 
 		die;

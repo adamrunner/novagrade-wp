@@ -182,11 +182,16 @@ class Layers_Form_Elements {
 				$range_input_props['max'] = ( NULL !== $input->max ) ? 'max="' .  $input->max . '"' : NULL ;
 				$range_input_props['step'] = ( NULL !== $input->step ) ? 'step="' .  $input->step . '"' : NULL ;
 				$range_input_props['placeholder'] = ( NULL !== $input->placeholder ) ? 'placeholder="' .  $input->placeholder . '"' : NULL ;
-
+				
 				if ( isset( $input->value ) && '' !== $input->value )
 					$range_input_props['value'] = 'value="' .  $input->value . '"';
 				elseif ( isset( $input->placeholder ) )
 					$range_input_props['value'] = 'value="' .  $input->placeholder . '"';
+				
+				// Add the disabled to the number field if a placeholder is set and it's the same as the value.
+				// the javascript does this too so it will be live applied when the range slider is dragged.
+				if ( isset( $input->placeholder ) && $input->placeholder == $input->value )
+					$number_input_props['class'] = 'class="layers-range-disabled"';
 				?>
 				<div class="layers-row">
 					<div class="layers-column layers-span-9">
@@ -204,7 +209,17 @@ class Layers_Form_Elements {
 				<input type="checkbox" <?php echo implode ( ' ' , $input_props ); ?> <?php checked( $input->value , 'on' ); ?>/>
 				<?php if( isset( $input->label ) ) { ?>
 					<label for="<?php echo esc_attr( $input->id ); ?>"><?php echo esc_html( $input->label ); ?></label>
-				<?php } // if isset label ?>
+				<?php } ?>
+				<?php
+				// Prepare sibling checkbox for parity/existance check.
+				$duplicate_input_props = array();
+				foreach ( $input_props as $key => $val ) {
+					if ( 0 === strpos( $val, 'id=' ) ) $duplicate_input_props[$key] = rtrim( $val, '"' ) . '-CHECKBOX"';
+					else if ( 0 === strpos( $val, 'name=' ) ) $duplicate_input_props[$key] = rtrim( $val, ']"' ) . '-CHECKBOX]"';
+					else $duplicate_input_props[$key] = $val;
+				}
+				?>
+				<input type="hidden" value="on" style="display: none;" <?php echo implode ( ' ' , $duplicate_input_props ); ?>>
 			<?php break;
 			/**
 			* Radio Buttons
@@ -251,7 +266,7 @@ class Layers_Form_Elements {
 			* Select 'icons' such as the column selector
 			*/
 			case 'select-icons' :
-				
+
 				$input_type = ( 1 == count( $input->options ) ) ? 'checkbox' : 'radio';
 				?>
 				<div class="layers-select-icons">
@@ -271,12 +286,17 @@ class Layers_Form_Elements {
 							$class = "icon-{$key}";
 							$data_string = '';
 						}
-						
+
 						$data_string .= 'data-value="' . $input->value . '" ';
+						
+						// Allow for setting of a default selection.
+						$checked = FALSE;
+						if ( $input->value && $input->value == $key ) $checked = TRUE;
+						// elseif ( ! $input->value && isset( $input->default ) && $input->default == $key ) $checked = TRUE; // Not Using Anymore
 						?>
 						<label
 							href=""
-							class="layers-icon-wrapper <?php if ( $key == $input->value ) echo 'layers-active'; ?>"
+							class="layers-icon-wrapper <?php if ( $checked ) echo 'layers-active'; ?>"
 							for="<?php echo esc_attr( $input->id ) ,'-', esc_attr( $key ); ?>"
 							<?php echo $data_string ?>
 							>
@@ -285,7 +305,7 @@ class Layers_Form_Elements {
 								<?php echo esc_html( $name ); ?>
 							</span>
 						</label>
-						<input type="<?php echo $input_type ?>" <?php echo implode ( ' ' , $input_props ); ?> id="<?php echo esc_attr( $input->id ), '-', esc_attr( $key ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $input->value, $key, true ); ?> />
+						<input type="<?php echo $input_type ?>" <?php echo implode ( ' ' , $input_props ); ?> id="<?php echo esc_attr( $input->id ), '-', esc_attr( $key ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $checked, true, true ); ?> />
 					<?php } ?>
 				</div>
 			<?php break;
@@ -303,7 +323,19 @@ class Layers_Form_Elements {
 				$allow_tags = ( isset( $input->allow_tags ) && is_array( $input->allow_tags ) ? implode( ',' , $input->allow_tags ) : array() );
 
 				// Add custom button support
-				$allow_buttons = ( isset( $input->allow_buttons ) && is_array( $input->allow_buttons ) ? $input->allow_buttons : array( 'sep','bold','italic','underline','strikeThrough','createLink','insertOrderedList','insertUnorderedList','removeFormat','html' ) );
+				$default_allowed_buttons = array(
+					'bold',
+					'italic',
+					'underline',
+					'strikeThrough',
+					'insertLink',
+					'formatOL',
+					'formatUL',
+					'clearFormatting',
+					'html'
+				);
+
+				$allow_buttons = ( isset( $input->allow_buttons ) && is_array( $input->allow_buttons ) ? $input->allow_buttons : $default_allowed_buttons );
 
 				// Check for disabling of standard buttons
 				if( isset( $input->disallow_buttons ) && is_array( $input->disallow_buttons ) ) {
@@ -652,24 +684,24 @@ class Layers_Form_Elements {
 				<div class="layers-row">
 					<?php echo $input->html; ?>
 				</div>
-			
+
 			<?php break;
-				
+
 			/**
 			* Dynamic Linking Interface
 			*/
 			case 'link-group' : ?>
 				<div class="layers-form-collection layers-link-group closed">
-					
+
 					<!-- Header -->
 					<div class="layers-form-collection-header">
 						<?php echo ( isset( $input->value->link_text ) ) ? $input->value->link_text : '&nbsp' ; ?>
 					</div>
 					<!-- / Header -->
-					
+
 					<!-- Content -->
 					<div class="layers-form-collection-content">
-					
+
 						<div class="layers-row">
 							<div class="layers-form-item layers-column layers-span-5">
 								<label for="<?php echo "{$input->id}-link_type"; ?>">
@@ -789,7 +821,7 @@ class Layers_Form_Elements {
 								</div>
 							</div>
 						</div>
-						
+
 						<div class="layers-row">
 							<div class="layers-form-item layers-column layers-span-12">
 								<label for="<?php echo "{$input->id}-link_text"; ?>">
@@ -806,14 +838,14 @@ class Layers_Form_Elements {
 								); ?>
 							</div>
 						</div>
-						
+
 					</div>
 					<!-- / Content -->
-					
+
 				</div>
-				
+
 			<?php break;
-			
+
 			/**
 			* Default to hidden field
 			*/

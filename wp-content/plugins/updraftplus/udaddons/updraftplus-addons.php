@@ -52,7 +52,7 @@ class UpdraftPlusAddons2 {
 		$this->slug = $slug;
 		$this->url = $url;
 
-		# This needs to exact match PluginUpdateChecker's view
+		// This needs to exact match PluginUpdateChecker's view
 		$this->plugin_file = plugin_basename($this->slug.'/'.$this->slug.'.php');
 
 		add_action('updraftplus_restore_db_pre', array($this, 'updraftplus_restore_db_pre'));
@@ -81,8 +81,10 @@ class UpdraftPlusAddons2 {
 				add_filter('puc_check_now-'.$this->slug, array($this, 'puc_check_now'), 10, 3);
 				add_filter('puc_retain_fields-'.$this->slug, array($this, 'puc_retain_fields'));
 				add_filter('puc_request_info_options-'.$this->slug, array($this, 'puc_request_info_options'));
+				// Run after the PluginUpdateChcker has done its stuff
+				add_filter('site_transient_update_plugins', array($this, 'possibly_inject_translations'), 11);
 
-				$plug_updatechecker = new PluginUpdateChecker($this->url."/plugin-info/", WP_PLUGIN_DIR.'/'.$this->slug.'/'.$this->slug.'.php', $this->slug, 24);
+				$plug_updatechecker = new PluginUpdateChecker_3_0($this->url."/plugin-info/", WP_PLUGIN_DIR.'/'.$this->slug.'/'.$this->slug.'.php', $this->slug, 24);
 				$plug_updatechecker->addQueryArgFilter(array($this, 'updater_queryargs_plugin'));
 				if ($this->debug) $plug_updatechecker->debugMode = true;
 				$this->plug_updatechecker = $plug_updatechecker;
@@ -90,6 +92,35 @@ class UpdraftPlusAddons2 {
 		}
 	}
 
+	public function possibly_inject_translations($updates) {
+	
+		$slug = $this->slug;
+	
+		$checker = is_object($this->plug_updatechecker) ? get_site_option($this->plug_updatechecker->optionName, null) : null;
+
+		if (!isset($checker->update->translations) || !is_array($checker->update->translations)) return $updates;
+		
+		foreach ($checker->update->translations as $translation) {
+
+			// Remove any existing updates indicated for this slug/language - i.e. we want it over-ridden with the result from the server
+			if (isset($updates->translations) && is_array($updates->translations)) {
+				foreach ($updates->translations as $k => $translation) {
+					if ($translation['type'] == 'plugin' && $translation['slug'] == $slug) unset($updates->translations[$k]);
+				}
+			}
+			
+			// Add our translation onto the array
+			$translation_array = (array)$translation;
+			$translation_array['type'] = 'plugin';
+			$translation_array['slug'] = $slug;
+			
+			$updates->translations[] = $translation_array;
+			
+		}
+		
+		return $updates;
+	}
+	
 	public function puc_request_info_options($opts) {
 		if (is_array($opts)) $opts['timeout'] = 10;
 		return $opts;
@@ -115,7 +146,7 @@ class UpdraftPlusAddons2 {
 	}
 
 	public function puc_retain_fields($f) {
-		$retain_these = array('x-spm-yourversion-tested', 'x-spm-yourversion-tested', 'x-spm-expiry', 'x-langpack');
+		$retain_these = array('x-spm-yourversion-tested', 'x-spm-yourversion-tested', 'x-spm-expiry', 'translations');
 		foreach ($retain_these as $retain) {
 			if (!in_array($retain, $f)) $f[] = $retain;
 		}
@@ -228,11 +259,6 @@ class UpdraftPlusAddons2 {
 
 	public function addons_admin_url() {
 		return UpdraftPlus_Options::admin_page().'?page='.UDADDONS2_PAGESLUG.'&tab=addons';
-// 		if (is_multisite()) {
-// 			return network_admin_url('settings.php?page='.UDADDONS2_PAGESLUG.'&tab=addons');
-// 		} else {
-// 			return admin_url('options-general.php?page='.UDADDONS2_PAGESLUG.'&tab=addons');
-// 		}
 	}
 
 	// Funnelling through here a) allows for future flexibility and b) allows us to migrate elegantly from the previous non-MU-friendly setup
@@ -265,24 +291,24 @@ class UpdraftPlusAddons2 {
 		return update_site_option($option, $val);
 	}
 
-	function deinstall_udaddons() {
+	public function deinstall_udaddons() {
 		$del = '<a href="' . wp_nonce_url('plugins.php?action=delete-selected&amp;checked[]=updraftplus-addons/updraftplus-addons.php&amp;plugin_status=all&amp;paged=1&amp;s=', 'bulk-plugins') . '" title="' . esc_attr__('Delete plugin') . '" class="delete">' . 'delete the UpdraftPlus Addons Manager plugin' . '</a>';
 		$this->show_admin_warning('You can '.$del.' - it is obsolete (all of its functions, including your add-ons, are now included in the main UpdraftPlus plugin obtained from updraftplus.com).');
 	}
 
-	function show_admin_warning($message, $class = "updated") {
+	public function show_admin_warning($message, $class = "updated") {
 		echo '<div class="updraftmessage '.$class.'">'."<p>$message</p></div>";
 	}
 
-	# Remove any existing updates detected
-	function site_transient_update_plugins($updates) {
+	// Remove any existing updates detected
+	public function site_transient_update_plugins($updates) {
 		if (!is_object($updates) || empty($this->plugin_file)) return $updates;
 		if (isset($updates, $updates->response, $updates->response[$this->plugin_file]))
 			unset($updates->response[$this->plugin_file]);
 		return $updates;
 	}
 
-	# We want to lessen the number of automatic checks if an update is already known to be available
+	// We want to lessen the number of automatic checks if an update is already known to be available
 	public function puc_check_now($shouldcheck, $lastcheck, $checkperiod) {
 		global $wp_current_filter;
 		if (true !== $shouldcheck || empty($this->plug_updatechecker) || 0 == $lastcheck || in_array('load-update-core.php', $wp_current_filter) || !defined('DOING_CRON')) return $shouldcheck;
@@ -397,13 +423,27 @@ class UpdraftPlusAddons2 {
 			'mem' => ini_get('memory_limit'),
 			'lang' => (string)get_locale()
 		);
-
+		
+		// Since 3.7.0
+		if (function_exists('wp_get_installed_translations')) {
+			$all_translations = wp_get_installed_translations('plugins');
+			if (isset($all_translations[$this->slug])) {
+				foreach ($all_translations[$this->slug] as $locale => $tinfo) {
+					$found_existing = false;
+					if (isset($tinfo['PO-Revision-Date'])) {
+						$found_existing = strtotime($tinfo['PO-Revision-Date']);
+					}
+					$sinfo['trans'][$locale]['d'] = $found_existing;
+				}
+			}
+		}
+		
 		if (is_a($updraftplus, 'UpdraftPlus') && isset($updraftplus->version)) {
 			$sinfo['ud'] = $updraftplus->version;
-			if (class_exists('UpdraftPlus_Options')) $sinfo['service'] = serialize(UpdraftPlus_Options::get_updraft_option('updraft_service'));
+			if (class_exists('UpdraftPlus_Options')) $sinfo['service'] = json_encode(UpdraftPlus_Options::get_updraft_option('updraft_service'));
 		}
 
-		$args['si'] = urlencode(base64_encode(serialize($sinfo)));
+		$args['si2'] = urlencode(base64_encode(json_encode($sinfo)));
 
 		return $args;
 	}
@@ -650,14 +690,16 @@ class UpdraftPlusAddons2 {
 					'p' => base64_encode($password),
 					'sid' => $this->siteid(),
 					'sn' => base64_encode(get_bloginfo('name')),
-					'su' => base64_encode(home_url())
+					'su' => base64_encode(home_url()),
+					'f' => 2
 				) 
 			)
 		);
 
 		if (is_wp_error($result) || false === $result) return $result;
 
-		$response = maybe_unserialize($result['body']);
+// 		$response = maybe_unserialize($result['body']);
+		$response = json_decode($result['body'], true);
 
 		if (!is_array($response) || !isset($response['updraftpluscom']) || !isset($response['loggedin'])){
 			$ser_resp = htmlspecialchars(serialize($response));

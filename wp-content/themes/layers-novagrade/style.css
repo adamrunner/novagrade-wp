@@ -107,10 +107,10 @@
   color: #fff;
 }
 
-.row.copyright {
+#footer .copyright {
   font-size: 1.5rem;
 }
-.row.copyright .nav-horizontal a {
+#footer .copyright .nav-horizontal a {
   font-size: 1.5rem;
 }
 

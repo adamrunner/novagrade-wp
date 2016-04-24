@@ -2,9 +2,9 @@
 /*
 UpdraftPlus Addon: multisite:Multisite/Network
 Description: Makes UpdraftPlus compatible with a WordPress Network (a.k.a. multi-site) and adds Network-related features
-Version: 3.0
+Version: 3.1
 Shop: /shop/network-multisite/
-Latest Change: 1.11.20
+Latest Change: 1.11.28
 */
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
@@ -41,7 +41,7 @@ if (is_multisite()) {
 			$tmp = get_site_option('updraftplus_options', array(), $use_cache);
 			if (!is_array($tmp)) $tmp = array();
 			$tmp[$option] = $value;
-			update_site_option('updraftplus_options', $tmp);
+			return update_site_option('updraftplus_options', $tmp);
 		}
 
 		public static function delete_updraft_option($option) {
@@ -165,6 +165,11 @@ if (is_multisite()) {
 		}
 
 		public static function admin_init() {
+
+			static $already_inited = false;
+			if ($already_inited) return;
+			$already_inited = true;
+		
 			global $updraftplus, $updraftplus_admin;
 			$updraftplus->plugin_title .= " - ".__('Multisite Install','updraftplus');
 		}
@@ -176,12 +181,7 @@ if (is_multisite()) {
 			}
 
 			if (isset($_POST['action']) && $_POST['action'] == 'update' && isset($_POST['updraft_interval'])) {
-				$result = self::update_wpmu_options();
-				if (count($result) > 0) {
-					echo "<div class='error'>\n";
-					echo implode("<br />\n", $result);
-					echo "</div>\n";
-				}
+				$updated_options = self::mass_options_update($_POST);
 			}
 
 			global $updraftplus_admin;
@@ -189,17 +189,15 @@ if (is_multisite()) {
 
 		}
 
-		public static function update_wpmu_options() {
+		public static function mass_options_update($new_options) {
 
 			if ( !self::user_can_manage() ) wp_die( __( 'You do not have permission to access this page.' ) );
 
 			global $updraftplus, $updraftplus_admin;
 
-			$options=get_site_option('updraftplus_options');
+			$options = get_site_option('updraftplus_options');
 
-			$errors = array();
-
-			foreach ($_POST as $key => $value) {
+			foreach ($new_options as $key => $value) {
 				if ('updraft_include_others_exclude' == $key || 'updraft_include_uploads_exclude' == $key || 'updraft_include_wpcore_exclude' == $key) {
 					$options[$key] = $updraftplus->strip_dirslash($value);
 				} elseif ('updraft_include_more_path' == $key) {
@@ -228,6 +226,11 @@ if (is_multisite()) {
 				} elseif ('updraft_interval_database' == $key) {
 					$options[$key] = $updraftplus->schedule_backup_database($value);
 				} elseif ('updraft_service' == $key) {
+					if (is_array($value)) {
+						foreach ($value as $subkey => $subvalue){
+							if ($subvalue == '0') unset($value[$subkey]);
+						}
+					}
 					$options[$key] = $updraftplus->just_one($value);
 				} elseif ('updraft_webdav_settings' == $key) {
 					$options[$key] = $updraftplus->replace_http_with_webdav($value);
@@ -253,23 +256,22 @@ if (is_multisite()) {
 			}
 
 			foreach (array('updraft_delete_local', 'updraft_debug_mode', 'updraft_include_plugins', 'updraft_include_themes', 'updraft_include_uploads', 'updraft_include_others', 'updraft_include_blogs', 'updraft_include_wpcore', 'updraft_include_more', 'updraft_include_mu-plugins', 'updraft_ssl_useservercerts', 'updraft_ssl_disableverify', 'updraft_ssl_nossl', 'updraft_log_syslog', 'updraft_autobackup_default') as $key) {
-				if (empty($_POST[$key])) $options[$key] = false;
+				if (empty($new_options[$key])) $options[$key] = false;
 			}
 
-			if (empty($_POST['updraft_service'])) $options['updraft_service'] = 'none';
-			if (empty($_POST['updraft_email'])) $options['updraft_email'] = '';
+			if (empty($new_options['updraft_service'])) $options['updraft_service'] = 'none';
+			if (empty($new_options['updraft_email'])) $options['updraft_email'] = '';
 
-			if (empty($_POST['updraft_report_warningsonly'])) $_POST['updraft_report_warningsonly'] = array();
-			if (empty($_POST['updraft_report_wholebackup'])) $_POST['updraft_report_wholebackup'] = array();
+			if (empty($new_options['updraft_report_warningsonly'])) $new_options['updraft_report_warningsonly'] = array();
+			if (empty($new_options['updraft_report_wholebackup'])) $new_options['updraft_report_wholebackup'] = array();
 
-			$options['updraft_report_warningsonly'] = $updraftplus_admin->return_array($_POST['updraft_report_warningsonly']);
-			$options['updraft_report_wholebackup'] = $updraftplus_admin->return_array($_POST['updraft_report_wholebackup']);
+			$options['updraft_report_warningsonly'] = $updraftplus_admin->return_array($new_options['updraft_report_warningsonly']);
+			$options['updraft_report_wholebackup'] = $updraftplus_admin->return_array($new_options['updraft_report_wholebackup']);
 
 			update_site_option('updraftplus_options', $options);
 
-			return $errors;
+			return $options;
 		}
-
 
 	}
 

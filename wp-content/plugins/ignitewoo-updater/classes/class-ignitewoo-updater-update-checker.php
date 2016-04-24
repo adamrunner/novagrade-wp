@@ -18,9 +18,10 @@ class IgniteWoo_Updater_Update_Checker {
 	 * @since  1.0.0
 	 * @return void
 	 */
-	public function __construct ( $file, $product_id, $file_id, $license_hash ) {
+	public function __construct ( $file, $product_id, $file_id, $license_hash, $slug = '' ) {
 		$this->api_url = 'http://ignitewoo.com/api/?api=installer-api&';
 		$this->file = $file;
+		$this->baseslug = $slug;
 		$this->product_id = $product_id;
 		$this->file_id = $file_id;
 		$this->license_hash = $license_hash;
@@ -50,16 +51,19 @@ class IgniteWoo_Updater_Update_Checker {
 		// The transient contains the 'checked' information
 		// Now append to it information form your own API
 
+//$this->file = 'woocommerce-metals';
+		
 		$args = array(
 			'request' => 'update_check',
-			'plugin_name' => $this->file,
+			'plugin_name' => $this->baseslug,
 			'version' => isset( $transient->checked[$this->file] ) ? $transient->checked[$this->file] : '',
 			'product_id' => $this->product_id,
 			'file_id' => $this->file_id,
 			'licence_hash' => $this->license_hash,
-			'home_url' => trailingslashit( esc_url( home_url( '/' ) ) )
+			'home_url' => trailingslashit( esc_url( home_url( '/' ) ) ),
+			'ign_updater_version' => '1.2', // helps the updater determine which "$this->file" format is being used
 		);
-
+//var_dump( $args ); die;
 		// Send request checking for an update
 		$response = $this->request( $args );
 
@@ -166,11 +170,13 @@ class IgniteWoo_Updater_Update_Checker {
 	 * @return object $response
 	 */
 	public function plugin_information ( $false, $action, $args ) {	
+		global $wp_version;
+//var_dump( $args, dirname( $this->file ) ); die;
 		$transient = get_site_transient( 'update_plugins' );
 
 		// Check if this plugins API is about this plugin
-		//if( $args->slug != dirname( $this->file ) ) {
-		if ( $args->slug != $this->file ) {
+		if( $args->slug != dirname( $this->file ) ) {
+		///if ( version_compare( $wp_version, '3.9', '<=' ) && $args->slug != $this->file ) {
 			return $false;
 		}
 
@@ -178,7 +184,7 @@ class IgniteWoo_Updater_Update_Checker {
 		$args = array(
 			'request' => 'get_plugin_information',
 			'plugin_name' => $this->file, 
-			'version' => $transient->checked[$this->file], 
+			'version' => isset( $transient->checked[$this->file] ) ? $transient->checked[$this->file] : '',
 			'product_id' => $this->product_id,
 			'file_id' => $this->file_id, 
 			'licence_hash' => $this->license_hash,
@@ -225,7 +231,7 @@ class IgniteWoo_Updater_Update_Checker {
 				'cookies' => array(),
 				'sslverify' => false
 			) );
-
+//	var_dump( $request ); die;
 		// Make sure the request was successful
 		if( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) != 200 ) {
 			// Request failed

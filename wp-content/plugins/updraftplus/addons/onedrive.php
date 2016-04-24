@@ -19,10 +19,9 @@ do_listfiles($match)
 do_delete($file) - return true/false
 do_download($file, $fullpath, $start_offset) - return true/false
 do_config_print()
-do_config_javascript()
 do_credentials_test_parameters() - return an array: keys = required _POST parameters; values = description of each
-do_credentials_test($testfile) - return true/false
-do_credentials_test_deletefile($testfile)
+do_credentials_test($testfile, $posted_settings) - return true/false
+do_credentials_test_deletefile($testfile, $posted_settings)
 */
 
 if (!class_exists('UpdraftPlus_RemoteStorage_Addons_Base')) require_once(UPDRAFTPLUS_DIR.'/methods/addon-base.php');
@@ -71,18 +70,26 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		try {
 			//Check if enough storage space in quota
 			$quota = $service->fetchQuota();
-			$total = $quota->total;
-			$available = $quota->remaining;
+			
+			if (!is_object($quota)) {
+			
+				$updraftplus->log("OneDrive quota fetching failed; object returned was a: ".gettype($quota));
+			
+			} else {
+			
+				$total = $quota->total;
+				$available = $quota->remaining;
 
-			if (is_numeric($total) && is_numeric($available)) {
-				$used = $total - $available;
-				$used_perc = round($used*100/$total, 1);
-				$message = sprintf('Your %s quota usage: %s %% used, %s available', 'OneDrive', $used_perc, round($available/1048576, 1).' Mb');
-			}
+				if (is_numeric($total) && is_numeric($available)) {
+					$used = $total - $available;
+					$used_perc = round($used*100/$total, 1);
+					$message = sprintf('Your %s quota usage: %s %% used, %s available', 'OneDrive', $used_perc, round($available/1048576, 1).' MB');
+				}
 
-			if (isset($available) && $available != -1 && $available < $filesize) {
-				$updraftplus->log("File upload expected to fail: file data remaining to upload ($file) size is ".($filesize)." b (overall file size; $filesize b), whereas available quota is only $available_quota b");
-				$updraftplus->log(sprintf(__("Account full: your %s account has only %d bytes left, but the file to be uploaded has %d bytes remaining (total size: %d bytes)",'updraftplus'), 'OneDrive', $available_quota, $filesize, $filesize), 'error');
+				if (isset($available) && $available != -1 && $available < $filesize) {
+					$updraftplus->log("File upload expected to fail: file data remaining to upload ($file) size is ".($filesize)." b (overall file size; $filesize b), whereas available quota is only $available_quota b");
+					$updraftplus->log(sprintf(__("Account full: your %s account has only %d bytes left, but the file to be uploaded has %d bytes remaining (total size: %d bytes)",'updraftplus'), 'OneDrive', $available_quota, $filesize, $filesize), 'error');
+				}
 			}
 			
 		} catch (Exception $e) {
@@ -149,7 +156,8 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 						} else {
 							$clean_state = $state;
 							if (is_object($state) && !empty($state->token->data->access_token)) $clean_state->token->data->access_token = substr($state->token->data->access_token, 0, 3).'...';
-							$updraftplus->log("Failed to get upload status: service_state=".serialize($clean_state).",  upload_status=".serialize($upload_status));
+							$updraftplus->log("Failed to get upload status - will re-start this upload: service_state=".serialize($clean_state).",  upload_status=".serialize($upload_status));
+							$updraftplus->jobdata_delete($session_key);
 						}
 					}
 
@@ -509,7 +517,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				if (is_numeric($total) && is_numeric($available)) {
 					$used = $total - $available;
 					$used_perc = round($used*100/$total, 1);
-					$message .= sprintf(__('Your %s quota usage: %s %% used, %s available','updraftplus'), 'OneDrive', $used_perc, round($available/1048576, 1).' Mb');
+					$message .= sprintf(__('Your %s quota usage: %s %% used, %s available','updraftplus'), 'OneDrive', $used_perc, round($available/1048576, 1).' MB');
 				}
 
 				$account_info = $service->fetchAccountInfo();
@@ -707,7 +715,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			sprintf(__('Authenticate with %s', 'updraftplus'), 'OneDrive').':',
 			'<p>'.(!empty($opts['refresh_token']) ? "<strong>".__('(You appear to be already authenticated).', 'updraftplus').'</strong>' : '').
 			((!empty($opts['refresh_token']) && !empty($opts['ownername'])) ? ' '.sprintf(__("Account holder's name: %s.", 'updraftplus'), htmlspecialchars($opts['ownername'])).' ' : '').
-			'</p><p><a href="?page=updraftplus&action=updraftmethod-onedrive-auth&updraftplus_onedriveauth=doit">'.sprintf(__('<strong>After</strong> you have saved your settings (by clicking \'Save Changes\' below), then come back here once and click this link to complete authentication with %s.','updraftplus'), 'OneDrive').'</a></p>'
+			'</p><p><a class="updraft_authlink" href="'.UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth&updraftplus_onedriveauth=doit">'.sprintf(__('<strong>After</strong> you have saved your settings (by clicking \'Save Changes\' below), then come back here once and click this link to complete authentication with %s.','updraftplus'), 'OneDrive').'</a></p>'
 		);
 	}
 

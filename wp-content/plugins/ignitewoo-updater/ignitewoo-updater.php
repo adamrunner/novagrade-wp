@@ -3,7 +3,7 @@
 Plugin Name: IgniteWoo Updater
 Plugin URI: http://ignitewoo.com/
 Description: Manage updates for your purchased IgniteWoo products.
-Version: 1.2
+Version: 1.2.2
 Author: IgniteWoo
 Author URI: http://ignitewoo.com/
 */
@@ -24,7 +24,7 @@ Author URI: http://ignitewoo.com/
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-	
+
     if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
     if ( is_admin() ) {

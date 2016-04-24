@@ -10,7 +10,7 @@
 /**
  * The current version of the theme. Use a random number for SCRIPT_DEBUG mode
  */
-define( 'LAYERS_VERSION', '1.2.14' );
+define( 'LAYERS_VERSION', '1.5.0' );
 define( 'LAYERS_TEMPLATE_URI' , get_template_directory_uri() );
 define( 'LAYERS_TEMPLATE_DIR' , get_template_directory() );
 define( 'LAYERS_THEME_TITLE' , 'Layers' );
@@ -150,11 +150,17 @@ if( ! function_exists( 'layers_setup' ) ) {
 		 */
 
 		// Custom Site Logo
-		add_theme_support( 'site-logo', array(
+		if( !function_exists( 'the_custom_logo' ) ){
+			$logo_support = 'site-logo';
+		} else {
+			$logo_support = 'custom-logo';
+		}
+		add_theme_support( $logo_support, array(
 			'header-text' => array(
 				'sitetitle',
 				'tagline',
 			),
+			'flex-width' => true,
 			'size' => 'large',
 		) );
 
@@ -283,8 +289,8 @@ if( ! function_exists( 'layers_register_standard_sidebars' ) ) {
 			register_sidebar( array(
 				'id'		=> LAYERS_THEME_SLUG . '-footer-' . $footer,
 				'name'		=> __( 'Footer ', 'layerswp' ) . $footer,
-				'before_widget'	=> '<section id="%1$s" class="widget %2$s">',
-				'after_widget'	=> '</section>',
+				'before_widget'	=> '<aside id="%1$s" class="widget %2$s">',
+				'after_widget'	=> '</aside>',
 				'before_title'	=> '<h5 class="section-nav-title">',
 				'after_title'	=> '</h5>',
 			) );
@@ -354,6 +360,18 @@ if( ! function_exists( 'layers_scripts' ) ) {
 		if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 			wp_enqueue_script( 'comment-reply' );
 		} // Comment reply script
+
+		wp_register_script(
+			LAYERS_THEME_SLUG . " -map-api",
+			"//maps.googleapis.com/maps/api/js"
+		);
+
+		wp_register_script(
+			LAYERS_THEME_SLUG . "-map-trigger",
+			get_template_directory_uri()."/core/widgets/js/maps.js",
+			array( "jquery" ),
+			LAYERS_VERSION
+		);
 
 		/**
 		* Front end Styles

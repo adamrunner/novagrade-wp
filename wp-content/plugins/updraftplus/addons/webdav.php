@@ -41,7 +41,7 @@ class UpdraftPlus_Addons_RemoteStorage_webdav extends UpdraftPlus_AddonStorage_v
 			<tr class="updraftplusmethod webdav">
 				<th><?php _e('WebDAV URL','updraftplus');?>:</th>
 				<td>
-					<input type="text" style="width: 432px" id="updraft_webdav_settings_url" name="updraft_webdav_settings[url]" value="<?php echo($url);?>" />
+					<input data-updraft_settings_test="url" type="text" style="width: 432px" id="updraft_webdav_settings_url" name="updraft_webdav_settings[url]" value="<?php echo($url);?>" />
 					<br>
 					<?php printf(__('Enter a complete URL, beginning with webdav:// or webdavs:// and including path, username, password and port as required - e.g.%s','updraftplus'),' webdavs://myuser:password@example.com/dav');?>
 				</td>
@@ -50,13 +50,14 @@ class UpdraftPlus_Addons_RemoteStorage_webdav extends UpdraftPlus_AddonStorage_v
 		<?php
 	}
 
-	public function credentials_test() {
-		if (empty($_POST['url'])) {
+	public function credentials_test($posted_settings) {
+	
+		if (empty($posted_settings['url'])) {
 			printf(__("Failure: No %s was given.",'updraftplus'), 'URL');
 			return;
 		}
 
-		$url = preg_replace('/^http/', 'webdav', untrailingslashit($_POST['url']));
+		$url = preg_replace('/^http/i', 'webdav', untrailingslashit($posted_settings['url']));
 		$this->credentials_test_go($url);
 	}
 

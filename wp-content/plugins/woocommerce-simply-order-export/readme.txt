@@ -3,8 +3,8 @@ Contributors: ankitgadertcampcom
 Donate link: http://sharethingz.com
 Tags: woocommerce, order, export, csv, duration, woocommerce-order, woocommerce-order-export
 Requires at least: 4.0
-Tested up to: 4.4
-Stable tag: 2.0.5
+Tested up to: 4.4.2
+Stable tag: 2.0.7
 License: GPLv2 or later (of-course)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,12 @@ Please use wpg_order_columns and wpg_before_csv_write hooks for performing this 
 You can also opt for woocommerce simply order export add-on, it is available [here](http://sharethingz.com/woocommerce-simply-order-export-add-on/?utm_source=readme&utm_medium=plugin&utm_campaign=wsoe). It adds all the fields related to orders and allows users to reorder the fields using drag and drop interface.
 
 == Changelog ==
+
+= 2.0.7 =
+* Minor fix: php support for older than 5.4.0 added for html_entity_decode function
+
+= 2.0.6 =
+* Minor fix: Invalid argument in foreach warning fixed.
 
 = 2.0.5 =
 * Minor fix: wsoe_after_value_* hook

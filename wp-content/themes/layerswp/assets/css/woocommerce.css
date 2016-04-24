@@ -308,13 +308,15 @@ p.stars span a:focus{
 
 		/*-------------------*/
 		/*- PRODUCT THUMBS --*/
+		.thumbnails.columns-3{
+			margin-left: 0;
+			margin-right: 0;
+			max-width: 100%;
+		}
 		.thumbnails a{
 			display: inline-block;
-			width: 23.5%;
-			margin: 10px 2% 0 0;
-		}
-		.thumbnails a:nth-child(4n+4){
-			margin-right: 0;
+			width: calc(((100% / 12) * 3) - 10px);
+			margin: 10px 10px 0 0;
 		}
 		.thumbnails a img{
 			display: block;
@@ -517,14 +519,14 @@ p.stars span a:focus{
 	.entry-content ul{
 		list-style: disc;
 		margin: 0 0 16px;
-		border: none;
+		border: none !important;
 	}
 	.entry-content ul li{
 		list-style: disc;
 		padding: 0;
 		margin: 0 0 6px 26px;
 		background: none;
-		border: none;
+		border: none !important;
 	}
 	.entry-content ol{
 		list-style: decimal;
@@ -1368,8 +1370,7 @@ p.stars span a:focus{
 		text-align: center;
 	}
 
-	table .product-thumbnail,
-	table .product-quantity{
+	table .product-thumbnail{
 		display: none;
 	}
 	table .actions{
@@ -1420,6 +1421,7 @@ p.stars span a:focus{
 	.woocommerce-tabs .tabs li{
 		float: none;
 		margin-bottom: 3px;
+		margin-right: 0;
 	}
 	.woocommerce-tabs .tabs a{
 	}

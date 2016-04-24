@@ -75,7 +75,7 @@ class IgniteWoo_Updater_API {
 	 */
 	private function request ( $endpoint = 'check', $params = array() ) {
 		global $current_user;
-		
+	
 		$url = add_query_arg( 'wc-api', 'product-key-api', $this->api_url );
 
 		$supported_methods = array( 'check', 'activation', 'deactivation' );

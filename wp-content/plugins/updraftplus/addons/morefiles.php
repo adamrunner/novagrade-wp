@@ -2,9 +2,9 @@
 /*
 UpdraftPlus Addon: morefiles:Back up more files, including WordPress core
 Description: Creates a backup of WordPress core (including everything in that directory WordPress is in), and any other file/directory you specify too.
-Version: 2.1
+Version: 2.2
 Shop: /shop/more-files/
-Latest Change: 1.11.7
+Latest Change: 1.11.28
 */
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
@@ -189,12 +189,13 @@ class UpdraftPlus_Addons_MoreFiles {
 
 		if ($prefix) return $ret;
 
-		$display = (UpdraftPlus_Options::get_updraft_option('updraft_include_more')) ? '' : 'style="display:none;"';
-
+		$display = UpdraftPlus_Options::get_updraft_option('updraft_include_more') ? '' : 'style="display:none;"';
+		$class = $display ? 'class="updraft-hidden"' : '';
+		
 		$paths = UpdraftPlus_Options::get_updraft_option('updraft_include_more_path');
 		if (!is_array($paths)) $paths = array($paths);
 
-		$ret .= "<div id=\"updraft_include_more_options\" $display><p>";
+		$ret .= "<div id=\"updraft_include_more_options\" $display $class><p>";
 
 			$ret .= __('If you are not sure what this option is for, then you will not want it, and should turn it off.','updraftplus').' '.__('If using it, enter an absolute path (it is not relative to your WordPress install).', 'updraftplus');
 			
@@ -208,7 +209,7 @@ class UpdraftPlus_Addons_MoreFiles {
 			foreach ($paths as $ind => $path) {
 				$maxind = max($ind, $maxind);
 				$ret .= '<div class="updraftplus-morefiles-row" style="float: left; clear: left;"><label for="updraft_include_more_path_'.$ind.'">'.__('Enter the directory:', 'updraftplus').'</label>';
-				$ret .= '<input type="text" id="updraft_include_more_path_'.$ind.'" name="updraft_include_more_path[]" size="54" value="'.htmlspecialchars($path).'" /> <span title="'.__('Remove', 'updraftplus').'" class="updraftplus-morefiles-row-delete">X</span>';
+				$ret .= '<input type="text" data-mp_index="'.$ind.'" id="updraft_include_more_path_'.$ind.'" class="updraft_include_more_path" name="updraft_include_more_path[]" size="54" value="'.htmlspecialchars($path).'" /> <span title="'.__('Remove', 'updraftplus').'" class="updraftplus-morefiles-row-delete">X</span>';
 				$ret .= '</div>';
 			}
 			
@@ -222,24 +223,24 @@ class UpdraftPlus_Addons_MoreFiles {
 		$remove = esc_js(__('Remove', 'updraftplus'));
 		$ret .= <<<ENDHERE
 		<script>
-			jQuery(document).ready(function() {
+			jQuery(document).ready(function($) {
 				var updraftplus_morefiles_lastind = $maxind;
-				jQuery('#updraft_include_more').click(function() {
-					if (jQuery('#updraft_include_more').is(':checked')) {
-						jQuery('#updraft_include_more_options').slideDown();
+				$('#updraft_include_more').click(function() {
+					if ($('#updraft_include_more').is(':checked')) {
+						$('#updraft_include_more_options').slideDown();
 					} else {
-						jQuery('#updraft_include_more_options').slideUp();
+						$('#updraft_include_more_options').slideUp();
 					}
 				});
-				jQuery('#updraft_include_more_paths_another').click(function(e) {
+				$('#updraft_include_more_paths_another').click(function(e) {
 					e.preventDefault();
 					updraftplus_morefiles_lastind++;
-					jQuery('#updraft_include_more_paths').append('<div class="updraftplus-morefiles-row" style="float: left; clear: left;"><label for="updraft_include_more_path_'+updraftplus_morefiles_lastind+'">$enter</label><input type="text" id="updraft_include_more_path_'+updraftplus_morefiles_lastind+'" name="updraft_include_more_path[]" size="54" value="" /> <span title="$remove" class="updraftplus-morefiles-row-delete">X</span></div>');
+					$('#updraft_include_more_paths').append('<div class="updraftplus-morefiles-row" style="float: left; clear: left;"><label for="updraft_include_more_path_'+updraftplus_morefiles_lastind+'">$enter</label><input type="text" id="updraft_include_more_path_'+updraftplus_morefiles_lastind+'" name="updraft_include_more_path[]" size="54" value="" /> <span title="$remove" class="updraftplus-morefiles-row-delete">X</span></div>');
 				});
-				jQuery('#updraft_include_more_options').on('click', '.updraftplus-morefiles-row-delete', function(e) {
+				$('#updraft_include_more_options').on('click', '.updraftplus-morefiles-row-delete', function(e) {
 					e.preventDefault();
-					var prow = jQuery(this).parent('.updraftplus-morefiles-row');
-					jQuery(prow).slideUp().delay(400).remove();
+					var prow = $(this).parent('.updraftplus-morefiles-row');
+					$(prow).slideUp().delay(400).remove();
 				});
 			});
 		</script>
@@ -252,31 +253,18 @@ ENDHERE;
 
 		if ($prefix) return $ret;
 
-		$display = (UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore')) ? '' : 'style="display:none;"';
+		$display = UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore') ? '' : 'style="display:none;"';
 
 		$ret .= "<div id=\"updraft_include_wpcore_exclude\" $display>";
 
 		$ret .= '<label for="updraft_include_wpcore_exclude">'.__('Exclude these:', 'updraftplus').'</label>';
 
-		$ret .= '<input title="'.__('If entering multiple files/directories, then separate them with commas. For entities at the top level, you can use a * at the start or end of the entry as a wildcard.', 'updraftplus').'" type="text" id="updraft_include_wpcore_exclude" name="updraft_include_wpcore_exclude" size="54" value="'.htmlspecialchars(UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore_exclude')).'" />';
+		$ret .= '<input title="'.__('If entering multiple files/directories, then separate them with commas. For entities at the top level, you can use a * at the start or end of the entry as a wildcard.', 'updraftplus').'" type="text" id="updraft_include_wpcore_exclude" name="updraft_include_wpcore_exclude" size="54" value="'.esc_attr(UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore_exclude')).'" />';
 
 		$ret .= '<br>';
 
 		$ret .= '</div>';
 
-		$ret .= <<<ENDHERE
-		<script>
-			jQuery(document).ready(function() {
-				jQuery('#updraft_include_wpcore').click(function() {
-					if (jQuery('#updraft_include_wpcore').is(':checked')) {
-						jQuery('#updraft_include_wpcore_exclude').slideDown();
-					} else {
-						jQuery('#updraft_include_wpcore_exclude').slideUp();
-					}
-				});
-			});
-		</script>
-ENDHERE;
 		return $ret;
 	}
 

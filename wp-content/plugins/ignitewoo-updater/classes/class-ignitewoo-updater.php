@@ -21,6 +21,7 @@ class IgniteWoo_Updater {
 	 * @return  void
 	 */
 	public function __construct ( $file ) {
+	
 		$this->file = $file;
 		$this->plugin_url = trailingslashit( plugins_url( '', $plugin = $file ) );
 		$this->plugin_path = trailingslashit( dirname( $file ) );

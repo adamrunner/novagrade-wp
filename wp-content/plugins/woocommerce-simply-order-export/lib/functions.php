@@ -155,10 +155,18 @@ function wsoe_is_shop_manager() {
  */
 function wsoe_formatted_price( $amount, $order_details ) {
 
-	if( is_a( $order_details, 'WC_Order' ) && apply_filters( 'wsoe_formatted_price', true ) )
-		return strip_tags( html_entity_decode( wc_price( $amount , apply_filters( 'wsoe_formatted_price_args', array() ) ) ) ) ;
+	if( is_a( $order_details, 'WC_Order' ) && apply_filters( 'wsoe_formatted_price', true ) ){
 
-		return $amount;
+		// Support for php versions older than PHP 5.4.0
+		if( !defined( 'ENT_HTML5' ) ){
+			return strip_tags( html_entity_decode( wc_price( $amount , apply_filters( 'wsoe_formatted_price_args', array() ) ) ) ) ;
+		}else {
+			$charset = get_option('blog_charset');
+			return strip_tags( html_entity_decode( wc_price( $amount , apply_filters( 'wsoe_formatted_price_args', array() ) ), ENT_HTML5, $charset ) ) ;
+		}
+	}
+
+	return $amount;
 }
 
 /**

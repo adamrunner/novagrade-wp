@@ -470,19 +470,28 @@ if( !function_exists( 'layers_apply_customizer_styles' ) ) {
 					'border-bottom-color' => layers_too_light_then_dark( $main_color ),
 				),
 			));
+
+			// Debugging:
+			global $wp_customize;
+			if ( $wp_customize && ( ( bool ) layers_get_theme_mod( 'dev-switch-button-css-testing' ) ) ) {
+				echo '<pre style="font-size:11px;">';
+				echo 'RE: Buttons - This should not happen if Layers Pro is active!';
+				echo '</pre>';
+			}
 		}
 
-/**
-		* Footer Colors
- */
+		/**
+		 * Footer Colors.
+		 */
 
 		if( '' != $footer_color ) {
+
 			// Apply the BG Color
-		layers_inline_styles( '.footer-site', 'background', array(
-			'background' => array(
-					'color' => $footer_color,
-			),
-		));
+			layers_inline_styles( '.footer-site', 'background', array(
+				'background' => array(
+						'color' => $footer_color,
+				),
+			));
 
 			// Add Invert if the color is dark
 			if ( 'dark' == layers_is_light_or_dark( $footer_color ) ){
@@ -899,12 +908,12 @@ add_action ( 'wp_footer', 'layers_add_additional_footer_scripts' );
 if( !function_exists( 'layers_add_google_analytics' ) ) {
 	function layers_add_google_analytics() {
 		global $wp_customize;
-		
+
 		// Bail if in customizer.
 		if( isset( $wp_customize ) ) return;
 
 		$analytics_id = layers_get_theme_mod( 'header-google-id' );
-		
+
 		if ( '' != $analytics_id ) { ?>
 			<script>
 				(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -1006,19 +1015,19 @@ if( !function_exists( 'layers_inline_styles' ) ) {
 				$trbl_args = $args[ $type ];
 
 				if( isset( $trbl_args['top'] ) && '' != $trbl_args['top'] ){
-					$css .= $type . '-top: ' . $trbl_args['top'] . '; ';
+					$css .= $type . '-top: ' . $trbl_args['top'] . 'px; ';
 				}
 
 				if( isset( $trbl_args['right'] ) && '' != $trbl_args['right'] ){
-					$css .= $type . '-right: ' . $trbl_args['right'] . '; ';
+					$css .= $type . '-right: ' . $trbl_args['right'] . 'px; ';
 				}
 
 				if( isset( $trbl_args['bottom'] ) && '' != $trbl_args['bottom'] ){
-					$css .= $type . '-bottom: ' . $trbl_args['bottom'] . '; ';
+					$css .= $type . '-bottom: ' . $trbl_args['bottom'] . 'px; ';
 				}
 
 				if( isset( $trbl_args['left'] ) && '' != $trbl_args['left'] ){
-					$css .= $type . '-left: ' . $trbl_args['left'] . '; ';
+					$css .= $type . '-left: ' . $trbl_args['left'] . 'px; ';
 				}
 
 			break;
@@ -1047,7 +1056,7 @@ if( !function_exists( 'layers_inline_styles' ) ) {
 			case 'font-family' :
 
 				if( '' == $args[ 'font-family' ] ) return ;
-				$css .= 'font-family: ' . $args[ 'font-family' ] . ', "Helvetica Neue", Helvetica, sans-serif;';
+				$css .= 'font-family: "' . $args[ 'font-family' ] . '", Helvetica, sans-serif;';
 
 			break;
 
@@ -1135,6 +1144,8 @@ if( !function_exists( 'layers_inline_styles' ) ) {
 if( !function_exists( 'layers_inline_button_styles' ) ) {
 	function layers_inline_button_styles( $container_id = NULL, $type = 'background' , $args = array() ){
 
+		$styles = '';
+
 		// Auto text color based on background color
 		if( isset( $args[ 'button' ][ 'background-color' ] ) && NULL !== layers_is_light_or_dark( $args[ 'button' ][ 'background-color' ] ) ){
 
@@ -1147,10 +1158,10 @@ if( !function_exists( 'layers_inline_button_styles' ) ) {
 			else if ( 'dark' == layers_is_light_or_dark( $background_darker ) ) {
 				$args['button']['color'] = '#FFFFFF';
 			}
-		}
 
-		// Add styling for the standard colors
-		layers_inline_styles( $container_id, $type, $args );
+			// Add styling for the standard colors
+			$styles .= layers_inline_styles( $container_id, $type, $args );
+		}
 
 		// Add styling for the hover colors
 		if( isset( $args['selectors'] ) ) {
@@ -1175,7 +1186,11 @@ if( !function_exists( 'layers_inline_button_styles' ) ) {
 		}
 
 		// Apply hover colors
-		if( isset( $hover_args ) ) layers_inline_styles( $container_id, $type, $hover_args );
+		if( isset( $hover_args ) ) {
+			$styles .= layers_inline_styles( $container_id, $type, $hover_args );// Add styling for the standard colors
+		}
+
+		return $styles;
 	}
 }
 
@@ -1537,3 +1552,45 @@ if( !function_exists( 'layers_excerpt_action' ) ) {
 	}
 }
 add_action( 'layers_list_post_content', 'layers_excerpt_action' );
+
+
+/**
+ * Set Header meta data, such as OG support
+ *
+ */
+if( !function_exists( 'layers_header_meta' ) ) {
+	function layers_header_meta(){ ?>
+		<?php if( is_single() ) { ?>
+			<meta property="og:title" content="<?php the_title(); ?>" />
+			<meta property="og:type" content="website" />
+			<meta property="og:url" content="<?php the_permalink(); ?>" />
+			<?php if( has_post_thumbnail() ){
+				$image_url = wp_get_attachment_url( get_post_thumbnail_id() ); ?>
+				<meta property="og:image" content="<?php echo $image_url; ?>" />
+			<?php } ?>
+		<?php } else { ?>
+			<meta property="og:title" content="<?php wp_title(); ?>" />
+			<meta property="og:type" content="website" />
+			<meta property="og:url" content="<?php home_url(); ?>" />
+			<?php $logo = get_option( 'site_logo' );
+			if( is_array( $logo ) && isset( $logo[ 'url' ] ) ){ ?>
+				<meta property="og:image" content="<?php echo esc_url( $logo['url'] ); ?>" />
+			<?php } ?>
+		<?php }
+	}
+}
+add_action( 'wp_head', 'layers_header_meta' );
+
+
+/**
+ * Set Blank menu function which is used as a fallback in the Layers Menus
+ *
+ * @return string Blank space
+ *
+ */
+
+if( !function_exists( 'layers_blank_menu' ) ) {
+	function layers_blank_menu(){
+		echo '';
+	}
+}

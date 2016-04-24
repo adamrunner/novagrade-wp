@@ -2,9 +2,9 @@
 /*
 UpdraftPlus Addon: reporting:Sophisticated reporting options
 Description: Provides various new reporting capabilities
-Version: 2.0
+Version: 2.1
 Shop: /shop/reporting/
-Latest Change: 2.11.22
+Latest Change: 2.11.28
 */
 
 # Future possibility: more reporting options; e.g. HTTP ping; tweet, etc.
@@ -311,15 +311,22 @@ class UpdraftPlus_Addon_Reporting {
 	public function admin_footer() {
 		?>
 		<script>
-			jQuery(document).ready(function(){
-				jQuery('#updraft_report_another').click(function(e) {
+			jQuery(document).ready(function($){
+			
+				var reportbox_index = $('#updraft_report_cell .updraft_reportbox').length + 2;
+				
+				$('#updraft_report_cell').on('click', '.updraft_reportbox .updraft_reportbox_delete', function() {
+					$(this).closest('.updraft_reportbox').fadeOut('medium', function() { $(this).remove(); });
+				});
+				
+				$('#updraft-navtab-settings-content .updraft_report_another').click(function(e) {
 					e.preventDefault();
 
-					var ind = jQuery('#updraft_report_cell .updraft_reportbox').length + 2;
-					var showemail = 1;
+					$('#updraft-navtab-settings-content .updraft_report_another_p').before('<div id="updraft_reportbox_'+reportbox_index+'" class="updraft_reportbox updraft-hidden" style="display:none;"><button class="updraft_reportbox_delete" reportbox_index="'+reportbox_index+'" type="button">X</button><input type="text" title="'+updraftlion.enteremailhere+'" class="updraft_report_email" name="updraft_email['+reportbox_index+']" value="" /><br><input class="updraft_report_checkbox" type="checkbox" id="updraft_report_warningsonly_'+reportbox_index+'" name="updraft_report_warningsonly['+reportbox_index+']"><label for="updraft_report_warningsonly_'+reportbox_index+'">'+updraftlion.sendonlyonwarnings+'</label><br><div class="updraft_report_wholebackup">\
+<input class="updraft_report_checkbox" type="checkbox" id="updraft_report_wholebackup_'+reportbox_index+'" name="updraft_report_wholebackup['+reportbox_index+']" title="'+updraftlion.emailsizelimits+'"><label for="updraft_report_wholebackup_'+reportbox_index+'" title="'+updraftlion.emailsizelimits+'">'+updraftlion.wholebackup+'</label></div></div>');
+					$('#updraft_reportbox_'+reportbox_index).fadeIn();
 
-					jQuery('#updraft_report_another_p').before('<div id="updraft_reportbox_'+ind+'" class="updraft_reportbox" style="padding:8px; margin: 8px 0; border: 1px dotted; clear:left;float:left;"><button onclick="jQuery(\'#updraft_reportbox_'+ind+'\').fadeOut().remove();" type="button" style="font-size: 50%; float:right; padding:0 3px; position: relative; top: -4px; left: 4px;">X</button><input type="text" title="'+updraftlion.enteremailhere+'" style="width:300px" name="updraft_email['+ind+']" value="" /><br><input style="margin-top: 4px;" type="checkbox" id="updraft_report_warningsonly_'+ind+'" name="updraft_report_warningsonly['+ind+']"><label for="updraft_report_warningsonly_'+ind+'">'+updraftlion.sendonlyonwarnings+'</label><br><div class="updraft_report_wholebackup" style="'+((showemail) ? '' : 'display:none;')+'">\
-<input style="margin-top: 4px;" type="checkbox" id="updraft_report_wholebackup_'+ind+'" name="updraft_report_wholebackup['+ind+']" title="'+updraftlion.emailsizelimits+'"><label for="updraft_report_wholebackup_'+ind+'" title="'+updraftlion.emailsizelimits+'">'+updraftlion.wholebackup+'</label></div></div>');
+					reportbox_index++;
 
 				});
 			});
@@ -359,10 +366,9 @@ class UpdraftPlus_Addon_Reporting {
 			$updraft_report_wholebackup = array();
 		}
 
-		$ind = 0;
-
 		$out .= '<p>'.__('Enter addresses here to have a report sent to them when a backup job finishes.', 'updraftplus').'</p>';
 
+		$ind = 0;
 		foreach ($updraft_email as $ikey => $destination) {
 			$warningsonly = (empty($updraft_report_warningsonly[$ikey])) ? false : true;
 			$wholebackup = (empty($updraft_report_wholebackup[$ikey])) ? false : true;
@@ -374,7 +380,7 @@ class UpdraftPlus_Addon_Reporting {
 
 		if (0 === $ind) $out .= $this->report_box_generator('', 0, false, false);
 
-		$out .= '<p id="updraft_report_another_p" style="clear:left;"><a id="updraft_report_another" href="#updraft_report_row">'.__('Add another address...', 'updraftplus').'</a></p>';
+		$out .= '<p class="updraft_report_another_p"><a class="updraft_report_another" href="#updraft_report_row">'.__('Add another address...', 'updraftplus').'</a></p>';
 
 		$out .= '</td>
 			</tr>';
@@ -399,15 +405,15 @@ class UpdraftPlus_Addon_Reporting {
 
 		$out = '';
 
-		$out .='<div id="updraft_reportbox_'.$ind.'" class="updraft_reportbox" style="padding:8px; margin: 8px 0; border: 1px dotted; clear:left;float:left;">';
+		$out .='<div id="updraft_reportbox_'.$ind.'" class="updraft_reportbox">';
 
-		$out .= '<button onclick="jQuery(\'#updraft_reportbox_'.$ind.'\').fadeOut().remove();" type="button" style="font-size: 50%; float:right; padding:0 3px; position: relative; top: -4px; left: 4px;">X</button>';
+		$out .= '<button class="updraft_reportbox_delete" type="button">X</button>';
 
-		$out .= '<input type="text" title="'.esc_attr(__('To send to more than one address, separate each address with a comma.', 'updraftplus')).'" style="width:300px" name="updraft_email['.$ind.']" value="'.esc_attr($addr).'" /><br>';
+		$out .= '<input type="text" title="'.esc_attr(__('To send to more than one address, separate each address with a comma.', 'updraftplus')).'" class="updraft_report_email" name="updraft_email['.$ind.']" value="'.esc_attr($addr).'" /><br>';
 
-		$out .= '<input '.(($warningsonly) ? 'checked="checked" ' : '').'style="margin-top: 4px;" type="checkbox" id="updraft_report_warningsonly_'.$ind.'" name="updraft_report_warningsonly['.$ind.']"><label for="updraft_report_warningsonly_'.$ind.'"> '.__('Send a report only when there are warnings/errors', 'updraftplus').'</label><br>';
+		$out .= '<input '.(($warningsonly) ? 'checked="checked" ' : '').' id="updraft_report_warningsonly_'.$ind.'" class="updraft_report_checkbox"type="checkbox"  name="updraft_report_warningsonly['.$ind.']"><label for="updraft_report_warningsonly_'.$ind.'"> '.__('Send a report only when there are warnings/errors', 'updraftplus').'</label><br>';
 
-		$out .= '<div class="updraft_report_wholebackup"><input '.(($wholebackup) ? 'checked="checked" ' : '').'style="margin-top: 4px;" type="checkbox" id="updraft_report_wholebackup_'.$ind.'" name="updraft_report_wholebackup['.$ind.']" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s Mb; backups larger than any limits will likely not arrive.','updraftplus'), '10-20')).'"><label for="updraft_report_wholebackup_'.$ind.'" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s Mb; backups larger than any limits will likely not arrive.','updraftplus'), '10-20')).'"> '.__('When the Email storage method is enabled, also send the entire backup', 'updraftplus').'</label></div>';
+		$out .= '<div class="updraft_report_wholebackup"><input '.(($wholebackup) ? 'checked="checked" ' : '').'class="updraft_report_checkbox" type="checkbox" id="updraft_report_wholebackup_'.$ind.'" name="updraft_report_wholebackup['.$ind.']" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s Mb; backups larger than any limits will likely not arrive.','updraftplus'), '10-20')).'"><label for="updraft_report_wholebackup_'.$ind.'" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s Mb; backups larger than any limits will likely not arrive.','updraftplus'), '10-20')).'"> '.__('When the Email storage method is enabled, also send the entire backup', 'updraftplus').'</label></div>';
 
 		$out .= '</div>';
 

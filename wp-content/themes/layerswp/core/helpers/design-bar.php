@@ -12,26 +12,36 @@ class Layers_Design_Controller {
 	/**
 	* Generate Design Options
 	*
-	* @param    string     $type       Sidebar type, side/top
-	* @param    array       $this->widget     Widget object (for name, id, etc)
-	* @param    array       $instance   Widget $instance
-	* @param    array       $components Array of standard components to support
-	* @param    array       $custom_components Array of custom components and elements
+	* @param   string   $type                Sidebar type, side/top
+	* @param   array    $args                Args for name, id, etc
+	* @param   array    $instance            Widget $instance
+	* @param   array    $components          Array of standard components to support
+	* @param   array    $custom_components   Array of custom components and elements
 	*/
 
-	public function __construct( $type = 'side' , $widget = NULL, $instance = array(), $components = array( 'columns' , 'background' , 'imagealign' ) , $custom_components = array() ) {
+	public function __construct( $type = 'side' , $args = NULL, $instance = array(), $components = array( 'columns' , 'background' , 'imagealign' ) , $custom_components = array() ) {
 
 		// Initiate Widget Inputs
 		$this->form_elements = new Layers_Form_Elements();
 
-		// If there is no widget information provided, can the operation
-		if( NULL == $widget ) return;
-		$this->widget = $widget;
+		// If there is no args information provided, can the operation
+		if( NULL == $args ) return;
 
-		// Set type side | top
+		// Store args (merged with defaults)
+		$defaults = array(
+			'container_class' => '', // Optional unique css classes
+			'align' => 'left', // left | right
+			'inline' => FALSE, // Inline will make the buttons appear interface-y - as one individual button after the next.
+		);
+		$this->args = wp_parse_args( $args, $defaults );
+
+		// Store type (side | top)
 		$this->type = $type;
+		
+		// Store widget instance
+		$this->instance = $instance;
 
-		// Set widget values as an object ( we like working with objects )
+		// Store widget values
 		if( empty( $instance ) ) {
 			$this->values = array( 'design' => NULL );
 		} elseif( isset( $instance[ 'design' ] ) ) {
@@ -40,7 +50,7 @@ class Layers_Design_Controller {
 			$this->values = NULL;
 		}
 
-		// Setup the components for use
+		// Store components & custom_components
 		$this->components = $components;
 		$this->custom_components = $custom_components;
 
@@ -49,7 +59,6 @@ class Layers_Design_Controller {
 
 		// Fire off the design bar
 		$this->render_design_bar();
-
 	}
 
 	public function render_design_bar() {
@@ -59,6 +68,24 @@ class Layers_Design_Controller {
 		$container_class[] = ( 'side' == $this->type ? 'layers-design-bar-right' : 'layers-design-bar-horizontal' );
 		$container_class[] = ( 'side' == $this->type ? 'layers-pull-right' : 'layers-visuals-horizontal' );
 		$container_class[] = 'layers-visuals';
+
+		// Apply custom container classes passed by args.
+		$container_class[] = $this->args['container_class'];
+
+		// Apply `left`, `right`, align to the container class.
+		switch ( $this->args['align'] ) {
+			case 'left':
+				// This is the default state so no unique class-name needed.
+				break;
+			case 'right':
+				$container_class[] = 'layers-align-right';
+				break;
+		}
+
+		// Apply `inline`.
+		if ( TRUE === $this->args['inline'] ){
+			$container_class[] = 'layers-visuals-inline';
+		}
 		?>
 		<div class="<?php echo esc_attr( implode( ' ', $container_class ) ); ?>">
 			<div class="layers-visuals-title">
@@ -165,12 +192,13 @@ class Layers_Design_Controller {
 		// Return filtered element array
 		$elements = apply_filters( 'layers_design_bar_' . $key . '_elements', $element_args );
 
-		if( isset( $this->widget[ 'widget_id' ] ) ){
+
+		if( isset( $this->args[ 'widget_id' ] ) ){
 			$elements = apply_filters(
-					'layers_design_bar_' . $key . '_' . $this->widget[ 'widget_id' ] . '_elements',
-					$elements,
-					$this
-				);
+				'layers_design_bar_' . $key . '_' . $this->args[ 'widget_id' ] . '_elements',
+				$elements,
+				$this
+			);
 		} ?>
 
 		<li class="layers-design-bar-nav-item layers-visuals-item">
@@ -194,10 +222,10 @@ class Layers_Design_Controller {
 
 	private function render_trash_control(){
 
-		if( isset( $this->widget['show_trash'] ) ) { ?>
+		if( isset( $this->args['show_trash'] ) && TRUE === $this->args['show_trash'] ) { ?>
 		<li class="layers-visuals-item layers-pull-right">
 			<a href="" class="layers-icon-wrapper layers-icon-error">
-				<span class="icon-trash" data-number="<?php echo $this->widget['number']; ?>"></span>
+				<span class="icon-trash" data-number="<?php echo $this->args['number']; ?>"></span>
 			</a>
 		</li>
 	<?php }
@@ -230,7 +258,7 @@ class Layers_Design_Controller {
 			$data_show_if['show-if-operator'] = 'data-show-if-operator="' . esc_attr( $form_args['data']['show-if-operator'] ) . '"';
 			unset( $form_args['data']['show-if-operator'] );
 		}
-		
+
 		// Prep Class
 		$class = array();
 		$class[] = 'layers-form-item';
@@ -273,8 +301,8 @@ class Layers_Design_Controller {
 	 */
 	public function layout_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -305,7 +333,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_layout_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_layout_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -315,8 +343,8 @@ class Layers_Design_Controller {
 	 */
 	public function liststyle_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -348,7 +376,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_liststyle_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_liststyle_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -358,8 +386,8 @@ class Layers_Design_Controller {
 	 */
 	public function columns_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -408,7 +436,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_columns_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_columns_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -418,8 +446,8 @@ class Layers_Design_Controller {
 	 */
 	public function textalign_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -452,7 +480,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_textalign_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_textalign_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -462,8 +490,8 @@ class Layers_Design_Controller {
 	 */
 	public function imagealign_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -495,7 +523,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_imagealign_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_imagealign_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -505,8 +533,8 @@ class Layers_Design_Controller {
 	 */
 	public function featuredimage_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -539,6 +567,7 @@ class Layers_Design_Controller {
 			),
 			'imageratios' => array(
 				'type' => 'select-icons',
+				'label' => __( 'Image Ratio', 'layerswp' ),
 				'name' => $this->get_layers_field_name( 'imageratios' ),
 				'id' => $this->get_layers_field_id( 'imageratios' ),
 				'value' => ( isset( $this->values['imageratios'] ) ) ? $this->values['imageratios'] : NULL,
@@ -556,7 +585,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_featuredimage_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_featuredimage_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -566,8 +595,8 @@ class Layers_Design_Controller {
 	 */
 	public function imageratios_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -601,7 +630,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_imageratios_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_imageratios_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -611,8 +640,8 @@ class Layers_Design_Controller {
 	 */
 	public function fonts_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -667,7 +696,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_font_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_font_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -677,8 +706,8 @@ class Layers_Design_Controller {
 	 */
 	public function background_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -705,7 +734,7 @@ class Layers_Design_Controller {
 				'button_label' => __( 'Choose Image', 'layerswp' ),
 				'name' => $this->get_layers_field_name( 'background', 'image' ),
 				'id' => $this->get_layers_field_id( 'background', 'image' ),
-				'value' => ( isset( $this->values['background']['image'] ) ) ? $this->values['background']['image'] : NULL
+				'value' => ( isset( $this->values['background']['image'] ) ) ? $this->values['background']['image'] : NULL,
 			),
 			'background-repeat' => array(
 				'type' => 'select',
@@ -718,7 +747,12 @@ class Layers_Design_Controller {
 					'repeat' => __( 'Repeat', 'layerswp' ),
 					'repeat-x' => __( 'Repeat Horizontal', 'layerswp' ),
 					'repeat-y' => __( 'Repeat Vertical', 'layerswp' )
-				)
+				),
+				'data' => array(
+					'show-if-selector' => '#' . $this->get_layers_field_id( 'background', 'image' ),
+					'show-if-value' => '',
+					'show-if-operator' => '!=='
+				),
 			),
 			'background-position' => array(
 				'type' => 'select',
@@ -732,27 +766,42 @@ class Layers_Design_Controller {
 					'bottom' => __( 'Bottom', 'layerswp' ),
 					'left' => __( 'Left', 'layerswp' ),
 					'right' => __( 'Right', 'layerswp' )
-				)
+				),
+				'data' => array(
+					'show-if-selector' => '#' . $this->get_layers_field_id( 'background', 'image' ),
+					'show-if-value' => '',
+					'show-if-operator' => '!=='
+				),
 			),
 			'background-stretch' => array(
 				'type' => 'checkbox',
 				'label' => __( 'Stretch', 'layerswp' ),
 				'name' => $this->get_layers_field_name( 'background', 'stretch' ),
 				'id' => $this->get_layers_field_id( 'background', 'stretch' ),
-				'value' => ( isset( $this->values['background']['stretch'] ) ) ? $this->values['background']['stretch'] : NULL
+				'value' => ( isset( $this->values['background']['stretch'] ) ) ? $this->values['background']['stretch'] : NULL,
+				'data' => array(
+					'show-if-selector' => '#' . $this->get_layers_field_id( 'background', 'image' ),
+					'show-if-value' => '',
+					'show-if-operator' => '!=='
+				),
 			),
 			'background-darken' => array(
 				'type' => 'checkbox',
 				'label' => __( 'Darken', 'layerswp' ),
 				'name' => $this->get_layers_field_name( 'background', 'darken' ),
 				'id' => $this->get_layers_field_id( 'background', 'darken' ),
-				'value' => ( isset( $this->values['background']['darken'] ) ) ? $this->values['background']['darken'] : NULL
+				'value' => ( isset( $this->values['background']['darken'] ) ) ? $this->values['background']['darken'] : NULL,
+				'data' => array(
+					'show-if-selector' => '#' . $this->get_layers_field_id( 'background', 'image' ),
+					'show-if-value' => '',
+					'show-if-operator' => '!=='
+				),
 			)
 		);
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_background_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_background_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -762,8 +811,8 @@ class Layers_Design_Controller {
 	 */
 	public function buttons_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -805,7 +854,7 @@ class Layers_Design_Controller {
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_button_colors_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_button_colors_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 	/**
 	 * Advanced - Static Option
@@ -814,8 +863,8 @@ class Layers_Design_Controller {
 	 */
 	public function advanced_component( $args = array() ) {
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Set a key for this input
@@ -870,13 +919,13 @@ class Layers_Design_Controller {
 				'type' => 'text',
 				'label' => __( 'Widget ID', 'layerswp' ),
 				'disabled' => FALSE,
-				'value' => '#'  . str_replace( 'widget-layers', 'layers', str_ireplace( '-design' , '', $this->widget['id'] ) )
+				'value' => '#'  . str_replace( 'widget-layers', 'layers', str_ireplace( '-design' , '', $this->args['id'] ) )
 			)
 		);
 
 		$args = $this->merge_component( $defaults, $args );
 
-		$this->render_control( $key, apply_filters( 'layerswp_advanced_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_advanced_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -890,12 +939,12 @@ class Layers_Design_Controller {
 		if ( empty( $args ) )
 			return;
 
-		// If there is no widget information provided, can the operation
-		if ( NULL == $this->widget )
+		// If there is no args information provided, can the operation
+		if ( NULL == $this->args )
 			return;
 
 		// Render Control
-		$this->render_control( $key, apply_filters( 'layerswp_custom_component_args', $args, $key, $this->type, $this->widget, $this->values ) );
+		$this->render_control( $key, apply_filters( 'layerswp_custom_component_args', $args, $key, $this->type, $this->args, $this->values ) );
 	}
 
 	/**
@@ -973,11 +1022,11 @@ class Layers_Design_Controller {
 	 */
 	function get_layers_field_name( $field_name_1 = '', $field_name_2 = '', $field_name_3 = '' ) {
 
-		// If we don't have these important widget details then bail.
-		if ( ! isset( $this->widget['name'] ) ) return;
+		// If we don't have these important args details then bail.
+		if ( ! isset( $this->args['name'] ) ) return;
 
 		// Compile the first part.
-		$string = $this->widget['name'];
+		$string = $this->args['name'];
 
 		// Now add any custom strings passed as args.
 		if( '' != $field_name_1 ) $string .= '[' . $field_name_1 . ']';
@@ -1002,11 +1051,11 @@ class Layers_Design_Controller {
 	 */
 	function get_layers_field_id( $field_name_1 = '', $field_name_2 = '', $field_id = '' ) {
 
-		// If we don't have these important widget details then bail.
-		if ( ! isset( $this->widget['id'] ) ) return;
+		// If we don't have these important args details then bail.
+		if ( ! isset( $this->args['id'] ) ) return;
 
 		// Compile the first part.
-		$string = $this->widget['id'];
+		$string = $this->args['id'];
 
 		// Now add any custom strings passed as args.
 		if( '' != $field_name_1 ) $string .= '-' . $field_name_1;

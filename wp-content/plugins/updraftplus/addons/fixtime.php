@@ -2,9 +2,9 @@
 /*
 UpdraftPlus Addon: fixtime:Time and Scheduling
 Description: Allows you to specify the exact time at which backups will run, and create more complex retention rules
-Version: 1.7
+Version: 2.1
 Shop: /shop/fix-time/
-Latest Change: 1.11.22
+Latest Change: 1.12.3
 */
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
@@ -22,35 +22,163 @@ class UpdraftPlus_AddOn_FixTime {
 		add_filter('updraftplus_schedule_sametimemsg', array($this, 'schedule_sametimemsg'));
 
 		// Retention rules
+		add_filter('updraftplus_group_backups_for_pruning', array($this, 'group_backups_for_pruning'), 10, 3);
 		add_action('updraftplus_after_filesconfig', array($this, 'after_filesconfig'));
 		add_action('updraftplus_after_dbconfig', array($this, 'after_dbconfig'));
-		add_filter('updraftplus_prune_or_not', array($this, 'prune_or_not'), 10, 5);
-
+		add_filter('updraftplus_prune_or_not', array($this, 'prune_or_not'), 10, 7);
+		add_filter('updraftplus_get_settings_meta', array($this, 'get_settings_meta'));
 	}
 
-	// Backup sets will get run through this filter in age order (most recent first)
+	// $backup_history - must be already sorted in date order (most recent first)
+	// $type = (string)'db'|'files'
+	// Purpose of this function: place the backups into groups, where each backup in the same group is governed by the same pruning rule
+	public function group_backups_for_pruning($groups, $backup_history, $type) {
+
+		if (is_array($groups)) return $groups;
+		$groups = array();
+		
+		if (empty($backup_history)) return $groups;
+		
+		global $updraftplus;
+
+		$wp_cron_unreliability_margin = (defined('UPDRAFTPLUS_PRUNE_MARGIN') && is_numeric(UPDRAFTPLUS_PRUNE_MARGIN)) ? UPDRAFTPLUS_PRUNE_MARGIN : 900;
+		
+		$retain_extrarules = UpdraftPlus_Options::get_updraft_option('updraft_retain_extrarules');
+		
+		if (!is_array($retain_extrarules)) $retain_extrarules = array();
+		if (!isset($retain_extrarules['db'])) $retain_extrarules['db'] = array();
+		if (!isset($retain_extrarules['files'])) $retain_extrarules['files'] = array();
+
+		$extra_rules = $retain_extrarules[$type];
+
+		uasort($extra_rules, array($this, 'soonest_first'));
+
+		// For each backup set in the history, we go through it, and work out which is the 'latest' rule to apply to it - and put it in the corresponding group. Then, return the groups.
+		
+		$backup_run_time = empty($updraftplus->backup_time) ? time() : $updraftplus->backup_time;
+
+		// We add on 15 minutes so that the vagaries of WP's cron system are less likely to intervene - backups that ran up to 10 minutes later than the exact time will be included
+		
+		$last_rule = empty($extra_rules) ? false : max(array_keys($extra_rules));
+
+		$there_are_some_multiple_periods_in = false;
+		
+		foreach ($backup_history as $backup_datestamp => $backup_to_examine) {
+
+			$backup_age = $backup_run_time - $backup_datestamp + $wp_cron_unreliability_margin;
+		
+			// Find the relevant rule at this stage
+			$latest_relevant_index = false;
+			foreach ($extra_rules as $i => $rule) {
+			
+				$rule_interpreted = $this->interpret_rule($rule);
+				if (!is_array($rule_interpreted)) continue;
+			
+				list ($after_howmany, $after_period, $every_howmany, $every_period) = $rule_interpreted;
+
+				// Get the times in seconds
+				$after_time = $after_howmany * $after_period;
+				if ($backup_age > $after_time) {
+					$latest_relevant_index = $i;
+				}
+			}
+
+			$group_number = (false === $latest_relevant_index) ? 0 : $latest_relevant_index+1;
+			
+			$process_order = 'keep_newest';
+			
+			if ($latest_relevant_index !== false) {
+			
+				// The last set needs splitting up into further sets - one set for each period specified in the rule. Only the final set-within-the-last-set should be keep_newest - that gets set later, once we know how many sets there actually are
+				$process_order = 'keep_oldest';
+			
+				if ($latest_relevant_index == $last_rule) {
+					
+					$rule = $extra_rules[$latest_relevant_index];
+					
+					$rule_interpreted = $this->interpret_rule($rule);
+					if (is_array($rule_interpreted)) {
+						list ($after_howmany, $after_period, $every_howmany, $every_period) = $rule_interpreted;
+						// Get the times in seconds
+						$after_time = $after_howmany * $after_period;
+						$one_every = $every_howmany * $every_period;
+				
+						$how_far_into_period = $backup_age - $after_time;
+						$how_many_periods_in = floor($how_far_into_period / $one_every);
+				
+						if ($how_many_periods_in > 0) {
+							$there_are_some_multiple_periods_in = true;
+							$group_number += $how_many_periods_in;
+						}
+				
+					}
+				}
+
+			}
+
+			if (!isset($groups[$group_number])) $groups[$group_number] = array(
+				'rule' => (false === $latest_relevant_index) ? null : $extra_rules[$latest_relevant_index],
+				'process_order' => $process_order,
+				'sets' => array(),
+			);
+			$groups[$group_number]['sets'][$backup_datestamp] = $backup_to_examine;
+			
+		}
+		
+		// If multiple rules exist, and if the final group got split, then in that group, the newest (not oldest) should be kept
+		$highest_group_number = max(array_keys($groups));
+		if ($highest_group_number > 0 && $there_are_some_multiple_periods_in) {
+			$groups[$highest_group_number]['process_order'] = 'keep_newest';
+		}
+		
+		return $groups;
+	}
+	
+	private function interpret_rule($rule) {
+		if (!is_array($rule) || !isset($rule['after-howmany']) || !isset($rule['after-period']) || !isset($rule['every-howmany']) || !isset($rule['every-period'])) return false;
+		$after_howmany = $rule['after-howmany'];
+		$after_period = $rule['after-period'];
+		if (!is_numeric($after_howmany) || $after_howmany < 0) return false;
+		// Fix historic bug - 'week' got saved as the number of seconds in 4 weeks instead...
+		if ($after_period == 2419200) $after_period = 604800;
+		if ($after_period < 3600) $after_period = 3600;
+		$every_howmany = $rule['every-howmany'];
+		$every_period = $rule['every-period'];
+		// Fix historic bug - 'week' got saved as the number of seconds in 4 weeks instead...
+		if (!is_numeric($every_howmany) || $every_howmany < 1) return false;
+		if ($every_period == 2419200) $every_period = 604800;
+		if ($every_period < 3600) $every_period = 3600;
+		return array($after_howmany, $after_period, $every_howmany, $every_period);
+	}
+	
+	// Backup sets will get run through this filter in "keep" order (i.e. within the same group, they are sent through in order of "keep first") - which is assumed (in the function below) to be by time, either ascending or descending
 	// $type is 'files' or 'db', not to be confused with entity (plugins/themes/db/db1 etc.)
-	public function prune_or_not($prune_it, $type, $backup_datestamp, $entity_how_many, $entity) {
+	public function prune_or_not($prune_it, $type, $backup_datestamp, $entity, $entity_how_many, $rule, $group_id) {
 
 		$debug = UpdraftPlus_Options::get_updraft_option('updraft_debug_mode');
 
 		static $last_backup_seen_at = array();
 		static $last_relevant_backup_kept_at = array();
 
-		if (!isset($last_backup_seen_at[$entity])) $last_backup_seen_at[$entity] = false;
-		if (!isset($last_relevant_backup_kept_at[$entity])) $last_relevant_backup_kept_at[$entity] = false;
+		if (!isset($last_backup_seen_at[$group_id])) $last_backup_seen_at[$group_id] = array();
+		if (!isset($last_relevant_backup_kept_at[$group_id])) $last_relevant_backup_kept_at[$group_id] = array();
+
+		if (!isset($last_backup_seen_at[$group_id][$entity])) $last_backup_seen_at[$group_id][$entity] = false;
+		if (!isset($last_relevant_backup_kept_at[$group_id][$entity])) $last_relevant_backup_kept_at[$group_id][$entity] = false;
 
 		global $updraftplus;
 
 		$wp_cron_unreliability_margin = (defined('UPDRAFTPLUS_PRUNE_MARGIN') && is_numeric(UPDRAFTPLUS_PRUNE_MARGIN)) ? UPDRAFTPLUS_PRUNE_MARGIN : 900;
 
-		if ($debug) $updraftplus->log("dbprune examine: $backup_datestamp, type=$type, entity=$entity, entry_prune_it=$prune_it", 'debug');
+		if ($debug) $updraftplus->log("dbprune examine: $backup_datestamp, type=$type, entity=$entity, entry_prune_it=$prune_it, last_relevant_backup_kept_at=".$last_relevant_backup_kept_at[$group_id][$entity].", last_backup_seen_at=".$last_backup_seen_at[$group_id][$entity].", rule=".json_encode($rule), 'debug');
+		
 		// If it's already being pruned, then we have nothing to do
 		if ($prune_it) {
-			$last_backup_seen_at[$entity] = $backup_datestamp;
+			$last_backup_seen_at[$group_id][$entity] = $backup_datestamp;
 			return $prune_it;
 		}
 
+/*
 		$backup_run_time = $updraftplus->backup_time;
 
 		static $retain_extrarules = false;
@@ -100,18 +228,24 @@ class UpdraftPlus_AddOn_FixTime {
 
 		if (false === $latest_relevant_index) {
 			// There are no rules which apply to this backup (it's not old enough)
-			$last_backup_seen_at[$entity] = $backup_datestamp;
+			$last_backup_seen_at[$group_id][$entity] = $backup_datestamp;
+			return false;
+		}
+		
+		$rule = $extra_rules[$latest_relevant_index];
+*/
+		if (empty($rule)) {
+			// There are no rules which apply to this backup (which would usually mean, it's not old enough)
+			$last_backup_seen_at[$group_id][$entity] = $backup_datestamp;
 			return false;
 		}
 
-		$rule = $extra_rules[$latest_relevant_index];
-
-		if ($debug) $updraftplus->log("last_relevant_backup_kept_at=$last_relevant_backup_kept_at[$entity], last_backup_seen_at=".$last_backup_seen_at[$entity].", rule=".serialize($rule), 'debug');
+// 		if ($debug) $updraftplus->log("last_relevant_backup_kept_at=$last_relevant_backup_kept_at[$group_id][$entity], last_backup_seen_at=".$last_backup_seen_at[$group_id][$entity].", rule=".serialize($rule), 'debug');
 
 		// Is this the first relevant (i.e. old enough) backup we've come across?
-		if (!$last_backup_seen_at[$entity] || !$last_relevant_backup_kept_at[$entity]) {
-			$last_backup_seen_at[$entity] = $backup_datestamp;
-			$last_relevant_backup_kept_at[$entity] = $backup_datestamp;
+		if (!$last_backup_seen_at[$group_id][$entity] || !$last_relevant_backup_kept_at[$group_id][$entity]) {
+			$last_backup_seen_at[$group_id][$entity] = $backup_datestamp;
+			$last_relevant_backup_kept_at[$group_id][$entity] = $backup_datestamp;
 			if ($debug) $updraftplus->log("Keeping this backup, as it is the first relevant (i.e. old enough) backup we've come across for the current rule");
 			return false;
 		}
@@ -119,22 +253,22 @@ class UpdraftPlus_AddOn_FixTime {
 		$every_time = $rule['every-howmany'] * $rule['every-period'];
 
 		// At this stage, we know that the backup's age is relevant to the rule, and that a previous old-enough backup has been kept. Now we just need to kept the time between them.
-
-		$time_from_backup_to_last_kept = $last_relevant_backup_kept_at[$entity] - $backup_datestamp;
-
-		if ($debug) $updraftplus->log("time_from_backup_to_last_kept=$time_from_backup_to_last_kept, every_time=$every_time", 'debug');
+		// We want an unsigned result, as potentially the backups may be being fed through in either forward or reverse order
+		$time_from_backup_to_last_kept = $last_relevant_backup_kept_at[$group_id][$entity] - $backup_datestamp;
+		$time_from_backup_to_last_kept_abs = absint($time_from_backup_to_last_kept);
 
 		// Again, apply a 15-minute margin
-		if ($time_from_backup_to_last_kept > $every_time - $wp_cron_unreliability_margin) {
+		if ($time_from_backup_to_last_kept_abs > $every_time - $wp_cron_unreliability_margin) {
 			// Keep it - enough time has passed
-			$last_backup_seen_at[$entity] = $backup_datestamp;
-			$last_relevant_backup_kept_at[$entity] = $backup_datestamp;
+			$last_backup_seen_at[$group_id][$entity] = $backup_datestamp;
+			$last_relevant_backup_kept_at[$group_id][$entity] = $backup_datestamp;
+			if ($debug) $updraftplus->log("Will keep - enough time different to the last backup. time_from_backup_to_last_kept=$time_from_backup_to_last_kept, every_time=$every_time", 'debug');
 			return false;
 		}
 
-		if ($debug) $updraftplus->log("Will prune ($entity): backup is older than ".$rule['after-howmany']." periods of ".$rule['after-period']." s, and a backup ".$time_from_backup_to_last_kept." s more recent was kept (which is less than the configured ".$rule['every-howmany']." periods of ".$rule['every-period']." s = ".$every_time." s)", 'debug');
+		if ($debug) $updraftplus->log("Will prune ($entity): backup is older than ".$rule['after-howmany']." periods of ".$rule['after-period']." s, and a backup ".$time_from_backup_to_last_kept." s more recent was kept (which is within the configured ".$rule['every-howmany']." periods of ".$rule['every-period']." s = ".$every_time." s)", 'debug');
 
-		$last_backup_seen_at[$entity] = $backup_datestamp;
+		$last_backup_seen_at[$group_id][$entity] = $backup_datestamp;
 
 		return true;
 
@@ -169,41 +303,54 @@ class UpdraftPlus_AddOn_FixTime {
 		return ($after_a < $after_b) ? -1 : 1;
 	}
 
+	public function get_settings_meta($meta) {
+		if (!is_array($meta)) return $meta;
+		$meta['retain_rules'] = array(
+			'files' => $this->javascript_retain_rules('files', 'return'),
+			'db' => $this->javascript_retain_rules('db', 'return'),
+		);
+		return $meta;
+	}
+	
 	public function admin_footer_extraretain_js() {
-		$extra_rules = UpdraftPlus_Options::get_updraft_option('updraft_retain_extrarules');
-		if (!is_array($extra_rules)) $extra_rules = array();
 		?>
 		<script>
-		jQuery(document).ready(function() {
+		jQuery(document).ready(function($) {
+			<?php
+				$this->javascript_retain_rules('files');
+				$this->javascript_retain_rules('db');
+			?>
 			var db_index = 0;
 			var files_index = 0;
-			<?php
-				if (isset($extra_rules['files']) && is_array($extra_rules['files'])) {
-					$this->javascript_print_retain_rules($extra_rules['files'], 'files');
-				}
-				if (isset($extra_rules['db']) && is_array($extra_rules['db'])) {
-					$this->javascript_print_retain_rules($extra_rules['db'], 'db');
-				}
-			?>
-			jQuery('#updraft_retain_db_addnew').click(function(e) {
+			$.each(retain_rules_files, function(index, rule) {
+				add_rule('files', rule.after_howmany, rule.after_period, rule.every_howmany, rule.every_period);
+			});
+			$.each(retain_rules_db, function(index, rule) {
+				add_rule('db', rule.after_howmany, rule.after_period, rule.every_howmany, rule.every_period);
+			});
+					
+			$('#updraft_retain_db_addnew').click(function(e) {
 				e.preventDefault();
-				add_rule('db', db_index, 12, 604800, 1, 604800);
+				add_rule('db', 12, 604800, 1, 604800);
 			});
-			jQuery('#updraft_retain_files_addnew').click(function(e) {
+			$('#updraft_retain_files_addnew').click(function(e) {
 				e.preventDefault();
-				add_rule('files', files_index, 12, 604800, 1, 604800);
+				add_rule('files', 12, 604800, 1, 604800);
 			});
-			jQuery('#updraft_retain_db_rules, #updraft_retain_files_rules').on('click', '.updraft_retain_rules_delete', function() {
-				jQuery(this).parent('.updraft_retain_rules').slideUp(function() {jQuery(this).remove();});
+			$('#updraft_retain_db_rules, #updraft_retain_files_rules').on('click', '.updraft_retain_rules_delete', function() {
+				$(this).parent('.updraft_retain_rules').slideUp(function() {$(this).remove();});
 			});
-			function add_rule(type, index, howmany_after, period_after, howmany_every, period_every) {
+			function add_rule(type, howmany_after, period_after, howmany_every, period_every) {
 				var selector = 'updraft_retain_'+type+'_rules';
+				var index;
 				if ('db' == type) {
-					db_index = index + 1;
+					db_index++;
+					index = db_index;
 				} else {
-					files_index = index + 1;
+					files_index++;
+					index = files_index;
 				}
-				jQuery('#'+selector).append(
+				$('#'+selector).append(
 					'<div style="float:left; clear:left;" class="updraft_retain_rules '+selector+'_entry">'+
 					updraftlion.forbackupsolderthan+' '+rule_period_selector(type, index, 'after', howmany_after, period_after)+' keep no more than 1 backup every '+rule_period_selector(type, index, 'every', howmany_every, period_every)+
 					' <span title="'+updraftlion.deletebutton+'" class="updraft_retain_rules_delete">X</span></div>'
@@ -211,7 +358,7 @@ class UpdraftPlus_AddOn_FixTime {
 			}
 			function rule_period_selector(type, index, which, howmany_value, period) {
 				var nameprefix = "updraft_retain_extrarules["+type+"]["+index+"]["+which+"-";
-				var ret = '<input type="number" min="1" step="1" style="width:48px;" name="'+nameprefix+'howmany]" value="'+howmany_value+'"> \
+				var ret = '<input type="number" min="1" step="1" class="additional-rule-width" name="'+nameprefix+'howmany]" value="'+howmany_value+'"> \
 				<select name="'+nameprefix+'period]">\
 				<option value="3600"';
 				if (period == 3600) { ret += ' selected="selected"'; }
@@ -230,9 +377,14 @@ class UpdraftPlus_AddOn_FixTime {
 		<?php
 	}
 
-	private function javascript_print_retain_rules($extra_rules, $type) {
-		if (!is_array($extra_rules)) return;
+	public function javascript_retain_rules($type, $format = 'printjs') {
+	
+		$extra_rules = UpdraftPlus_Options::get_updraft_option('updraft_retain_extrarules');
+		if (!is_array($extra_rules)) $extra_rules = array();
+		$extra_rules = empty($extra_rules[$type]) ? array() : $extra_rules[$type];
+	
 		uasort($extra_rules, array($this, 'soonest_first'));
+		$processed_rules = array();
 		foreach ($extra_rules as $i => $rule) {
 			if (!is_array($rule) || !isset($rule['after-howmany']) || !isset($rule['after-period']) || !isset($rule['every-howmany']) || !isset($rule['every-period'])) continue;
 			$after_howmany = $rule['after-howmany'];
@@ -255,7 +407,14 @@ class UpdraftPlus_AddOn_FixTime {
 			if (!is_numeric($every_howmany) || $every_howmany < 1) continue;
 			if ($every_period <3600) $every_period = 3600;
 			if ($every_period != 3600 && $every_period != 86400 && $every_period != 604800) continue;
-			echo "add_rule('$type', $i, $after_howmany, $after_period, $every_howmany, $every_period);\n";
+
+			$processed_rules[] = array('index' => $i, 'after_howmany' => $after_howmany, 'after_period' => $after_period, 'every_howmany' => $every_howmany, 'every_period' => $every_period);
+// 			echo "add_rule('$type', $i, $after_howmany, $after_period, $every_howmany, $every_period);\n";
+		}
+		if ('return' == $format) {
+			return $processed_rules;
+		} else {
+			echo "var retain_rules_$type = ".json_encode($processed_rules).";\n";
 		}
 	}
 
@@ -353,7 +512,7 @@ class UpdraftPlus_AddOn_FixTime {
 			if  ('weekly' == $sched || 'fortnightly' == $sched) {
 				$start_time_unix = $start_time_unix + 86400*7;
 			} elseif ('monthly' == $sched) {
-				error_log("This code path is impossible, or so I thought!");
+				error_log("This code path is impossible, or so it was thought!");
 			} else {
 				$start_time_unix=$start_time_unix+86400;
 			}
@@ -383,7 +542,7 @@ class UpdraftPlus_AddOn_FixTime {
 	}
 
 	public function starting_widget($start_hour, $start_minute, $day_selector_id, $time_selector_id, $selected_interval = 'manual') {
-		return __('starting from next time it is','updraftplus').' '.$this->day_selector($day_selector_id, $selected_interval).'<input title="'.__('Enter in format HH:MM (e.g. 14:22).','updraftplus').' '.htmlspecialchars(__('The time zone used is that from your WordPress settings, in Settings -> General.', 'updraftplus')).'" type="text" style="width: 48px;" maxlength="5" name="'.$time_selector_id.'" value="'.sprintf('%02d', $start_hour).':'.sprintf('%02d', $start_minute).'">';
+		return __('starting from next time it is','updraftplus').' '.$this->day_selector($day_selector_id, $selected_interval).'<input title="'.__('Enter in format HH:MM (e.g. 14:22).','updraftplus').' '.htmlspecialchars(__('The time zone used is that from your WordPress settings, in Settings -> General.', 'updraftplus')).'" type="text" class="fix-time" maxlength="5" name="'.$time_selector_id.'" value="'.sprintf('%02d', $start_hour).':'.sprintf('%02d', $start_minute).'">';
 	}
 
 	public function schedule_showdbopts($disp, $selected_interval) {
@@ -399,5 +558,3 @@ class UpdraftPlus_AddOn_FixTime {
 	}
 
 }
-
-?>

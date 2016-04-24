@@ -39,7 +39,7 @@ jQuery(function($) {
     /**
     * 2 - Container padding on first widgets for header fixed
     */
-    $(window).on('load resize', function() {
+    $(window).on('load', function() {
         layers_apply_overlay_header_styles();
     });
 
@@ -65,7 +65,7 @@ jQuery(function($) {
     */
 
     // Set site header element
-    $header_sticky = $("header.header-sticky");
+    $header_sticky = $("section.header-sticky");
 
 	// Handle scroll passsing the go-sticky position.
 	$("body").waypoint({
@@ -152,12 +152,12 @@ function layers_swiper_resize( s ){
 /**
  * 8 - Container padding on first widgets for header fixed - helper funcion.
  */
-layers_apply_overlay_header_styles(); // Ping one as early as poss.
-
+var $first_element;
 function layers_apply_overlay_header_styles() {
 
     // Get header.
     $header = jQuery( '.header-site' );
+    $header_height = $header.outerHeight();
 
     // Get content wrapper.
     $content_wrapper = jQuery( '#wrapper-content' );
@@ -165,18 +165,21 @@ function layers_apply_overlay_header_styles() {
     if( $header.hasClass( 'header-overlay' ) ) {
 
         // Get first element.
-        $first_element = $content_wrapper.children().eq(0);
+        if( ! $first_element ) $first_element = $content_wrapper.children().eq(0);
 
-        if( $first_element.hasClass( 'slide' ) ) {
+        if( $first_element.hasClass( 'slide' ) && !$first_element.hasClass( '.full-screen' ) ) {
 
             // Reset previous incase this is being re-aplied due to window resize.
             $first_element.find('.swiper-slide > .content' ).css('padding-top', '' );
+
+            $first_element_height = $first_element.outerHeight();
 
             var padding_top = $first_element.find('.swiper-slide > .content' ).eq(0).css('padding-top').replace('px', '');
             padding_top = ( '' != padding_top ) ? parseInt( padding_top ) : 0 ;
 
             // First element is Slider Widget.
-            $first_element.find('.swiper-slide > .content').css({ 'paddingTop': padding_top + $header.outerHeight() });
+            $first_element.css( 'height', ( $header_height + $first_element_height ) );
+            $first_element.find('.swiper-slide' ).css( 'height', ( $header_height + $first_element_height ) );
 
             jQuery('body').addClass( 'header-overlay-no-push' );
         }
@@ -189,7 +192,7 @@ function layers_apply_overlay_header_styles() {
             padding_top = ( '' != padding_top ) ? parseInt( padding_top ) : 0 ;
 
             // First element is Title (eg WooCommerce).
-            $first_element.css({ 'paddingTop': $header.outerHeight() + padding_top });
+            $first_element.css({ 'paddingTop': $header_height + padding_top });
             jQuery('body').addClass( 'header-overlay-no-push' );
         }
         else{
@@ -201,7 +204,7 @@ function layers_apply_overlay_header_styles() {
             padding_top = ( '' != padding_top ) ? parseInt( padding_top ) : 0 ;
 
             // Pad the site to compensate for overlay header.
-            $content_wrapper.css( 'paddingTop', $header.outerHeight() + padding_top );
+            $content_wrapper.css( 'paddingTop', $header_height + padding_top );
         }
 
     }

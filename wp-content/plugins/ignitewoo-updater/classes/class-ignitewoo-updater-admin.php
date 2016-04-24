@@ -379,12 +379,16 @@ class IgniteWoo_Updater_Admin {
 	 */
 	protected function load_updater_instances () {
 		$products = $this->get_activated_products();
+
 		if ( count( $products ) > 0 ) {
 			require_once( 'class-ignitewoo-updater-update-checker.php' );
 			foreach ( $products as $k => $v ) {
 				if ( isset( $v[0] ) && isset( $v[1] ) && isset( $v[2] ) ) {
 					// file path. 0: product_id. 1: file_id. 2: md5 hash of license key.
-					new IgniteWoo_Updater_Update_Checker( $k, $v[0], $v[1], $v[2] );
+					$info = pathinfo( $k );
+					
+					new IgniteWoo_Updater_Update_Checker( $k, $v[0], $v[1], $v[2], $info['filename'] );
+					//new IgniteWoo_Updater_Update_Checker( $k, $v[0], $v[1], $v[2] );
 				}
 			}
 		}

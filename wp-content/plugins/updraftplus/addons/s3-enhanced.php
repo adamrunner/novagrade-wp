@@ -2,10 +2,10 @@
 /*
 UpdraftPlus Addon: s3-enhanced:Amazon S3, enhanced
 Description: Adds enhanced capabilities for Amazon S3 users
-Version: 1.4
+Version: 1.5
 Shop: /shop/s3-enhanced/
 RequiresPHP: 5.3.3
-Latest Change: 1.10.4
+Latest Change: 1.11.29
 */
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
@@ -21,6 +21,9 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		add_filter('updraft_s3_storageclass', array($this, 'storageclass'), 10, 3);
 		add_action('updraftplus_settings_page_init', array($this, 'updraftplus_settings_page_init'));
 		add_action('updraft_s3_newuser', array($this, 'newuser'));
+		add_filter('updraft_s3_apikeysetting', array($this, 'apikeysettings'));
+		add_action('updraft_s3_print_new_api_user_form', array($this, 's3_print_new_api_user_form'));
+		add_filter('updraft_s3_newuser_go', array($this, 'newuser_go'), 10, 2);
 	}
 
 	public function storageclass($class, $s3, $opts) {
@@ -31,18 +34,17 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		?>
 		<tr class="updraftplusmethod s3">
 			<th><?php _e('Reduced redundancy storage', 'updraftplus');?>:<br><a href="https://aws.amazon.com/about-aws/whats-new/2010/05/19/announcing-amazon-s3-reduced-redundancy-storage/"><em><?php _e('(Read more)', 'updraftplus');?></em></a></th>
-			<td><input title="<?php echo htmlspecialchars(__("Check this box to use Amazon's reduced redundancy storage and tariff", 'updraftplus')); ?>" type="checkbox" name="updraft_s3[rrs]" id="updraft_s3_rrs" value="1" <?php if (!empty($opts['rrs'])) echo 'checked="checked"';?>/></td>
+			<td><input data-updraft_settings_test="rrs" title="<?php echo htmlspecialchars(__("Check this box to use Amazon's reduced redundancy storage and tariff", 'updraftplus')); ?>" type="checkbox" name="updraft_s3[rrs]" id="updraft_s3_rrs" value="1" <?php if (!empty($opts['rrs'])) echo 'checked="checked"';?>/></td>
 		</tr>
 		<tr class="updraftplusmethod s3">
 			<th><?php _e('Server-side encryption', 'updraftplus');?>:<br><a href="https://aws.amazon.com/blogs/aws/new-amazon-s3-server-side-encryption/"><em><?php _e('(Read more)', 'updraftplus');?></em></a></th>
-			<td><input title="<?php echo htmlspecialchars(__("Check this box to use Amazon's server-side encryption", 'updraftplus')); ?>" type="checkbox" name="updraft_s3[server_side_encryption]" id="updraft_s3_server_side_encryption" value="1" <?php if (!empty($opts['server_side_encryption'])) echo 'checked="checked"';?>/></td>
+			<td><input data-updraft_settings_test="server_side_encryption" title="<?php esc_attr_e(__("Check this box to use Amazon's server-side encryption", 'updraftplus')); ?>" type="checkbox" name="updraft_s3[server_side_encryption]" id="updraft_s3_server_side_encryption" value="1" <?php if (!empty($opts['server_side_encryption'])) echo 'checked="checked"';?>/></td>
 		</tr>
 		<?php
 	}
 	
 	public function updraftplus_settings_page_init() {
 		add_action('admin_footer', array($this, 'admin_footer'));
-		add_filter('updraft_s3_apikeysetting', array($this, 'apikeysettings'));
 	}
 
 	public function apikeysettings($msg) {
@@ -51,28 +53,29 @@ class UpdraftPlus_Addon_S3_Enhanced {
 	}
 
 	public function newuser() {
+		echo json_encode($this->newuser_go(array(), $_POST));
+		die;
+	}
+	
+	public function newuser_go($initial_value = array(), $settings_values) {
 
-	if (empty($_POST['adminaccesskey'])) {
-			echo json_encode(array('e' => 1, 'm' => __('You need to enter an admin access key', 'updraftplus')));
-			die;
+		if (empty($settings_values['adminaccesskey'])) {
+			return array('e' => 1, 'm' => __('You need to enter an admin access key', 'updraftplus'));
 		}
-		if (empty($_POST['adminsecret'])) {
-			echo json_encode(array('e' => 1, 'm' => __('You need to enter an admin secret key', 'updraftplus')));
-			die;
+		if (empty($settings_values['adminsecret'])) {
+			return array('e' => 1, 'm' => __('You need to enter an admin secret key', 'updraftplus'));
 		}
-		if (empty($_POST['newuser'])) {
-			echo json_encode(array('e' => 1, 'm' => __('You need to enter a new IAM username', 'updraftplus')));
-			die;
+		if (empty($settings_values['newuser'])) {
+			return array('e' => 1, 'm' => __('You need to enter a new IAM username', 'updraftplus'));
 		}
-		if (empty($_POST['bucket'])) {
-			echo json_encode(array('e' => 1, 'm' => __('You need to enter a bucket', 'updraftplus')));
-			die;
+		if (empty($settings_values['bucket'])) {
+			return array('e' => 1, 'm' => __('You need to enter a bucket', 'updraftplus'));
 		}
-		if (empty($_POST['region'])) $_POST['region'] = 'us-east-1';
-		if (empty($_POST['rrs'])) $_POST['rrs'] = false; 
+		if (empty($settings_values['region'])) $settings_values['region'] = 'us-east-1';
+		if (empty($settings_values['rrs'])) $settings_values['rrs'] = false; 
 
-		$allow_download = (!empty($_POST['allowdownload'])) ? true : false;
-		$allow_delete = (!empty($_POST['allowdelete'])) ? true : false;
+		$allow_download = (!empty($settings_values['allowdownload'])) ? true : false;
+		$allow_delete = (!empty($settings_values['allowdelete'])) ? true : false;
 
 		global $updraftplus;
 
@@ -80,36 +83,33 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		
 		$method = new UpdraftPlus_BackupModule_s3;
 
-		$useservercerts = !empty($_POST['useservercerts']);
-		$disableverify = !empty($_POST['disableverify']);
-		$nossl = !empty($_POST['nossl']);
+		$useservercerts = !empty($settings_values['useservercerts']);
+		$disableverify = !empty($settings_values['disableverify']);
+		$nossl = !empty($settings_values['nossl']);
 		
-		$adminaccesskey = stripslashes($_POST['adminaccesskey']);
-		$adminsecret = stripslashes($_POST['adminsecret']);
-		$region = $_POST['region'];
+		$adminaccesskey = stripslashes($settings_values['adminaccesskey']);
+		$adminsecret = stripslashes($settings_values['adminsecret']);
+		$region = $settings_values['region'];
 		
 		try {
 			$service = $method->getS3($adminaccesskey, $adminsecret, $useservercerts, $disableverify, $nossl);
 			if (!is_a($service, 'UpdraftPlus_S3_Compat')) {
 				$msg = __('Cannot create new AWS user, since the old AWS toolkit is being used.', 'updraftplus');
-				echo json_encode(array('e' => 1, 'm' => __('Error:', 'updraftplus').' '.$msg));
 				$updraftplus->log('Cannot create new AWS user, since the old AWS toolkit is being used.');
 				$updraftplus->log($msg, 'error');
-				return false;
+				return array('e' => 1, 'm' => __('Error:', 'updraftplus').' '.$msg);
 			}
 		} catch(AuthenticationError $e) { 
-			echo json_encode(array('e' => 1, 'm' => __('Error:', 'updraftplus').' '.$e->getMessage()));
 			$updraftplus->log('AWS authentication failed ('.$e->getMessage().')');
 			$updraftplus->log(__('AWS authentication failed', 'updraftplus').' ('.$e->getMessage().')', 'error');
-			return false;
+			return array('e' => 1, 'm' => __('Error:', 'updraftplus').' '.$e->getMessage());
 		} catch (Exception $e) {
-			echo json_encode(array('e' => 1, 'm' => __('Error:', 'updraftplus').' '.$e->getMessage()));
-			return false;
+			return array('e' => 1, 'm' => __('Error:', 'updraftplus').' '.$e->getMessage());
 		}
 		
 		# Create the bucket if necessary
 		# Get the bucket
-		$path = stripslashes($_POST['bucket']);
+		$path = stripslashes($settings_values['bucket']);
 		
 		if (preg_match("#^/*([^/]+)/(.*)$#", $path, $bmatches)) {
 			$bucket = $bmatches[1];
@@ -150,8 +150,7 @@ class UpdraftPlus_Addon_S3_Enhanced {
 			} else {
 				$msg = __("Failure: We could not successfully access or create such a bucket. Please check your access credentials, and if those are correct then try another bucket name (as another AWS user may already have taken your name).", 'updraftplus');
 				if (isset($s3_error)) $msg .= "\n\n".sprintf(__('The error reported by %s was:','updraftplus'), 'S3').' '.$s3_error;
-				echo json_encode(array('e' => 1, 'm' => $msg));
-				die;
+				return array('e' => 1, 'm' => $msg);
 			}
 		}
 		
@@ -168,28 +167,25 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		try {
 			$response = $iam->createUser(array(
 				'Path'=>'/updraftplus/',
-				'UserName'=>$_POST['newuser']
+				'UserName'=>$settings_values['newuser']
 			));
 		} catch (Guzzle\Http\Exception\ClientErrorResponseException $e) {
 			$response = $e->getResponse();
 			$code = $response->getStatusCode();
 			$reason = $response->getReasonPhrase();
 			if (403 == $code) {
-				echo json_encode(array('e' =>1, 'm' => __('Authorisation failed (check your credentials)', 'updraftplus')));
+				return array('e' =>1, 'm' => __('Authorisation failed (check your credentials)', 'updraftplus'));
 			} elseif (409 == $code && 'Conflict' == $reason) {
-				echo json_encode(array('e' => 1, 'm' => __('Conflict: that user already exists', 'updraftplus')));
+				return array('e' => 1, 'm' => __('Conflict: that user already exists', 'updraftplus'));
 			} else {
-				echo json_encode(array('e' => 1, 'm' => sprintf(__('IAM operation failed (%s)', 'updraftplus'), 5)." (".$e->getMessage().') ('.get_class($e).')'));
+				return array('e' => 1, 'm' => sprintf(__('IAM operation failed (%s)', 'updraftplus'), 5)." (".$e->getMessage().') ('.get_class($e).')');
 			}
-			die;
 		} catch (Exception $e) {
-			echo json_encode(array('e' => 1, 'm' => sprintf(__('IAM operation failed (%s)', 'updraftplus'), 4).' ('.$e->getMessage().') ('.get_class($e).')'));
-			die;
+			return array('e' => 1, 'm' => sprintf(__('IAM operation failed (%s)', 'updraftplus'), 4).' ('.$e->getMessage().') ('.get_class($e).')');
 		}
 		
 		if (empty($response['User']['UserId']) || empty($response['User']['CreateDate']) || empty($response['User']['UserName'])) {
-			echo json_encode(array('e' => 1, 'm' => sprintf(__('IAM operation failed (%s)', 'updraftplus'), 3)));
-			die;
+			return array('e' => 1, 'm' => sprintf(__('IAM operation failed (%s)', 'updraftplus'), 3));
 		}
 		
 		$user = $response['User']['UserName'];
@@ -202,16 +198,13 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		try {
 			$response = $iam->createAccessKey(array('UserName' => $user));
 		} catch (Guzzle\Http\Exception\ClientErrorResponseException $e) {
-			echo json_encode(array('e' => 1, 'm' => __('Failed to create user Access Key', 'updraftplus')." (".$e->getMessage().') ('.get_class($e).')'));
-			die;
+			return array('e' => 1, 'm' => __('Failed to create user Access Key', 'updraftplus')." (".$e->getMessage().') ('.get_class($e).')');
 		} catch (Exception $e) {
-			echo json_encode(array('e' => 1, 'm' => __('Operation to create user Access Key failed', 'updraftplus')));
-			die;
+			return array('e' => 1, 'm' => __('Operation to create user Access Key failed', 'updraftplus'));
 		}
 		
 		if (empty($response['AccessKey']['UserName']) || empty($response['AccessKey']['AccessKeyId']) || empty($response['AccessKey']['SecretAccessKey'])) {
-			echo json_encode(array('e' => 1, 'm' => __('Operation to create user Access Key failed', 'updraftplus').' (2)'));
-			die;
+			return array('e' => 1, 'm' => __('Operation to create user Access Key failed', 'updraftplus').' (2)');
 		}
 		
 		$key = $response['AccessKey']['AccessKeyId'];
@@ -266,14 +259,12 @@ class UpdraftPlus_Addon_S3_Enhanced {
 				'PolicyDocument' => $pol_doc
 			));
 		} catch (Guzzle\Http\Exception\ClientErrorResponseException $e) {
-			echo json_encode(array('e' => 1, 'm' => __('Failed to apply User Policy', 'updraftplus')." (".$e->getMessage().') ('.get_class($e).')'));
-			die;
+			return array('e' => 1, 'm' => __('Failed to apply User Policy', 'updraftplus')." (".$e->getMessage().') ('.get_class($e).')');
 		} catch (Exception $e) {
-			echo json_encode(array('e' => 1, 'm' => __('Failed to apply User Policy'.$e->getMessage())));
-			die;
+			return array('e' => 1, 'm' => __('Failed to apply User Policy'.$e->getMessage()));
 		}
 		
-		echo json_encode(array(
+		return array(
 			'e' => 0,
 			'u' => htmlspecialchars($user),
 			'k' => htmlspecialchars($key),
@@ -281,27 +272,21 @@ class UpdraftPlus_Addon_S3_Enhanced {
 			'l' => $region,
 			'c' => $bucket,
 			'm' => htmlspecialchars(sprintf(__("Username: %s", 'updraftplus'), $user))."<br>".htmlspecialchars(sprintf(__("Access Key: %s", 'updraftplus'), $key))."<br>".htmlspecialchars(sprintf(__("Secret Key: %s", 'updraftplus'), $secret))
-		));
-		
-		die;
+		);
 	
 	}
 
-	public function admin_footer() {
+	// This is called both directly, and made available as an action
+	public function s3_print_new_api_user_form($include_form_apparatus = true) {
 		?>
-		<style type="text/css">
-			#updraft_s3newapiuser_form label { float: left; clear:left; width: 170px;}
-			#updraft_s3newapiuser_form input[type="text"], #updraft_s3newapiuser_form select { float: left; width: 310px; }
-			#updraft_s3newapiuser_form input[type="checkbox"] { float: left; }
-		</style>
-		<div id="updraft-s3newapiuser-modal" style="display:none;" title="<?php _e('Create new IAM user and S3 bucket', 'updraftplus');?>">
 		<div id="updraft_s3newapiuser_form">
-			<p style="margin:1px; padding-top:0; clear: left; float: left;">
-			<em><?php echo __('Enter your administrative Amazon S3 access/secret keys (this needs to be a key pair with enough rights to create new users and buckets), and a new (unique) username for the new user and a bucket name.', 'updraftplus').' '.__('These will be used to create a new user and key pair with an IAM policy attached which will only allow it to access the indicated bucket.', 'updraftplus').' '.__('Then, these lower-powered access credentials can be used, instead of storing your administrative keys.', 'updraftplus');?></em>
+			<p class="updraft-s3newapiuser-first-para">
+				<em><?php echo __('Enter your administrative Amazon S3 access/secret keys (this needs to be a key pair with enough rights to create new users and buckets), and a new (unique) username for the new user and a bucket name.', 'updraftplus').' '.__('These will be used to create a new user and key pair with an IAM policy attached which will only allow it to access the indicated bucket.', 'updraftplus').' '.__('Then, these lower-powered access credentials can be used, instead of storing your administrative keys.', 'updraftplus');?></em>
 			</p>
-			<div id="updraft-s3newapiuser-results" style="clear: left; float: left;"><p><p></div>
+			
+			<div id="updraft-s3newapiuser-results"><p></p></div>
 
-			<p style="margin-top:3px; padding-top:0; clear: left; float: left;">
+			<p class="updraft-s3newapiuser-settings-para">
 
 			<label for="updraft_s3newapiuser_adminaccesskey"><?php _e('Admin access key', 'updraftplus');?></label> <input type="text" id="updraft_s3newapiuser_adminaccesskey" value="">
 			<label for="updraft_s3newapiuser_adminsecret"><?php _e('Admin secret key', 'updraftplus');?></label> <input type="text" id="updraft_s3newapiuser_adminsecret" value="">
@@ -332,23 +317,45 @@ class UpdraftPlus_Addon_S3_Enhanced {
 					}
 				?>
 			</select>
-			<label for="updraft_s3newapiuser_bucket"><?php _e("S3 bucket", 'updraftplus');?></label><span style="float:left; width:30px; position:relative; top:3px;">s3://</span><input style="width: 280px;" type="text" id="updraft_s3newapiuser_bucket" value="">
+			<label for="updraft_s3newapiuser_bucket"><?php _e("S3 bucket", 'updraftplus');?></label><span class="updraft_s3newapiuser_textexplain">s3://</span><input type="text" id="updraft_s3newapiuser_bucket" value="">
 			
 			<label for="updraft_s3newapiuser_allowdownload"><?php _e("Allow download", 'updraftplus');?></label>
 			<input type="checkbox" id="updraft_s3newapiuser_allowdownload" value="1" checked="checked">
-			<span style="width:310px; float:left;"><em><?php _e('Without this permission, you cannot directly download or restore using UpdraftPlus, and will instead need to visit the AWS website.', 'updraftplus');?></em></span>
+			<span class="updraft_s3newapiuser_checkboxexplain"><em><?php _e('Without this permission, you cannot directly download or restore using UpdraftPlus, and will instead need to visit the AWS website.', 'updraftplus');?></em></span>
 
 			<label for="updraft_s3newapiuser_allowdelete"><?php _e("Allow deletion", 'updraftplus');?></label>
 			<input type="checkbox" id="updraft_s3newapiuser_allowdelete" value="1" checked="checked">
-			<span style="width:310px; float:left;"><em><?php _e("Without this permission, UpdraftPlus cannot delete backups - you should also set your 'retain' settings very high to prevent seeing deletion errors.", 'updraftplus');?></em></span>
+			<span class="updraft_s3newapiuser_checkboxexplain"><em><?php _e("Without this permission, UpdraftPlus cannot delete backups - you should also set your 'retain' settings very high to prevent seeing deletion errors.", 'updraftplus');?></em></span>
 
 			</p>
+			<?php if ($include_form_apparatus) { ?>
 			<fieldset>
 				<input type="hidden" name="nonce" value="<?php echo wp_create_nonce('updraftplus-credentialtest-nonce');?>">
 				<input type="hidden" name="action" value="updraft_ajax">
 				<input type="hidden" name="subaction" value="s3_newuser">
 			</fieldset>
+			<?php } ?>
 		</div>
+		<?php
+	}
+	
+	public function admin_footer() {
+		?>
+		<style type="text/css">
+			#updraft_s3newapiuser_form label { float: left; clear:left; width: 170px;}
+			#updraft_s3newapiuser_form input[type="text"], #updraft_s3newapiuser_form select { float: left; width: 310px; }
+			#updraft_s3newapiuser_form input[type="checkbox"] { float: left; }
+			#updraft_s3newapiuser_form p { padding-top:0; clear: left; float: left; }
+			#updraft_s3newapiuser_form .updraft-s3newapiuser-first-para { margin:1px; }
+			#updraft_s3newapiuser_form .updraft-s3newapiuser-settings-para { margin-top:3px; padding-top:0; clear: left; float: left; }
+			#updraft_s3newapiuser_form #updraft-s3newapiuser-results { clear: left; float: left; }
+			#updraft_s3newapiuser_form #updraft-s3newapiuser-results p { margin: 1px 0; padding: 1px 0; }
+			#updraft_s3newapiuser_form .updraft_s3newapiuser_checkboxexplain { width:310px; float:left; }
+			#updraft_s3newapiuser_form .updraft_s3newapiuser_textexplain { float:left; width:30px; position:relative; top:3px; }
+			#updraft_s3newapiuser_form #updraft_s3newapiuser_bucket { width: 280px; }
+		</style>
+		<div id="updraft-s3newapiuser-modal" style="display:none;" title="<?php _e('Create new IAM user and S3 bucket', 'updraftplus');?>">
+			<?php $this->s3_print_new_api_user_form(); ?>
 		</div>
 
 		<script>

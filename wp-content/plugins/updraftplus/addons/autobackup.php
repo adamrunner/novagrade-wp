@@ -2,9 +2,9 @@
 /*
 UpdraftPlus Addon: autobackup:Automatic Backups
 Description: Save time and worry by automatically create backups before updating WordPress components
-Version: 2.2
+Version: 2.3
 Shop: /shop/autobackup/
-Latest Change: 1.11.20
+Latest Change: 1.11.25
 */
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
@@ -34,10 +34,24 @@ class UpdraftPlus_Addon_Autobackup {
 		add_action('admin_action_do-core-reinstall', array($this, 'admin_action_do_core_upgrade'));
 		add_action('ud_wp_maybe_auto_update', array($this, 'ud_wp_maybe_auto_update'));
 		add_action('updraftplus_configprint_expertoptions', array($this, 'configprint_expertoptions'));
-		// Somewhat inelegant... see: https://core.trac.wordpress.org/ticket/30441
-		add_filter('auto_update_plugin', array($this, 'auto_update_plugin'), PHP_INT_MAX, 2);
-		add_filter('auto_update_theme', array($this, 'auto_update_theme'), PHP_INT_MAX, 2);
-		add_filter('auto_update_core', array($this, 'auto_update_core'), PHP_INT_MAX, 2);
+		
+		// Hooks into JetPack's remote updater (manual updates performed from the wordpress.com console)
+		add_action('jetpack_pre_plugin_upgrade', array($this, 'jetpack_pre_plugin_upgrade'), 10, 3);
+		add_action('jetpack_pre_theme_upgrade', array($this, 'jetpack_pre_theme_upgrade'), 10, 2);
+		add_action('jetpack_pre_core_upgrade', array($this, 'jetpack_pre_core_upgrade'));
+		
+		include(ABSPATH.WPINC.'/version.php');
+
+		if (version_compare($wp_version, '4.4.0', '<')) {
+			// Somewhat inelegant... see: https://core.trac.wordpress.org/ticket/30441
+			add_filter('auto_update_plugin', array($this, 'auto_update_plugin'), PHP_INT_MAX, 2);
+			add_filter('auto_update_theme', array($this, 'auto_update_theme'), PHP_INT_MAX, 2);
+			add_filter('auto_update_core', array($this, 'auto_update_core'), PHP_INT_MAX, 2);
+		} else {
+			// Action added in WP 4.4
+			add_action('pre_auto_update', array($this, 'pre_auto_update'), 10, 2);
+		}
+		
 		add_action('admin_footer', array($this, 'admin_footer_possibly_network_themes'));
 		add_action('pre_current_active_plugins', array($this, 'pre_current_active_plugins'));
 		add_action('install_plugins_pre_plugin-information', array($this, 'install_plugins_pre_plugin'));
@@ -45,6 +59,19 @@ class UpdraftPlus_Addon_Autobackup {
 		add_filter('updraft_wpcore_description', array($this, 'wpcore_description'));
 	}
 
+	// All 3 of these hooks since JetPack 3.9.2 (assuming our patch goes in)
+	public function jetpack_pre_plugin_upgrade($plugin, $plugins, $update_attempted) {
+		$this->auto_update(true, $plugin, 'plugins');
+	}
+	
+	public function jetpack_pre_theme_upgrade($theme, $themes) {
+		$this->auto_update(true, $theme, 'themes');
+	}
+	
+	public function jetpack_pre_core_upgrade($update) {
+		$this->auto_update(true, $update, 'core');
+	}
+	
 	public function install_plugins_pre_plugin() {
 		if (!current_user_can('update_plugins')) return;
 		$this->inpage_restrict = 'plugins';
@@ -71,7 +98,7 @@ class UpdraftPlus_Addon_Autobackup {
 
 	public function configprint_expertoptions() {
 		?>
-		<tr class="expertmode" style="display:none;">
+		<tr class="expertmode updraft-hidden" style="display:none;">
 			<th><?php _e('UpdraftPlus Automatic Backups', 'updraftplus');?>:</th>
 			<td><?php $this->auto_backup_form(false, 'updraft_autobackup_default', '1');?></td>
 		</tr>
@@ -94,6 +121,17 @@ class UpdraftPlus_Addon_Autobackup {
 		return $jobdata;
 	}
 
+	// WP 4.4+
+	public function pre_auto_update($type, $item) {
+		// Can also be 'translation'. We don't auto-backup for those.
+		if ('plugin' == $type || 'theme' == $type) {
+			$this->auto_update(true, $item, $type.'s');
+		} elseif ('core' == $type) {
+			$this->auto_update(true, $item, $type);
+		}
+	}
+	
+	// Before WP 4.4
 	public function auto_update_plugin($update, $item) {
 		return $this->auto_update($update, $item, 'plugins');
 	}
@@ -106,8 +144,9 @@ class UpdraftPlus_Addon_Autobackup {
 		return $this->auto_update($update, $item, 'core');
 	}
 
+	// Note - with the addition of support for JetPack remote updates (via manual action in a user's wordpress.com dashboard), this is now more accurately a method to handle *background* updates, rather than "automatic" ones.
 	public function auto_update($update, $item, $type) {
-		if (!$update || !empty($this->do_not_filter_auto_backup) || in_array($type, $this->already_backed_up) || !$this->doing_filter('wp_maybe_auto_update') || !UpdraftPlus_Options::get_updraft_option('updraft_autobackup_default')) return $update;
+		if (!$update || !empty($this->do_not_filter_auto_backup) || in_array($type, $this->already_backed_up) || !UpdraftPlus_Options::get_updraft_option('updraft_autobackup_default') || (!$this->doing_filter('wp_maybe_auto_update') && !$this->doing_filter('jetpack_pre_plugin_upgrade') && !$this->doing_filter('jetpack_pre_theme_upgrade') && !$this->doing_filter('jetpack_pre_core_upgrade') )) return $update;
 
 		if ('core' == $type) {
 			// This has to be copied from WP_Automatic_Updater::should_update() because it's another reason why the eventual decision may be false.
@@ -557,7 +596,6 @@ ENDHERE;
 
 		if (!empty($this->inpage_restrict) && !current_user_can('update_'.$this->inpage_restrict)) return;
 		global $updraftplus_admin, $wp_version;
-		$updraftplus_admin->render_admin_css();
 		$updraftplus_admin->admin_enqueue_scripts();
 		?>
 			<script type="text/javascript">

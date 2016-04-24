@@ -22,7 +22,7 @@ class UpdraftPlus_Addon_LockAdmin {
 		add_filter('updraftplus_settings_page_render', array($this, 'settings_page_render'));
 		add_action('updraftplus_settings_page_render_abort', array($this, 'settings_page_render_abort'));
 		if ((!empty($_POST['updraft_unlockadmin_session_length']) || !empty($_POST['updraft_unlockadmin_password'])) && !empty($_POST['nonce'])) add_action('admin_init', array($this, 'admin_init'));
-		add_action('updraftplus_debugtools_dashboard', array($this, 'debugtools_dashboard'));
+		add_action('updraftplus_debugtools_dashboard', array($this, 'debugtools_dashboard'), 10);
 	}
 
 	private function check_user_cookie($password) {

@@ -21,10 +21,9 @@ jQuery(document).ready(function($){
 	/**
 	* 1 - Sortable items
 	*/
-	
-	$( document ).on( 'layers-interface-init', '.widget, .layers-accordions', function( e ){
-		// 'this' is the widget
-		layers_set_column_sortable( $(this) );
+
+	$( document ).on( 'layers-interface-init', function( e, element ){
+		layers_set_column_sortable( $(element) );
 	});
 
 	function layers_set_column_sortable( $element_s ){
@@ -37,7 +36,7 @@ jQuery(document).ready(function($){
 				placeholder: "layers-sortable-drop",
 				handle: ".layers-accordion-title",
 				stop: function(e , li){
-					
+
 					// Get Elements
 					$repeater_list = li.item.closest( 'ul' );
 					$repeater_group = $repeater_list.parents('.layers-widget-repeater');
@@ -60,16 +59,16 @@ jQuery(document).ready(function($){
 	* 2 - Item Removal
 	*/
 	$(document).on( 'click' , '.layers-widget-repeater .layers-icon-error' , function(e){
-		
+
 		e.preventDefault();
 
 		// "Hi Mom"
 		var $that = $(this);
 
 		// Confirmation message @TODO: Make JS confirmation column
-		
+
 		if( false === confirm( contentwidgeti18n.confirm_message ) ) return;
-		
+
 		// Get elements
 		$repeater_delete_button = $(this);
 		$repeater_item_row      = $repeater_delete_button.closest( '.layers-accordion-item' );
@@ -77,23 +76,23 @@ jQuery(document).ready(function($){
 		$repeater_group         = $repeater_delete_button.parents('.layers-widget-repeater');
 		$repeater_list          = $repeater_group.find('.layers-accordions');
 		$repeater_input         = $repeater_group.find('.layers-repeater-input');
-		
+
 		// Close the row first.
 		$repeater_item_title.click();
-		
+
 		// Delay till the row closed.
 		setTimeout(function() {
-			
+
 			$repeater_item_row.addClass('layers-accordion-item-remove');
-			
+
 			// Delay while the remove animation plays.
 			setTimeout(function() {
-				
+
 				$repeater_item_row.animate({ height: 0, margin: 0 }, { duration: 150, complete: function() {
-					
+
 					// Remove this row completely now.
 					$repeater_item_row.remove();
-					
+
 					// Curate column IDs
 					$column_guids = [];
 
@@ -106,31 +105,31 @@ jQuery(document).ready(function($){
 
 					// Reset Sortable Items
 					layers_set_column_sortable( $that );
-					
+
 				}});
-				
+
 			}, 700 );
-			
+
 		}, 500 );
 	});
-	
+
 	/**
 	* 3 - Item Adittion
 	*/
 	$(document).on( 'click' , '.layers-widget-repeater-add-item' , function(e){
-		
+
 		e.preventDefault();
 
 		// "Hi Mom"
 		var $that = $(this);
-		
+
 		// Get elements
 		$repeater_add_button = $(this);
 		$repeater_group  = $repeater_add_button.parents('.layers-widget-repeater');
 		$repeater_list   = $repeater_group.find('.layers-accordions');
 		$repeater_input  = $repeater_group.find('.layers-repeater-input');
 		$widget_form     = $repeater_add_button.parents('.widget-content');
-		
+
 		// Get data
 		var data_repeater_type    = $repeater_group.attr( 'data-repeater-type' );
 		var data_repeater_number  = $repeater_group.attr( 'data-repeater-number' );
@@ -148,7 +147,7 @@ jQuery(document).ready(function($){
 				$serialized_inputs.push( $(input).serialize() );
 			}
 		);
-		
+
 		// Serialize input data
 		$serialized_instance_inputs = $widget_form.find( 'textarea, input, select, checkbox' ).serialize();
 
@@ -186,8 +185,8 @@ jQuery(document).ready(function($){
 				$repeater_input.val( $item_guids.join() ).layers_trigger_change();
 
 				// Trigger interface init. will trigger init of elemnts eg colorpickers etc
-				$item.trigger('layers-interface-init');
-				
+				$( document ).trigger( 'layers-interface-init', $item );
+
 				// Remove loading class
 				$repeater_add_button.removeClass('layers-loading-button');
 
@@ -200,7 +199,7 @@ jQuery(document).ready(function($){
 
 	});
 
-	
+
 
 	/**
 	* 3 - Module Title Update

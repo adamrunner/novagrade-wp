@@ -5,13 +5,13 @@ require "HTTP/WebDAV/Tools/_parse_propfind_response.php";
 require "HTTP/WebDAV/Tools/_parse_lock_response.php";
 
 // WebDAV defines some addition HTTP methods
-define('HTTP_REQUEST_METHOD_COPY',      'COPY',      true);
-define('HTTP_REQUEST_METHOD_MOVE',      'MOVE',      true);
-define('HTTP_REQUEST_METHOD_MKCOL',     'MKCOL',     true);
-define('HTTP_REQUEST_METHOD_PROPFIND',  'PROPFIND',  true);
-define('HTTP_REQUEST_METHOD_PROPPATCH', 'PROPPATCH', true);
-define('HTTP_REQUEST_METHOD_LOCK',      'LOCK',      true);
-define('HTTP_REQUEST_METHOD_UNLOCK',    'UNLOCK',    true);
+define('HTTP_REQUEST_METHOD_COPY',      'COPY');
+define('HTTP_REQUEST_METHOD_MOVE',      'MOVE');
+define('HTTP_REQUEST_METHOD_MKCOL',     'MKCOL');
+define('HTTP_REQUEST_METHOD_PROPFIND',  'PROPFIND');
+define('HTTP_REQUEST_METHOD_PROPPATCH', 'PROPPATCH');
+define('HTTP_REQUEST_METHOD_LOCK',      'LOCK');
+define('HTTP_REQUEST_METHOD_UNLOCK',    'UNLOCK');
 
 /**
  * A stream wrapper class for WebDAV access

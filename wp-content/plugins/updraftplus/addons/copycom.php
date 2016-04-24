@@ -2,12 +2,12 @@
 /*
 UpdraftPlus Addon: copycom:Copy.Com Support
 Description: Allows UpdraftPlus to back up to Copy.Com cloud storage
-Version: 1.2
+Version: 1.4
 Shop: /shop/copycom/
 Include: copy
 IncludePHP: methods/addon-base.php
 RequiresPHP: 5.3.3
-Latest Change: 1.10.4
+Latest Change: 1.11.30
 */
 
 # https://developers.copy.com/documentation
@@ -22,10 +22,9 @@ do_listfiles($match)
 do_delete($file) - return true/false
 do_download($file, $fullpath, $start_offset) - return true/false
 do_config_print()
-do_config_javascript()
 do_credentials_test_parameters() - return an array: keys = required _POST parameters; values = description of each
-do_credentials_test($testfile) - return true/false
-do_credentials_test_deletefile($testfile)
+do_credentials_test($testfile, $posted_settings) - return true/false
+do_credentials_test_deletefile($testfile, $posted_settings)
 */
 
 if (!class_exists('UpdraftPlus_RemoteStorage_Addons_Base')) require_once(UPDRAFTPLUS_DIR.'/methods/addon-base.php');
@@ -58,6 +57,8 @@ class UpdraftPlus_Addons_RemoteStorage_copycom extends UpdraftPlus_RemoteStorage
 
 		$uploaded_size = $this->next_partno * $this->chunk_size;
 
+		$updraftplus->log(__('Barracuda are closing down Copy.Com on May 1st, 2016. See:', 'updraftplus').' https://techlib.barracuda.com/CudaDrive/EOL', 'warning', 'copycom_going_away');
+		
 		try {
 			$profile = $this->storage->get('rest/user');
 		} catch (Exception $e) {
@@ -77,7 +78,7 @@ class UpdraftPlus_Addons_RemoteStorage_copycom extends UpdraftPlus_RemoteStorage
 					$available_quota = ($total_quota > -1 ) ? $total_quota - $used_quota : PHP_INT_MAX;
 					$used_perc = ($total_quota > 0) ? round($used_quota*100/$total_quota, 1) : 0;
 
-					$message = sprintf('Your %s quota usage: %s %% used, %s available', 'Copy.Com', $used_perc, round($available_quota/1048576, 1).' Mb');
+					$message = sprintf('Your %s quota usage: %s %% used, %s available', 'Copy.Com', $used_perc, round($available_quota/1048576, 1).' MB');
 				}
 				// We don't actually abort now - there's no harm in letting it try and then fail
 				$filesize = filesize($from);
@@ -409,7 +410,7 @@ class UpdraftPlus_Addons_RemoteStorage_copycom extends UpdraftPlus_RemoteStorage
 					$used_quota = $quota_info->used;
 					$available_quota = ($total_quota > -1 ) ? $total_quota - $used_quota : PHP_INT_MAX;
 					$used_perc = ($total_quota > 0) ? round($used_quota*100/$total_quota, 1) : 0;
-					$message .= ' <br>'.sprintf(__('Your %s quota usage: %s %% used, %s available','updraftplus'), 'Copy.Com', $used_perc, round($available_quota/1048576, 1).' Mb');
+					$message .= ' <br>'.sprintf(__('Your %s quota usage: %s %% used, %s available','updraftplus'), 'Copy.Com', $used_perc, round($available_quota/1048576, 1).' MB');
 
 				}
 			} catch (Exception $e) {
@@ -519,6 +520,13 @@ class UpdraftPlus_Addons_RemoteStorage_copycom extends UpdraftPlus_RemoteStorage
 			'<img alt="Copy.Com" src="'.UPDRAFTPLUS_URL.'/images/copycom.png">'.$apikey_text
 		);
 
+		$updraftplus_admin->storagemethod_row(
+			'copycom',
+			'',
+			'<strong>'.__('Barracuda are closing down Copy.Com on May 1st, 2016. See:', 'updraftplus').' <a href="https://techlib.barracuda.com/CudaDrive/EOL">https://techlib.barracuda.com/CudaDrive/EOL</a></strong>'
+		);
+		
+		
 		list($clientid, $secret) = $this->api_keys($opts);
 
 		if (defined('UPDRAFTPLUS_COPYCOM_CUSTOMKEYS') && true == UPDRAFTPLUS_COPYCOM_CUSTOMKEYS) {
@@ -548,7 +556,7 @@ class UpdraftPlus_Addons_RemoteStorage_copycom extends UpdraftPlus_RemoteStorage
 			sprintf(__('Authenticate with %s', 'updraftplus'), 'Copy.Com').':',
 			'<p>'.(!empty($opts['token']) ? "<strong>".__('(You appear to be already authenticated).', 'updraftplus').'</strong>' : '').
 			((!empty($opts['token']) && !empty($opts['ownername'])) ? ' '.sprintf(__("Account holder's name: %s.", 'updraftplus'), htmlspecialchars($opts['ownername'])).' ' : '').
-			'</p><p><a href="?page=updraftplus&action=updraftmethod-copycom-auth&updraftplus_copycomauth=doit">'.sprintf(__('<strong>After</strong> you have saved your settings (by clicking \'Save Changes\' below), then come back here once and click this link to complete authentication with %s.','updraftplus'), 'Copy.Com').'</a></p>'
+			'</p><p><a class="updraft_authlink" href="'.UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-copycom-auth&updraftplus_copycomauth=doit">'.sprintf(__('<strong>After</strong> you have saved your settings (by clicking \'Save Changes\' below), then come back here once and click this link to complete authentication with %s.','updraftplus'), 'Copy.Com').'</a></p>'
 		);
 		# Not explicitly required: we use wp_remote_get|post(), and the API only requires basic GET/POST functionality
 		# .$updraftplus_admin->curl_check('Copy.Com', false, 'copycom', false)

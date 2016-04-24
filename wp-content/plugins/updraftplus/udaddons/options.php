@@ -253,7 +253,7 @@ ENDHERE;
 
 		global $updraftplus_addons2;
 // 		$this->connected = (!empty($options['email']) && !empty($options['password'])) ? $updraftplus_addons2->connection_status() : false;
-		$this->connected = (!empty($options['email'])) ? $updraftplus_addons2->connection_status() : false;
+		$this->connected = !empty($options['email']) ? $updraftplus_addons2->connection_status() : false;
 
 		if (true !== $this->connected) {
 			if (is_wp_error($this->connected)) {
@@ -294,7 +294,6 @@ ENDHERE;
 			echo '</ul></div>';
 		}
 
-		global $updraftplus_addons2;
 		$sid = $updraftplus_addons2->siteid();
 
 		$home_url = home_url();
@@ -313,7 +312,7 @@ ENDHERE;
 					$key = $addon['key'];
 					$assigned[$key] = $akey;
 					if ('all' == $key) $have_all=true;
-				} elseif (isset($addon['sitedescription']) && ($home_url === $addon['sitedescription'] || 0 === strpos($addon['sitedescription'], $home_url.' - '))) {
+				} elseif (isset($addon['sitedescription']) && ($this->normalise_url($home_url) === $this->normalise_url($addon['sitedescription']) || 0 === strpos($addon['sitedescription'], $home_url.' - '))) {
 					# Is assigned to a site with the same URL as this one - allow a reclaim
 					$key = $addon['key'];
 					$unclaimed_available[$key] = array('eid' => $akey, 'status' => 'reclaimable');
@@ -379,7 +378,7 @@ ENDHERE;
 		if (is_object($updates_available) && isset($updates_available->response) && isset($updraftplus_addons2->plug_updatechecker) && isset($updraftplus_addons2->plug_updatechecker->pluginFile) && isset($updates_available->response[$updraftplus_addons2->plug_updatechecker->pluginFile])) {
 			$file = $updraftplus_addons2->plug_updatechecker->pluginFile;
 			$this->plugin_update_url = wp_nonce_url(self_admin_url('update.php?action=upgrade-plugin&updraftplus_noautobackup=1&plugin=').$file, 'upgrade-plugin_'.$file);
-			$this->update_js = '<script>jQuery(document).ready(function() { jQuery(\'#updraftaddons_updatewarning\').html(\''.__('An update containing your addons is available for UpdraftPlus - please follow this link to get it.', 'updraftplus').'\') });</script>';
+			$this->update_js = '<script>jQuery(document).ready(function() { jQuery(\'#updraftaddons_updatewarning\').html(\''.esc_js(__('An update containing your addons is available for UpdraftPlus - please follow this link to get it.', 'updraftplus')).'\') });</script>';
 			
 		}
 
@@ -435,6 +434,21 @@ ENDHERE;
 
 	}
 
+	// This may produce a URL that does not actually reference the same location; its purpose is to use in comparisons of two URLs that *both* go through this function, only
+	private function normalise_url($url) {
+		if (preg_match('/^(\S+) - /', ltrim($url), $matches)) $url = $matches[1];
+		$parsed_descrip_url = parse_url($url);
+		if (is_array($parsed_descrip_url) && isset($parsed_descrip_url['host'])) {
+			if (preg_match('/^www\./i', $parsed_descrip_url['host'], $matches)) $parsed_descrip_url['host'] = substr($parsed_descrip_url['host'], 4);
+			$normalised_descrip_url = 'http://'.strtolower($parsed_descrip_url['host']);
+			if (!empty($parsed_descrip_url['port'])) $normalised_descrip_url .= ':'.$parsed_descrip_url['port'];
+			if (!empty($parsed_descrip_url['path'])) $normalised_descrip_url .= untrailingslashit($parsed_descrip_url['path']);
+		} else {
+			$normalised_descrip_url = untrailingslashit($url);
+		}
+		return $normalised_descrip_url;
+	}
+	
 	private function addonbox($key, $name, $shopurl, $description, $installedversion, $latestversion = false, $installed = false, $unclaimed = false, $is_assigned = false, $have_all = false) {
 		$urlbase = UDADDONS2_URL;
 		$mother = $this->mother;
