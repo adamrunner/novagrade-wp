@@ -21,7 +21,6 @@ digiscope
 wpdev
 /.ftpquota
 /error_log
-/.htaccess
 /license.txt
 /readme.html
 /sitemap.xml
