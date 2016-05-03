@@ -1,0 +1,9 @@
+#!/bin/bash
+mkdir -p tmp
+LOCAL_DB="novagrade_development"
+DB_PATH="$(ssh novagrade ./backup_database.sh)"
+DB_FILENAME="tmp/$(echo $DB_PATH | grep -E -o  'doug6875_.+')"
+scp novagrade:$DB_PATH ./$DB_FILENAME
+vagrant ssh --command "mysql $LOCAL_DB < /vagrant/$DB_FILENAME"
+vagrant ssh --command "mysql $LOCAL_DB < /vagrant/novagrade_hostname_local.sql"
+rm $DB_FILENAME
