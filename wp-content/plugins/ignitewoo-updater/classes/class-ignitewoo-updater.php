@@ -305,4 +305,3 @@ class IgniteWoo_Updater {
 		return (array) $this->products;
 	} // End get_products()
 } // End Class
-?>

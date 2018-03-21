@@ -9,8 +9,6 @@
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
 
-var layers_masonry_settings = {};
-
 (function ( $ ) {
 
     // These are the defaults.
@@ -74,7 +72,6 @@ var layers_masonry_settings = {};
 
 jQuery(function($){
 
-
     $('.layers-masonry-filter li').on( 'click' , function(e){
         e.preventDefault();
 
@@ -89,13 +86,13 @@ jQuery(function($){
 
         // Target the masonry container
         $masonry_container = $( '#' + $masonry_container_id );
+        
+        // Get the main Masonry Grid element.
+        $masonry_grid = $masonry_container.find('.list-masonry .grid');
+        if ( 0 == $masonry_grid.length ) $masonry_grid = $masonry_container.find('.list-masonry');
 
         // Set whether is Masonry or not
-        if( 0 != $masonry_container.find('.list-masonry').length ){
-            $is_masonry = true;
-        } else {
-            $is_masonry = false;
-        }
+        $is_masonry = ( 0 != $masonry_grid.length );
 
         if( '' == $filter) {
             // Toggle button
@@ -116,14 +113,14 @@ jQuery(function($){
         }
 
         // Hide items
-        $masonry_container.find( '.layers-masonry-column' ).not( $final_filter ).removeClass('active').hide();
+        $masonry_container.find( '.layers-masonry-column' ).not( $final_filter ).removeClass('active').addClass( 'hide' );
 
         // Show items
-        $masonry_container.find( '.layers-masonry-column' ).filter( $final_filter ).addClass('active').show();
+        $masonry_container.find( '.layers-masonry-column' ).filter( $final_filter ).addClass('active').removeClass( 'hide' );
 
         // Relayout if Masonry
         if( $is_masonry ){
-            $masonry_container.find('.list-masonry').masonry( 'layout' );
+            $masonry_grid.masonry( 'layout' );
         }
     });
 });

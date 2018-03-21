@@ -1,26 +1,35 @@
 <?php
 
-if (!defined('UPDRAFTPLUS_DIR')) die('No access.');
+if (!defined('UPDRAFTCENTRAL_CLIENT_DIR')) die('No access.');
 
-// This class is the basic glue between the lower-level UpdraftPlus_Remote_Communications (UDRPC) class, and UpdraftPlus. It does not contain actual commands themselves; the class names to use for actual commands are passed in as a parameter to the constructor.
-
+/**
+ * This class is the basic glue between the lower-level UpdraftPlus_Remote_Communications (UDRPC) class, and UpdraftPlus. It does not contain actual commands themselves; the class names to use for actual commands are passed in as a parameter to the constructor.
+ */
 class UpdraftPlus_UpdraftCentral_Listener {
 
 	public $udrpc_version;
+
 	private $ud = null;
+
 	private $receivers = array();
+
 	private $extra_info = array();
+
 	private $php_events = array();
+
 	private $commands = array();
+
 	private $current_udrpc = null;
+
+	private $command_classes;
 
 	public function __construct($keys = array(), $command_classes = array()) {
 		global $updraftplus;
 		$this->ud = $updraftplus;
+		// It seems impossible for this condition to result in a return; but it seems Plesk can do something odd within the control panel that causes a problem - see HS#6276
+		if (!is_a($this->ud, 'UpdraftPlus')) return;
 
-		foreach ($command_classes as $class_prefix => $command_class) {
-			if (class_exists($command_class)) $this->commands[$class_prefix] = new $command_class($this);
-		}
+		$this->command_classes = $command_classes;
 		
 		foreach ($keys as $name_hash => $key) {
 			// publickey_remote isn't necessarily set yet, depending on the key exchange method
@@ -52,12 +61,14 @@ class UpdraftPlus_UpdraftCentral_Listener {
 		
 		// If we ever need to expand beyond a single GET action, this can/should be generalised and put into the commands class
 		if (!empty($_GET['udcentral_action']) && 'login' == $_GET['udcentral_action']) {
-			# auth_redirect() does not return, according to the documentation; but the code shows that it can
-			# auth_redirect();
+			// auth_redirect() does not return, according to the documentation; but the code shows that it can
+			// auth_redirect();
 
 			if (!empty($_GET['login_id']) && is_numeric($_GET['login_id']) && !empty($_GET['login_key'])) {
 				$login_user = get_user_by('id', $_GET['login_id']);
-				if (is_a($login_user, 'WP_User')) {
+				
+				include_once(ABSPATH.WPINC.'/version.php');
+				if (is_a($login_user, 'WP_User') || (version_compare($wp_version, '3.5', '<') && !empty($login_user->ID))) {
 					// Allow site implementers to disable this functionality
 					$allow_autologin = apply_filters('updraftcentral_allow_autologin', true, $login_user);
 					if ($allow_autologin) {
@@ -79,11 +90,17 @@ class UpdraftPlus_UpdraftCentral_Listener {
 
 	}
 	
-	// Do verification before calling this method
+	/**
+	 * Do verification before calling this method
+	 *
+	 * @param  WP_User|Object $user         user object for autologin
+	 * @param  boolean        $redirect_url Redirect URL
+	 */
 	private function autologin_user($user, $redirect_url = false) {
 		if (!is_user_logged_in()) {
-	// 		$user = get_user_by('id', $user_id);
-			if (!is_object($user) || !is_a($user, 'WP_User')) return;
+	// $user = get_user_by('id', $user_id);
+			// Don't check that it's a WP_User - that's WP 3.5+ only
+			if (!is_object($user) || empty($user->ID)) return;
 			wp_set_current_user($user->ID, $user->user_login);
 			wp_set_auth_cookie($user->ID);
 			do_action('wp_login', $user->user_login, $user);
@@ -100,16 +117,38 @@ class UpdraftPlus_UpdraftCentral_Listener {
 		$this->initialise_listener_error_handling($key_name_indicator);
 
 		if (!preg_match('/^([a-z0-9]+)\.(.*)$/', $command, $matches)) return;
-		$command_class_name = $matches[1];
+		$class_prefix = $matches[1];
 		$command = $matches[2];
 		
 		// We only handle some commands - the others, we let something else deal with
-		if (!isset($this->commands[$command_class_name])) return $response;
-		$command_class = $this->commands[$command_class_name];
+		if (!isset($this->command_classes[$class_prefix])) return $response;
 
-		if ('_' == substr($command, 0, 1) || !method_exists($command_class, $command)) {
+		$command_php_class = $this->command_classes[$class_prefix];
+		
+		$command_base_class_at = apply_filters('updraftcentral_command_base_class_at', UPDRAFTCENTRAL_CLIENT_DIR.'/commands.php');
+		
+		if (!class_exists('UpdraftCentral_Commands')) include_once($command_base_class_at);
+		
+		// Second parameter has been passed since
+		do_action('updraftcentral_command_class_wanted', $command_php_class);
+		
+		if (!class_exists($command_php_class)) {
+			if (file_exists(UPDRAFTCENTRAL_CLIENT_DIR.'/modules/'.$class_prefix.'.php')) {
+				include_once(UPDRAFTCENTRAL_CLIENT_DIR.'/modules/'.$class_prefix.'.php');
+			}
+		}
+		
+		if (empty($this->commands[$class_prefix])) {
+			if (class_exists($command_php_class)) {
+				$this->commands[$class_prefix] = new $command_php_class($this);
+			}
+		}
+		
+		$command_class = isset($this->commands[$class_prefix]) ? $this->commands[$class_prefix] : new stdClass;
+
+		if ('_' == substr($command, 0, 1) || !is_a($command_class, $command_php_class) || (!method_exists($command_class, $command) && !method_exists($command_class, '__call'))) {
 			if (defined('UPDRAFTPLUS_UDRPC_FORCE_DEBUG') && UPDRAFTPLUS_UDRPC_FORCE_DEBUG) error_log("Unknown RPC command received: ".$command);
-			return $this->return_rpc_message(array('response' => 'rpcerror', 'data' => array('code' => 'unknown_rpc_command', 'data' => $command)));
+			return $this->return_rpc_message(array('response' => 'rpcerror', 'data' => array('code' => 'unknown_rpc_command', 'data' => array('prefix' => $class_prefix, 'command' => $command, 'class' => $command_php_class))));
 		}
 
 		$extra_info = isset($this->extra_info[$key_name_indicator]) ? $this->extra_info[$key_name_indicator] : null;
@@ -119,9 +158,16 @@ class UpdraftPlus_UpdraftCentral_Listener {
 		
 		$this->current_udrpc = $ud_rpc;
 		
+		do_action('updraftcentral_listener_pre_udrpc_action', $command, $command_class, $data, $extra_info);
+		
+		global $updraftplus;
+		if (is_a($updraftplus, 'UpdraftPlus')) $updraftplus->register_wp_http_option_hooks();
+		
 		// Despatch
-		$msg = call_user_func(array($command_class, $command), $data, $extra_info);
-	
+		$msg = apply_filters('updraftcentral_listener_udrpc_action', call_user_func(array($command_class, $command), $data, $extra_info), $command_class, $class_prefix, $command, $data, $extra_info);
+
+		if (is_a($updraftplus, 'UpdraftPlus')) $updraftplus->register_wp_http_option_hooks(false);
+		
 		return $this->return_rpc_message($msg);
 	}
 	
@@ -134,16 +180,15 @@ class UpdraftPlus_UpdraftCentral_Listener {
 		set_error_handler(array($this->ud, 'php_error'), E_ALL & ~E_STRICT);
 		$this->php_events = array();
 		@ob_start();
-		add_action('updraftplus_logline', array($this, 'updraftplus_logline'), 10, 4);
+		add_filter('updraftplus_logline', array($this, 'updraftplus_logline'), 10, 4);
 		if (!UpdraftPlus_Options::get_updraft_option('updraft_debug_mode')) return;
-// 		$this->ud->nonce = $hash;
-// 		$this->ud->logfile_open($hash);
 	}
 	
 	public function updraftplus_logline($line, $nonce, $level, $uniq_id) {
 		if ('notice' === $level && 'php_event' === $uniq_id) {
 			$this->php_events[] = $line;
 		}
+		return $line;
 	}
 
 	public function return_rpc_message($msg) {
@@ -154,7 +199,7 @@ class UpdraftPlus_UpdraftCentral_Listener {
 		$caught_output = @ob_get_contents();
 		@ob_end_clean();
 		// If turning output-catching off, turn this on instead:
- 		// $caught_output = ''; @ob_end_flush();
+		// $caught_output = ''; @ob_end_flush();
 		
 		// If there's higher-level output buffering going on, then get rid of that
 		if (ob_get_level()) ob_end_clean();
@@ -180,5 +225,4 @@ class UpdraftPlus_UpdraftCentral_Listener {
 
 		return $msg;
 	}
-	
 }

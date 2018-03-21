@@ -4,7 +4,7 @@
 class HTTP_WebDAV_Client_parse_propfind_response
 {
     // get requested properties as array containing name/namespace pairs
-    function HTTP_WebDAV_Client_parse_propfind_response($response)
+    public function __construct($response)
     {
         $this->urls = array();
 

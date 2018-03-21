@@ -1,25 +1,34 @@
-<ul class="steps <?php if ( $order->shipping_country !== 'US' ) : ?>non-us<?php endif; ?>">
-	<li class="step-address <?php echo $step === 'address' ? 'active' : ''; ?>"><?php _e( 'Address', 'woocommerce-shipping-stamps' ); ?></li>
-	<li class="step-rates <?php echo $step === 'rates' ? 'active' : ''; ?>"><?php _e( 'Rate', 'woocommerce-shipping-stamps' ); ?></li>
-	<?php if ( $order->shipping_country !== 'US' ) : ?>
-		<li class="step-customs <?php echo $step === 'customs' ? 'active' : ''; ?>"><?php _e( 'Customs', 'woocommerce-shipping-stamps' ); ?></li>
+<?php
+/**
+ * View template to display meta box content.
+ *
+ * @package WC_Stamps_Integration/View
+ */
+
+$needs_customs = $this->needs_customs_step( $order );
+?>
+<ul class="steps<?php echo $needs_customs ? ' needs-customs' : '';  ?>">
+	<li class="step-address <?php echo 'address' === $step ? 'active' : ''; ?>"><?php _e( 'Address', 'woocommerce-shipping-stamps' ); ?></li>
+	<li class="step-rates <?php echo 'rates' === $step ? 'active' : ''; ?>"><?php _e( 'Rate', 'woocommerce-shipping-stamps' ); ?></li>
+	<?php if ( $needs_customs ) : ?>
+		<li class="step-customs <?php echo 'customs' === $step ? 'active' : ''; ?>"><?php _e( 'Customs', 'woocommerce-shipping-stamps' ); ?></li>
 	<?php endif; ?>
-	<li class="step-labels <?php echo $step === 'labels' ? 'active' : ''; ?>"><?php _e( 'Label', 'woocommerce-shipping-stamps' ); ?></li>
+	<li class="step-labels <?php echo 'labels' === $step ? 'active' : ''; ?>"><?php _e( 'Label', 'woocommerce-shipping-stamps' ); ?></li>
 </ul>
 <div class="stamps_result">
 	<?php
-		switch ( $step ) {
-			case 'address' :
-				echo $this->get_address_verification_html( $order );
-			break;
-			case 'rates' :
-				echo $this->get_packages_html( $order );
-			break;
-			case 'labels' :
-				echo $this->get_labels_html( $labels );
-			break;
-		}
-		?>
+	switch ( $step ) {
+		case 'address' :
+			echo $this->get_address_verification_html( $order );
+		break;
+		case 'rates' :
+			echo $this->get_packages_html( $order );
+		break;
+		case 'labels' :
+			echo $this->get_labels_html( $labels );
+		break;
+	}
+	?>
 </div>
 <script type="text/javascript">
 	jQuery(function() {

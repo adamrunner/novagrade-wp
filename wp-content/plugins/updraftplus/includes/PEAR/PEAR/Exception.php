@@ -116,6 +116,7 @@ class PEAR_Exception extends Exception
      * @param string exception message
      * @param int|Exception|PEAR_Error|array|null exception cause
      * @param int|null exception code or null
+     * @throws PEAR_Exception if PEAR_Error class not exists or Exception not type of PEAR_Error
      */
     public function __construct($message, $p2 = null, $p3 = null)
     {

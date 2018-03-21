@@ -1,4 +1,10 @@
 <?php
+/**
+ * View template to display custom information.
+ *
+ * @package WC_Stamps_Integration/View
+ */
+
 ob_start();
 include( 'html-customs-item.php' );
 $line_html = ob_get_clean();
@@ -48,20 +54,20 @@ $line_html = ob_get_clean();
 <p class="wc-stamps-customs-line-intro"><?php _e( 'Add line items for the customs form here.', 'woocommerce-shipping-stamps' ); ?></p>
 <div class="wc-stamps-customs-items">
 	<?php
-		foreach ( $order->get_items() as $item_id => $item ) {
-			$product = $order->get_product_from_item( $item );
+	foreach ( $order->get_items() as $item_id => $item ) {
+		$product = $order->get_product_from_item( $item );
 
-			if ( ! $product->needs_shipping() ) {
-				continue;
-			}
-
-			$description = $product->get_title();
-			$qty         = $item['qty'];
-			$value       = $product->get_price() * $item['qty'];
-			$weight      = wc_get_weight( $product->get_weight() * $item['qty'], 'lbs' );
-
-			include( 'html-customs-item.php' );
+		if ( ! $product->needs_shipping() ) {
+			continue;
 		}
+
+		$description = $product->get_title();
+		$qty         = $item['qty'];
+		$value       = $product->get_price() * $item['qty'];
+		$weight      = wc_get_weight( $product->get_weight() * $item['qty'], 'lbs' );
+
+		include( 'html-customs-item.php' );
+	}
 	?>
 </div>
 <p>

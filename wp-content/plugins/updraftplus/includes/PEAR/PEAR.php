@@ -52,8 +52,6 @@ $GLOBALS['_PEAR_destructor_object_list'] = array();
 $GLOBALS['_PEAR_shutdown_funcs']         = array();
 $GLOBALS['_PEAR_error_handler_stack']    = array();
 
-@ini_set('track_errors', true);
-
 /**
  * Base class for other PEAR classes.  Provides rudimentary
  * emulation of destructors.
@@ -61,7 +59,7 @@ $GLOBALS['_PEAR_error_handler_stack']    = array();
  * If you want a destructor in your class, inherit PEAR and make a
  * destructor method called _yourclassname (same name as the
  * constructor, but with a "_" prefix).  Also, in your constructor you
- * have to call the PEAR constructor: $this->PEAR();.
+ * have to call the PEAR constructor: parent::_construct();.
  * The destructor method will be called without parameters.  Note that
  * at in some SAPI implementations (such as Apache), any output during
  * the request shutdown (in which destructors are called) seems to be
@@ -144,34 +142,33 @@ class PEAR
      * @param string $error_class  (optional) which class to use for
      *        error objects, defaults to PEAR_Error.
      * @access public
-     * @return void
+     * @return self
      */
-    function PEAR($error_class = null)
-    {
-        $classname = strtolower(get_class($this));
-        if ($this->_debug) {
-            print "PEAR constructor called, class=$classname\n";
-        }
+	public function __construct($error_class = null) {
+		$classname = strtolower(get_class($this));
+		if ($this->_debug) {
+			print "PEAR constructor called, class=$classname\n";
+		}
 
-        if ($error_class !== null) {
-            $this->_error_class = $error_class;
-        }
+		if ($error_class !== null) {
+			$this->_error_class = $error_class;
+		}
 
-        while ($classname && strcasecmp($classname, "pear")) {
-            $destructor = "_$classname";
-            if (method_exists($this, $destructor)) {
-                global $_PEAR_destructor_object_list;
-                $_PEAR_destructor_object_list[] = &$this;
-                if (!isset($GLOBALS['_PEAR_SHUTDOWN_REGISTERED'])) {
-                    register_shutdown_function("_PEAR_call_destructors");
-                    $GLOBALS['_PEAR_SHUTDOWN_REGISTERED'] = true;
-                }
-                break;
-            } else {
-                $classname = get_parent_class($classname);
-            }
-        }
-    }
+		while ($classname && strcasecmp($classname, "pear")) {
+			$destructor = "_$classname";
+			if (method_exists($this, $destructor)) {
+				global $_PEAR_destructor_object_list;
+				$_PEAR_destructor_object_list[] = &$this;
+				if (!isset($GLOBALS['_PEAR_SHUTDOWN_REGISTERED'])) {
+					register_shutdown_function("_PEAR_call_destructors");
+					$GLOBALS['_PEAR_SHUTDOWN_REGISTERED'] = true;
+				}
+				break;
+			} else {
+				$classname = get_parent_class($classname);
+			}
+		}
+	}
 
     /**
      * Destructor (the emulated type of...).  Does nothing right now,
@@ -184,11 +181,11 @@ class PEAR
      * @access public
      * @return void
      */
-    function _PEAR() {
-        if ($this->_debug) {
-            printf("PEAR destructor called, class=%s\n", strtolower(get_class($this)));
-        }
-    }
+	public function __destruct() {
+		if ($this->_debug) {
+			printf("PEAR destructor called, class=%s\n", strtolower(get_class($this)));
+		}
+	}
 
     /**
     * If you have a class that's mostly/entirely static, and you need static
@@ -747,7 +744,7 @@ function _PEAR_call_destructors()
             $_PEAR_destructor_object_list = array_reverse($_PEAR_destructor_object_list);
         }
 
-        while (list($k, $objref) = each($_PEAR_destructor_object_list)) {
+        foreach ($_PEAR_destructor_object_list as $k => $objref) {
             $classname = get_class($objref);
             while ($classname) {
                 $destructor = "_$classname";
@@ -823,7 +820,7 @@ class PEAR_Error
      * @access public
      *
      */
-    function PEAR_Error($message = 'unknown error', $code = null,
+    function __construct($message = 'unknown error', $code = null,
                         $mode = null, $options = null, $userinfo = null)
     {
         if ($mode === null) {

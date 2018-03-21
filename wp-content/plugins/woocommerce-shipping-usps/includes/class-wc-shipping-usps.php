@@ -48,9 +48,10 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 	 * @return bool
 	 */
 	public function is_available( $package ) {
-		if ( "no" === $this->enabled ) {
+		if ( "no" === $this->enabled || empty( $package['destination']['country'] ) ) {
 			return false;
 		}
+
 		if ( 'specific' === $this->availability ) {
 			if ( is_array( $this->countries ) && ! in_array( $package['destination']['country'], $this->countries ) ) {
 				return false;
@@ -60,6 +61,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 				return false;
 			}
 		}
+		
 		return apply_filters( 'woocommerce_shipping_' . $this->id . '_is_available', true, $package );
 	}
 
@@ -221,16 +223,24 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 		foreach ( $posted_services as $code => $settings ) {
 
 			$services[ $code ] = array(
-				'name'               => wc_clean( $settings['name'] ),
-				'order'              => wc_clean( $settings['order'] )
+				'name'  => wc_clean( $settings['name'] ),
+				'order' => wc_clean( $settings['order'] )
 			);
 
-			foreach ( $this->services[$code]['services'] as $key => $name ) {
-				$services[ $code ][ $key ]['enabled'] = isset( $settings[ $key ]['enabled'] ) ? true : false;
-				$services[ $code ][ $key ]['adjustment'] = wc_clean( $settings[ $key ]['adjustment'] );
-				$services[ $code ][ $key ]['adjustment_percent'] = wc_clean( $settings[ $key ]['adjustment_percent'] );
+			foreach( $this->services[$code]['services'] as $key => $name ) {
+				// process sub sub services
+				if ( 0 === $key ) {
+					foreach( $name as $subsub_service_key => $subsub_service ) {
+						$services[ $code ][ $key ][ $subsub_service_key ]['enabled'] = isset( $settings[ $key ][ $subsub_service_key ]['enabled'] ) ? true : false;
+						$services[ $code ][ $key ][ $subsub_service_key ]['adjustment'] = wc_clean( $settings[ $key ][ $subsub_service_key ]['adjustment'] );
+						$services[ $code ][ $key ][ $subsub_service_key ]['adjustment_percent'] = wc_clean( $settings[ $key ][ $subsub_service_key ]['adjustment_percent'] );
+					}				
+				} else {
+					$services[ $code ][ $key ]['enabled'] = isset( $settings[ $key ]['enabled'] ) ? true : false;
+					$services[ $code ][ $key ]['adjustment'] = wc_clean( $settings[ $key ]['adjustment'] );
+					$services[ $code ][ $key ]['adjustment_percent'] = wc_clean( $settings[ $key ]['adjustment_percent'] );
+				}
 			}
-
 		}
 
 		return $services;
@@ -532,7 +542,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
      * @param mixed $package
      * @return void
      */
-    public function calculate_shipping( $package ) {
+    public function calculate_shipping( $package = array() ) {
 		$this->rates               = array();
 		$this->unpacked_item_costs = 0;
 		$domestic                  = in_array( $package['destination']['country'], $this->domestic ) ? true : false;
@@ -644,14 +654,9 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 								}
 							}
 
-							// Loop our known services
+							// Loop defined services
 							foreach ( $this->services as $service => $values ) {
-
-								if ( $domestic && strpos( $service, 'D_' ) !== 0 ) {
-									continue;
-								}
-
-								if ( ! $domestic && strpos( $service, 'I_' ) !== 0 ) {
+								if ( $domestic && strpos( $service, 'D_' ) !== 0 || ! $domestic && strpos( $service, 'I_' ) !== 0 ) {
 									continue;
 								}
 
@@ -661,48 +666,65 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 								$rate_cost      = null;
 								$svc_commitment = null;
 
+								// loop through rate quotes returned from USPS
 								foreach ( $quotes as $quote ) {
+									$quoted_service_name = sanitize_title( strip_tags( htmlspecialchars_decode( (string) $quote->{'MailService'} ) ) );
 
-									if ( $domestic ) {
-										$code = strval( $quote->attributes()->CLASSID );
-									} else {
+									$code = strval( $quote->attributes()->CLASSID );
+
+									if ( ! $domestic ) {
 										$code = strval( $quote->attributes()->ID );
 									}
 
 									if ( $code !== "" && in_array( $code, array_keys( $values['services'] ) ) ) {
+										$cost = (float) $quote->{'Rate'} * $cart_item_qty;
+										
+										if ( ! empty( $quote->{'CommercialRate'} ) ) {
+											$cost = (float) $quote->{'CommercialRate'} * $cart_item_qty;
+										}
 
-										if ( $domestic ) {
-
-											if ( ! empty( $quote->{'CommercialRate'} ) ) {
-												$cost = (float) $quote->{'CommercialRate'} * $cart_item_qty;
-											} else {
-												$cost = (float) $quote->{'Rate'} * $cart_item_qty;
-											}
-
-										} else {
+										if ( ! $domestic ) {
+											$cost = (float) $quote->{'Postage'} * $cart_item_qty;
 
 											if ( ! empty( $quote->{'CommercialPostage'} ) ) {
 												$cost = (float) $quote->{'CommercialPostage'} * $cart_item_qty;
-											} else {
-												$cost = (float) $quote->{'Postage'} * $cart_item_qty;
 											}
 
 										}
 
-										// Cost adjustment %
-										if ( ! empty( $this->custom_services[ $rate_code ][ $code ]['adjustment_percent'] ) ) {
-											$cost = round( $cost + ( $cost * ( floatval( $this->custom_services[ $rate_code ][ $code ]['adjustment_percent'] ) / 100 ) ), wc_get_price_decimals() );
-										}
+										// process sub sub services
+										if ( '0' == $code ) {
+											if ( array_key_exists( $quoted_service_name, $this->custom_services[ $rate_code ][ $code ] ) ) {
+												// Enabled check
+												if ( ! empty( $this->custom_services[ $rate_code ][ $code ][ $quoted_service_name ] ) && ( true != $this->custom_services[ $rate_code ][ $code ][ $quoted_service_name ]['enabled'] || empty( $this->custom_services[ $rate_code ][ $code ][ $quoted_service_name ]['enabled'] ) ) ) {
+													continue;
+												}
 
-										// Cost adjustment
-										if ( ! empty( $this->custom_services[ $rate_code ][ $code ]['adjustment'] ) ) {
-											$cost = round( $cost + floatval( $this->custom_services[ $rate_code ][ $code ]['adjustment'] ), wc_get_price_decimals() );
-										}
+												// Cost adjustment %
+												if ( ! empty( $this->custom_services[ $rate_code ][ $code ][ $quoted_service_name ]['adjustment_percent'] ) ) {
+													$cost = round( $cost + ( $cost * ( floatval( $this->custom_services[ $rate_code ][ $code ][ $quoted_service_name ]['adjustment_percent'] ) / 100 ) ), wc_get_price_decimals() );
+												}
 
-										// Enabled check
-										if ( isset( $this->custom_services[ $rate_code ][ $code ] ) && empty( $this->custom_services[ $rate_code ][ $code ]['enabled'] ) ) {
-											//$this->debug( 'Skipping disabled service: ' . $rate_code . ' - ' . $code );
-											continue;
+												// Cost adjustment
+												if ( ! empty( $this->custom_services[ $rate_code ][ $code ][ $quoted_service_name ]['adjustment'] ) ) {
+													$cost = round( $cost + floatval( $this->custom_services[ $rate_code ][ $code ][ $quoted_service_name ]['adjustment'] ), wc_get_price_decimals() );
+												}
+											}
+										} else {
+											// Enabled check
+											if ( ! empty( $this->custom_services[ $rate_code ][ $code ] ) && ( true != $this->custom_services[ $rate_code ][ $code ]['enabled'] || empty( $this->custom_services[ $rate_code ][ $code ]['enabled'] ) ) ) {
+												continue;
+											}
+
+											// Cost adjustment %
+											if ( ! empty( $this->custom_services[ $rate_code ][ $code ]['adjustment_percent'] ) ) {
+												$cost = round( $cost + ( $cost * ( floatval( $this->custom_services[ $rate_code ][ $code ]['adjustment_percent'] ) / 100 ) ), wc_get_price_decimals() );
+											}
+
+											// Cost adjustment
+											if ( ! empty( $this->custom_services[ $rate_code ][ $code ]['adjustment'] ) ) {
+												$cost = round( $cost + floatval( $this->custom_services[ $rate_code ][ $code ]['adjustment'] ), wc_get_price_decimals() );
+											}
 										}
 
 										if ( $domestic ) {
@@ -780,6 +802,10 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 
 													} elseif ( strstr( $service_name, 'Large Envelope' ) ) {
 
+														if ( ( $package_length > 11.5 && $package_length < 15 ) || ( $package_width > 6 && $package_width < 12 ) || ( $package_height > 0.25 || $package_width < 0.75 ) ) {
+															break;
+														}
+												
 														if ( $package_length > 15 || $package_length < 11.5 ) {
 															continue 2;
 														}
@@ -1395,7 +1421,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 			if ( $domestic ) {
 
 				$request  = '<Package ID="' . $this->generate_package_id( $key, 1, $dimensions[2], $dimensions[1], $dimensions[0], $weight ) . '">' . "\n";
-				$request .= '	<Service>' . ( ! $this->settings['shippingrates'] ? 'ONLINE' : $this->settings['shippingrates'] ) . '</Service>' . "\n";
+				$request .= '	<Service>' . ( !$this->settings['shippingrates'] ? 'ONLINE' : $this->settings['shippingrates'] ) . '</Service>' . "\n";
 				$request .= '	<ZipOrigination>' . str_replace( ' ', '', strtoupper( $this->origin ) ) . '</ZipOrigination>' . "\n";
 				$request .= '	<ZipDestination>' . strtoupper( substr( $package['destination']['postcode'], 0, 5 ) ) . '</ZipDestination>' . "\n";
 				$request .= '	<Pounds>' . floor( $weight ) . '</Pounds>' . "\n";
@@ -1422,7 +1448,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 				$request .= '	<Pounds>' . floor( $weight ) . '</Pounds>' . "\n";
 				$request .= '	<Ounces>' . number_format( ( $weight - floor( $weight ) ) * 16, 2 ) . '</Ounces>' . "\n";
 				$request .= '	<Machinable>true</Machinable> ' . "\n";
-				$request .= '	<MailType>' . ( empty( $this->boxes[ $box_package->id ]['is_letter'] ) ? 'PACKAGE' : 'ENVELOPE' ) . '</MailType>' . "\n";
+				$request .= '	<MailType>' . ( empty( $this->boxes[ $key ]['is_letter'] ) ? 'PACKAGE' : 'ENVELOPE' ) . '</MailType>' . "\n";
 				$request .= '	<GXG><POBoxFlag>N</POBoxFlag><GiftFlag>N</GiftFlag></GXG>' . "\n";
 				$request .= '	<ValueOfContents>' . number_format( $box_package->value, 2, '.', '' ) . '</ValueOfContents>' . "\n";
 				$request .= '	<Country>' . $this->get_country_name( $package['destination']['country'] ) . '</Country>' . "\n";
@@ -1458,6 +1484,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 			'AX' => 'Aland Island (Finland)',
 			'AL' => 'Albania',
 			'DZ' => 'Algeria',
+			'AS' => 'American Samoa',
 			'AD' => 'Andorra',
 			'AO' => 'Angola',
 			'AI' => 'Anguilla',
@@ -1541,6 +1568,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 			'GL' => 'Greenland',
 			'GD' => 'Grenada',
 			'GP' => 'Guadeloupe',
+			'GU' => 'Guam',
 			'GT' => 'Guatemala',
 			'GG' => 'Guernsey',
 			'GN' => 'Guinea',
@@ -1611,6 +1639,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 			'NG' => 'Nigeria',
 			'NU' => 'Niue',
 			'NF' => 'Norfolk Island',
+			'MP' => 'Northern Mariana Islands',
 			'KP' => 'North Korea',
 			'NO' => 'Norway',
 			'OM' => 'Oman',
@@ -1624,6 +1653,7 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 			'PN' => 'Pitcairn Island',
 			'PL' => 'Poland',
 			'PT' => 'Portugal',
+			'PR' => 'Puerto Rico',
 			'QA' => 'Qatar',
 			'RE' => 'Reunion',
 			'RO' => 'Romania',
@@ -1679,6 +1709,8 @@ class WC_Shipping_USPS extends WC_Shipping_Method {
 			'UA' => 'Ukraine',
 			'AE' => 'United Arab Emirates',
 			'GB' => 'United Kingdom',
+			'UM' => 'United States (US) Minor Outlying Islands',
+			'VI' => 'United States (US) Virgin Islands',
 			'UY' => 'Uruguay',
 			'UZ' => 'Uzbekistan',
 			'VU' => 'Vanuatu',

@@ -15,7 +15,7 @@ if ( is_multisite() && ! is_network_admin() ) {
 }
 
 if ( !current_user_can('edit_themes') )
-	wp_die('<p>'.__('You do not have sufficient permissions to edit templates for this site.').'</p>');
+	wp_die('<p>'.__('Sorry, you are not allowed to edit templates for this site.').'</p>');
 
 $title = __("Edit Themes");
 $parent_file = 'themes.php';
@@ -25,7 +25,7 @@ get_current_screen()->add_help_tab( array(
 'title'		=> __('Overview'),
 'content'	=>
 	'<p>' . __('You can use the Theme Editor to edit the individual CSS and PHP files which make up your theme.') . '</p>
-	<p>' . __("Begin by choosing a theme to edit from the dropdown menu and clicking Select. A list then appears of the theme's template files. Clicking once on any file name causes the file to appear in the large Editor box.") . '</p>
+	<p>' . __( 'Begin by choosing a theme to edit from the dropdown menu and clicking the Select button. A list then appears of the theme&#8217;s template files. Clicking once on any file name causes the file to appear in the large Editor box.' ) . '</p>
 	<p>' . __('For PHP files, you can use the Documentation dropdown to select from functions recognized in that file. Look Up takes you to a web page with reference material about that particular function.') . '</p>
 	<p id="newcontent-description">' . __( 'In the editing area the Tab key enters a tab character. To move below this area by pressing Tab, press the Esc key followed by the Tab key. In some cases the Esc key will need to be pressed twice before the Tab key will allow you to continue.' ) . '</p>
 	<p>' . __('After typing in your edits, click Update File.') . '</p>
@@ -66,7 +66,7 @@ $has_templates = false;
 $default_types = array( 'php', 'css' );
 
 /**
- * Filter the list of file types allowed for editing in the Theme editor.
+ * Filters the list of file types allowed for editing in the Theme editor.
  *
  * @since 4.4.0
  *
@@ -99,7 +99,7 @@ if ( empty( $file ) ) {
 	$relative_file = 'style.css';
 	$file = $allowed_files['style.css'];
 } else {
-	$relative_file = $file;
+	$relative_file = wp_unslash( $file );
 	$file = $theme->get_stylesheet_directory() . '/' . $relative_file;
 }
 
@@ -112,7 +112,7 @@ case 'update':
 	$newcontent = wp_unslash( $_POST['newcontent'] );
 	$location = 'theme-editor.php?file=' . urlencode( $relative_file ) . '&theme=' . urlencode( $stylesheet ) . '&scrollto=' . $scrollto;
 	if ( is_writeable( $file ) ) {
-		// is_writable() not always reliable, check return value. see comments @ http://uk.php.net/is_writable
+		// is_writable() not always reliable, check return value. see comments @ https://secure.php.net/is_writable
 		$f = fopen( $file, 'w+' );
 		if ( $f !== false ) {
 			fwrite( $f, $newcontent );
@@ -156,10 +156,12 @@ default:
  <div id="message" class="updated notice is-dismissible"><p><?php _e( 'File edited successfully.' ) ?></p></div>
 <?php endif;
 
-$description = get_file_description( $relative_file );
+$file_description = get_file_description( $relative_file );
 $file_show = array_search( $file, array_filter( $allowed_files ) );
-if ( $description != $file_show )
-	$description .= ' <span>(' . $file_show . ')</span>';
+$description = esc_html( $file_description );
+if ( $file_description != $file_show ) {
+	$description .= ' <span>(' . esc_html( $file_show ) . ')</span>';
+}
 ?>
 <div class="wrap">
 <h1><?php echo esc_html( $title ); ?></h1>
@@ -229,10 +231,10 @@ if ( $allowed_files ) :
 
 			echo "\t<ul>\n";
 		}
-		
-		$file_description = get_file_description( $filename );
+
+		$file_description = esc_html( get_file_description( $filename ) );
 		if ( $filename !== basename( $absolute_filename ) || $file_description !== $filename ) {
-			$file_description .= '<br /><span class="nonessential">(' . $filename . ')</span>';
+			$file_description .= '<br /><span class="nonessential">(' . esc_html( $filename ) . ')</span>';
 		}
 
 		if ( $absolute_filename === $file ) {

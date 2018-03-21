@@ -51,7 +51,7 @@
 						<a href="#" class="button minus remove"><?php _e( 'Remove selected box(es)', 'woocommerce-shipping-usps' ); ?></a>
 					</th>
 					<th colspan="8">
-						<small class="description"><?php _e( 'Note: If you are using regional rates, A1, A2, B1, B2 and C box sizes will be defined for you.', 'woocommerce-shipping-usps' ); ?></small>
+						<small class="description"><?php esc_html_e( 'Note: If you are using regional rates, A1, A2, B1, and B2 sizes will be defined for you.', 'woocommerce-shipping-usps' ); ?></small>
 					</th>
 				</tr>
 			</tfoot>

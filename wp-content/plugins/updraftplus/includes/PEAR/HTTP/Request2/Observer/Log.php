@@ -102,7 +102,9 @@ class HTTP_Request2_Observer_Log implements SplObserver
      *                      or an instance of the PEAR Log class.
      * @param array $events Array of events to listen to (default: all events)
      *
-     * @return void
+     * @throws HTTP_Request2_Exception if file can't open
+     *
+     * @return self
      */
     public function __construct($target = 'php://output', array $events = array())
     {

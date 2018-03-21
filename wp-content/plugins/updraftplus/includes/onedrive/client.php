@@ -180,9 +180,10 @@ class Client {
 	 *         successful log in.
 	 * @param  (array) $options. Reserved for future use. Default: array(). TODO:
 	 *         support it.
+	 * @param  (string) $instance_id - the id of the instance that we are currently trying to authorise
 	 * @return (string) The login URL.
 	 */
-	public function getLogInUrl(array $scopes, $redirectUri, array $options = array()) {
+	public function getLogInUrl(array $scopes, $redirectUri, array $options = array(), $instance_id = '') {
 		if (null === $this->_clientId) {
 			throw new \Exception('The client ID must be set to call getLoginUrl()');
 		}
@@ -191,6 +192,8 @@ class Client {
 		$redirectUri = (string) $redirectUri;
 		$this->_state->redirect_uri = $redirectUri;
 
+		if ($instance_id) $instance_id = ':'.$instance_id;
+		
 		// When using this URL, the browser will eventually be redirected to the
 		// callback URL with a code passed in the URL query string (the name of the
 		// variable is "code"). This is suitable for PHP.
@@ -199,6 +202,7 @@ class Client {
 			. '&scope=' . urlencode($imploded)
 			. '&response_type=code'
 			. '&redirect_uri=' . urlencode($redirectUri)
+			. '&state=' . urlencode($instance_id)
 			. '&display=popup'
 			. '&locale=en';
 
@@ -260,12 +264,7 @@ class Client {
 			throw new \Exception('The state\'s redirect URI must be set to call obtainAccessToken()');
 		}
 
-		$url = self::TOKEN_URL
-			. '?client_id=' . urlencode($this->_clientId)
-			. '&redirect_uri=' . urlencode($this->_state->redirect_uri)
-			. '&client_secret=' . urlencode($clientSecret)
-			. '&grant_type=authorization_code'
-			. '&code=' . urlencode($code);
+		$url = self::TOKEN_URL;
 
 		$curl = curl_init();
 
@@ -278,6 +277,12 @@ class Client {
 			CURLOPT_URL            => $url,
 
 			CURLOPT_AUTOREFERER    => true,
+			CURLOPT_POST           => 1, // i am sending post data
+			CURLOPT_POSTFIELDS     => 'client_id=' . urlencode($this->_clientId)
+                . '&redirect_uri=' . urlencode($this->_state->redirect_uri)
+                . '&client_secret=' . urlencode($clientSecret)
+                . '&grant_type=authorization_code'
+                . '&code=' . urlencode($code),
 		);
 
 		// Prevent misleading PHP notice
@@ -676,18 +681,27 @@ class Client {
 			$object_path = 'drive/items/'.$objectId;
 		}
 
-		$result   = $this->apiGet($object_path . '/children', array(), true);
-		$objects  = array();
-
-		//print_r($result);
+		$fetch_url = $object_path . '/children';
 		
-		foreach ($result->value as $data) {
-			$object = property_exists($data, 'folder') ?
-				new Folder($this, $data->id, $data)
-				: new File($this, $data->id, $data);
+		$objects  = array();
+		
+		while ($fetch_url) {
+		
+			$result   = $this->apiGet($fetch_url, array(), true);
+			
+			foreach ($result->value as $data) {
+				$object = property_exists($data, 'folder') ?
+					new Folder($this, $data->id, $data)
+					: new File($this, $data->id, $data);
 
-			$objects[] = $object;
+				$objects[] = $object;
+			}
+			
+			$next_url_key = '@odata.nextLink';
+			
+			$fetch_url = !empty($result->$next_url_key) ? $result->$next_url_key : false;
 		}
+		
 		return $objects;
 	}
 
@@ -703,7 +717,7 @@ class Client {
 		$objectId   = $objectId;
 		$properties = (object) $properties;
 		$encoded    = json_encode($properties);
-		$stream     = fopen('php://memory', 'w+b');
+		$stream     = fopen('php://temp', 'w+b');
 
 		if (false === $stream) {
 			throw new \Exception('fopen() failed');

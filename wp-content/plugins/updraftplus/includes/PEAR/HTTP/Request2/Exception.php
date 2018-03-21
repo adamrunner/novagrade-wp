@@ -157,4 +157,3 @@ class HTTP_Request2_ConnectionException extends HTTP_Request2_Exception
 class HTTP_Request2_MessageException extends HTTP_Request2_Exception
 {
 }
-?>

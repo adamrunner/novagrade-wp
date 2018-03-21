@@ -122,7 +122,7 @@ class Layers_Custom_Meta {
 						</p>
 					</div>
 					<div class="l_admin-button-well clearfix">
-						<a href="<?php echo admin_url() . 'customize.php?url=' . esc_url( get_the_permalink() ); ?>" class="button btn-massive btn-primary btn-full <?php echo ( 'auto-draft' == $post->post_status ? 'disable' : '' ); ?>" id="<?php echo ( isset( $post->ID ) ? 'builder-button-' . $post->ID : 'builder-button-' . rand(0,1) ); ?>">
+						<a href="<?php echo admin_url() . 'customize.php?url=' . esc_url( get_permalink() ); ?>" class="button btn-massive btn-primary btn-full <?php echo ( 'auto-draft' == $post->post_status ? 'disable' : '' ); ?>" id="<?php echo ( isset( $post->ID ) ? 'builder-button-' . $post->ID : 'builder-button-' . rand(0,1) ); ?>">
 							<?php ( 'auto-draft' == $post->post_status ? _e( 'Start' , 'layerswp' ) : _e( 'Edit Your Page' , 'layerswp' ) ); ?>
 						</a>
 					</div>
@@ -172,7 +172,7 @@ class Layers_Custom_Meta {
 
 		// Add our button
 		if ( $can_edit_post && 'builder.php' == get_page_template_slug( $post->ID ) ) {
-			$actions['builder'] = '<a href="' . admin_url( 'customize.php?url=' . esc_url( get_the_permalink() ) ) . '" title="' . esc_attr( __( 'Edit Layout' , 'layerswp' ) ) . '">' . __( 'Edit Layout' , 'layerswp' ) . '</a>';
+			$actions['builder'] = '<a href="' . admin_url( 'customize.php?url=' . esc_url( get_permalink() ) ) . '" title="' . esc_attr( __( 'Edit Layout' , 'layerswp' ) ) . '">' . __( 'Edit Layout' , 'layerswp' ) . '</a>';
 		}
 
 		return $actions;
@@ -313,7 +313,7 @@ class Layers_Custom_Meta {
 			<div class="l_admin-nav l_admin-nav-tabs">
 				<ul class="l_admin-tabs clearfix">
 					<?php foreach( $this->custom_meta[ $meta_index ]['custom-meta'] as $key => $meta_option ){ ?>
-						<li <?php if( !isset( $inactive ) ) echo 'class="active"'; ?>><a href="#"><?php echo $meta_option[ 'title' ]; ?></a></li>
+						<li class="<?php if( ! isset( $inactive ) ) echo 'active'; ?> <?php echo esc_attr( 'l_admin-tab-' . sanitize_title( $key ) ); ?>" ><a href="#"><?php echo $meta_option[ 'title' ]; ?></a></li>
 						<?php $inactive=1; ?>
 					<?php } // foreach $this->custom_meta[ $post_type ]['custom-meta']  ?>
 				</ul>
@@ -321,12 +321,27 @@ class Layers_Custom_Meta {
 			<!-- Tab Content -->
 			<div class="l_admin-tab-content">
 				<?php foreach( $this->custom_meta[ $meta_index ]['custom-meta'] as $key => $meta_option ){ ?>
-					<section class="l_admin-accordion-section l_admin-content l_admin-tab-content <?php if( isset( $hide_tab ) ) echo 'l_admin-hide'; ?> customize-control"> <?php // @TODO: Remove .customizer-control class ?>
+					<section class="l_admin-accordion-section l_admin-content l_admin-tab-content <?php echo esc_attr( 'l_admin-tab-content-' . sanitize_title( $key ) ); ?> <?php if( isset( $hide_tab ) ) echo 'l_admin-hide'; ?> customize-control"> <?php // @TODO: Remove .customizer-control class ?>
 						<div class="l_admin-row clearfix">
 							<?php if( isset( $meta_option[ 'elements' ] ) ) { ?>
-								<fieldset>
-									<?php foreach( $meta_option[ 'elements' ] as $input_key => $input ) { ?>
-										<p class="l_admin-form-item">
+								<fieldset class="layers-post-meta">
+									<?php foreach( $meta_option[ 'elements' ] as $input_key => $input ) {
+										$data = '';
+										if( isset( $input[ 'data' ] ) ) {
+
+											if( isset( $input[ 'data' ][ 'show-if-value' ] ) ) {
+												$data .= ' data-show-if-selector="' . esc_attr( $input[ 'data' ][ 'show-if-selector' ] ) . '" ';
+											}
+
+											if( isset( $input[ 'data' ][ 'show-if-value' ] ) ) {
+												$data .= ' data-show-if-value="' . esc_attr( $input[ 'data' ][ 'show-if-value' ] ) . '" ';
+											}
+
+											if( isset( $input[ 'data' ][ 'show-if-operator' ] ) ) {
+												$data .= ' data-show-if-operator="' . esc_attr( $input[ 'data' ][ 'show-if-operator' ] ) . '" ';
+											}
+										} ?>
+										<p class="l_admin-form-item" <?php echo $data; ?>>
 											<label><?php echo $input[ 'label' ]; ?></label>
 											<?php  echo $form_elements->input(
 												array(

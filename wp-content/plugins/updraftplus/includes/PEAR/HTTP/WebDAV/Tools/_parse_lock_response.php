@@ -6,7 +6,7 @@ class HTTP_WebDAV_Client_parse_lock_response
     var $locktoken = "";
     var $collect_locktoken = false;
         
-    function HTTP_WebDAV_Client_parse_lock_response($response) 
+    public function __construct($response)
     {
         $xml_parser = xml_parser_create_ns("UTF-8", " ");
         xml_set_element_handler($xml_parser,

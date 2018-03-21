@@ -1,3 +1,12 @@
+<?php
+/**
+ * View template for defining packages from AJAX response.
+ *
+ * @package WC_Stamps_Integration/View
+ */
+
+?>
+
 <p><?php _e( 'Enter the weight and dimensions for the package being shipped. Dimensions are optional, but may be required for more accurate rating.', 'woocommerce-shipping-stamps' ); ?></p>
 
 <table class="form-table">

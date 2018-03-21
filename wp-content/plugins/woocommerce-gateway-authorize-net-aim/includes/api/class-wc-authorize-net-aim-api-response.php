@@ -1,6 +1,6 @@
 <?php
 /**
- * WooCommerce Authorize.net AIM Gateway
+ * WooCommerce Authorize.Net AIM Gateway
  *
  * This source file is subject to the GNU General Public License v3.0
  * that is bundled with this package in the file license.txt.
@@ -12,8 +12,8 @@
  *
  * DISCLAIMER
  *
- * Do not edit or add to this file if you wish to upgrade WooCommerce Authorize.net AIM Gateway to newer
- * versions in the future. If you wish to customize WooCommerce Authorize.net AIM Gateway for your
+ * Do not edit or add to this file if you wish to upgrade WooCommerce Authorize.Net AIM Gateway to newer
+ * versions in the future. If you wish to customize WooCommerce Authorize.Net AIM Gateway for your
  * needs please refer to http://docs.woothemes.com/document/authorize-net-aim/
  *
  * @package   WC-Gateway-Authorize-Net-AIM/API/Response
@@ -22,13 +22,13 @@
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+defined( 'ABSPATH' ) or exit;
 
 
 /**
- * Authorize.net AIM Response Class
+ * Authorize.Net AIM Response Class
  *
- * Parses XML received from the Authorize.net AIM API, the general response body looks like:
+ * Parses XML received from the Authorize.Net AIM API, the general response body looks like:
  *
  * <?xml version="1.0" encoding="utf-8"?>
  * <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -72,7 +72,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  * @since 3.0
  * @see SV_WC_Payment_Gateway_API_Response
  */
-class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Response, SV_WC_Payment_Gateway_API_Authorization_Response {
+class WC_Authorize_Net_AIM_API_Response extends SV_WC_API_XML_Response implements SV_WC_Payment_Gateway_API_Response, SV_WC_Payment_Gateway_API_Authorization_Response {
 
 
 	/** approved transaction response code */
@@ -90,12 +90,6 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	/** CSC match code */
 	const CSC_MATCH = 'M';
 
-	/** @var string string representation of this response */
-	private $raw_response_xml;
-
-	/** @var SimpleXMLElement response XML object */
-	protected $response_xml;
-
 
 	/**
 	 * Build a response object from the raw response xml
@@ -105,13 +99,10 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function __construct( $raw_response_xml ) {
 
-		$this->raw_response_xml = $raw_response_xml;
+		// Remove namespace as SimpleXML throws warnings with invalid namespace URI provided by Authorize.Net
+		 $raw_response_xml = preg_replace( '/[[:space:]]xmlns[^=]*="[^"]*"/i', '', $raw_response_xml );
 
-		// Remove namespace as SimpleXML throws warnings with invalid namespace URI provided by Authorize.net
-		$raw_response_xml = preg_replace( '/[[:space:]]xmlns[^=]*="[^"]*"/i', '', $raw_response_xml );
-
-		// LIBXML_NOCDATA ensures that any XML fields wrapped in [CDATA] will be included as text nodes
-		$this->response_xml = new SimpleXMLElement( $raw_response_xml, LIBXML_NOCDATA );
+		parent::__construct( $raw_response_xml );
 	}
 
 
@@ -123,11 +114,11 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function has_api_error() {
 
-		if ( ! isset( $this->response_xml->messages->resultCode ) ) {
+		if ( ! isset( $this->messages->resultCode ) ) {
 			return true;
 		}
 
-		return 'error' == strtolower( (string) $this->response_xml->messages->resultCode );
+		return 'error' == strtolower( (string) $this->messages->resultCode );
 	}
 
 
@@ -139,11 +130,11 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_api_error_code() {
 
-		if ( ! isset( $this->response_xml->messages->message->code ) ) {
+		if ( ! isset( $this->messages->message->code ) ) {
 			return __( 'N/A', 'woocommerce-gateway-authorize-net-aim' );
 		}
 
-		return (string) $this->response_xml->messages->message->code;
+		return (string) $this->messages->message->code;
 	}
 
 
@@ -155,11 +146,11 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_api_error_message() {
 
-		if ( ! isset( $this->response_xml->messages->message->text ) ) {
+		if ( ! isset( $this->messages->message->text ) ) {
 			return __( 'N/A', 'woocommerce-gateway-authorize-net-aim' );
 		}
 
-		$message = (string) $this->response_xml->messages->message->text;
+		$message = (string) $this->messages->message->text;
 
 		// E00027 is a generic decline error that is returned as an API error but includes additional error messages
 		// that are valuable to include
@@ -180,7 +171,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function is_test_request() {
 
-		return isset( $this->response_xml->transactionResponse->testRequest ) && '1' === (string) $this->response_xml->transactionResponse->testRequest;
+		return isset( $this->transactionResponse->testRequest ) && '1' === (string) $this->transactionResponse->testRequest;
 	}
 
 
@@ -223,7 +214,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_transaction_id() {
 
-		return isset( $this->response_xml->transactionResponse->transId ) ? (string) $this->response_xml->transactionResponse->transId : null;
+		return isset( $this->transactionResponse->transId ) ? (string) $this->transactionResponse->transId : null;
 	}
 
 
@@ -279,7 +270,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_transaction_response_code() {
 
-		return isset( $this->response_xml->transactionResponse->responseCode ) ? (string) $this->response_xml->transactionResponse->responseCode : null;
+		return isset( $this->transactionResponse->responseCode ) ? (string) $this->transactionResponse->responseCode : null;
 	}
 
 
@@ -323,7 +314,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_transaction_response_reason_code() {
 
-		return isset( $this->response_xml->transactionResponse->errors->error->errorCode ) ? (string) $this->response_xml->transactionResponse->errors->error->errorCode : null;
+		return isset( $this->transactionResponse->errors->error->errorCode ) ? (string) $this->transactionResponse->errors->error->errorCode : null;
 	}
 
 
@@ -334,7 +325,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 * @return string response reason code
 	 */
 	public function get_transaction_response_reason_text() {
-		return isset( $this->response_xml->transactionResponse->errors->error->errorText ) ? $this->response_xml->transactionResponse->errors->error->errorText : null;
+		return isset( $this->transactionResponse->errors->error->errorText ) ? $this->transactionResponse->errors->error->errorText : null;
 	}
 
 
@@ -348,7 +339,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_authorization_code() {
 
-		return isset( $this->response_xml->transactionResponse->authCode ) ? (string) $this->response_xml->transactionResponse->authCode : null;
+		return isset( $this->transactionResponse->authCode ) ? (string) $this->transactionResponse->authCode : null;
 	}
 
 
@@ -363,7 +354,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_avs_result() {
 
-		return isset( $this->response_xml->transactionResponse->avsResultCode ) ? (string) $this->response_xml->transactionResponse->avsResultCode : null;
+		return isset( $this->transactionResponse->avsResultCode ) ? (string) $this->transactionResponse->avsResultCode : null;
 	}
 
 
@@ -376,7 +367,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_csc_result() {
 
-		return isset( $this->response_xml->transactionResponse->cvvResultCode ) ? (string) $this->response_xml->transactionResponse->cvvResultCode : null;
+		return isset( $this->transactionResponse->cvvResultCode ) ? (string) $this->transactionResponse->cvvResultCode : null;
 	}
 
 
@@ -404,7 +395,7 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_cavv_result() {
 
-		return isset( $this->response_xml->transactionResponse->cavvResultCode ) ? (string) $this->response_xml->transactionResponse->cavvResultCode : null;
+		return isset( $this->transactionResponse->cavvResultCode ) ? (string) $this->transactionResponse->cavvResultCode : null;
 	}
 
 
@@ -443,55 +434,25 @@ class WC_Authorize_Net_AIM_API_Response implements SV_WC_Payment_Gateway_API_Res
 	 */
 	public function get_user_message() {
 
-		$reasons = array();
+		$helper = new WC_Authorize_Net_AIM_API_Response_Message_Handler( $this );
 
-		if ( isset( $this->response_xml->transactionResponse->errors->error ) ) {
-
-			foreach ( $this->response_xml->transactionResponse->errors->error as $error ) {
-
-				$reasons[] = (string) $error->errorText;
-			}
-		}
-
-		return ! empty( $reasons ) ? implode( ',', $reasons ) : null;
+		return $helper->get_message();
 	}
 
 
 	/**
-	 * Returns the string representation of this response
+	 * Get the payment type: 'credit-card', 'echeck', etc
 	 *
-	 * @since 3.0
-	 * @see SV_WC_Payment_Gateway_API_Response::to_string()
-	 * @return string response
+	 * @since 3.6.0
+	 * @return string payment type or null if not available
 	 */
-	public function to_string() {
+	public function get_payment_type() {
 
-		$string = $this->raw_response_xml;
-
-		$dom = new DOMDocument();
-
-		// suppress errors for invalid XML syntax issues
-		if ( @$dom->loadXML( $string ) ) {
-			$dom->formatOutput = true;
-			$string = $dom->saveXML();
+		if ( ! isset( $this->transactionResponse->accountType ) ) {
+			return null;
 		}
 
-		return $string;
-	}
-
-
-	/**
-	 * Returns the string representation of this response with any and all
-	 * sensitive elements masked or removed
-	 *
-	 * @since 3.0
-	 * @see SV_WC_Payment_Gateway_API_Response::to_string_safe()
-	 * @return string response safe for logging/displaying
-	 */
-	public function to_string_safe() {
-
-		// no sensitive data to mask
-		return $this->to_string();
+		return ( 'eCheck' === $this->transactionResponse->accountType ) ? 'echeck' : 'credit-card';
 	}
 
 

@@ -207,6 +207,18 @@ class Layers_Customizer_Config {
 			'priority' => 45,
 		);
 
+		$layers_customizer_sections[ 'site-scripts' ] = array(
+			'title' =>__( 'Additional Scripts' , 'layerswp' ),
+			'panel' => 'site-settings',
+		);
+
+		if( !class_exists( 'Layers_Pro' ) ) {
+			$layers_customizer_sections[ 'buttons'] = array(
+				'title' => __( 'Buttons', 'layerswp' ),
+				'panel' => 'site-settings',
+			);
+		}
+
 		$layers_customizer_sections[ 'site-colors' ] = array(
 			'title' =>__( 'Colors' , 'layerswp' ),
 			'panel' => 'site-settings',
@@ -234,23 +246,30 @@ class Layers_Customizer_Config {
 			'panel' => 'header',
 		);
 
-		$layers_customizer_sections[ 'header-scripts' ] = array(
-			'title' =>__( 'Additional Scripts' , 'layerswp' ),
-			'panel' => 'header',
-		);
-
 		$layers_customizer_sections[ 'header-layout' ] = array(
 			'title' =>__( 'Styling' , 'layerswp' ),
 			'panel' => 'header',
 		);
 
+		if( !class_exists( 'Layers_Pro' ) ) {
+			$layers_customizer_sections[ 'header-menu-styling' ] = array(
+				'title' =>__( 'Menu Styling' , 'layerswp' ),
+				'panel' => 'header',
+			);
+		}
+
+		$layers_customizer_sections[ 'blog-styling' ] = array(
+			'title' => __( 'Styling', 'layerswp' ),
+			'panel' => 'blog-archive-single',
+		);
+
 		$layers_customizer_sections[ 'blog-archive' ] = array(
-			'title' => __( 'Archive', 'layers-pro' ),
+			'title' => __( 'Archive', 'layerswp' ),
 			'panel' => 'blog-archive-single',
 		);
 
 		$layers_customizer_sections['blog-single' ] = array(
-			'title' => __( 'Posts &amp; Pages', 'layers-pro' ),
+			'title' => __( 'Posts &amp; Pages', 'layerswp' ),
 			'panel' => 'blog-archive-single',
 		);
 
@@ -298,7 +317,7 @@ class Layers_Customizer_Config {
 				'type'  => 'layers-heading',
 				'class' => 'layers-upsell-tag',
 				'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
-				'description' => __( 'Want more control over your Logo Size & Header Layout? <a target="_blank" href="http://codecanyon.net/item/layers-pro-extended-customization-for-layers/11225042?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Site%20Settings%20Logo">Purchase Layers Pro</a> to unlock the full power of Layers!' , 'layerswp' ),
+				'description' => __( 'Want more control over your Logo Size & Header Layout? <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Site%20Settings%20Logo">Purchase Layers Pro</a> to unlock the full power of Layers!' , 'layerswp' ),
 			),
 		);
 
@@ -371,10 +390,9 @@ class Layers_Customizer_Config {
 				'type'  => 'layers-heading',
 				'class' => 'layers-upsell-tag',
 				'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
-				'description' => __( 'Want more control over your Header Layout? <a target="_blank" href="http://codecanyon.net/item/layers-pro-extended-customization-for-layers/11225042?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Site%20Settings%20Header%20Layout">Purchase Layers Pro</a> to unlock the full power of Layers!' , 'layerswp' ),
+				'description' => __( 'Want more control over your Header Layout? <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Site%20Settings%20Header%20Layout">Purchase Layers Pro</a> to unlock the full power of Layers!' , 'layerswp' ),
 			),
 		);
-
 		// Site Settings -> Sidebars
 		$layers_customizer_controls['blog-single'] = array(
 			'single-sidebar-heading' => array(
@@ -396,7 +414,7 @@ class Layers_Customizer_Config {
 				'type'  => 'layers-heading',
 				'class' => 'layers-upsell-tag',
 				'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
-				'description' => __( 'Want more blog customzation? <a target="_blank" href="http://codecanyon.net/item/layers-pro-extended-customization-for-layers/11225042?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Blog%20Single">Purchase Layers Pro</a> and take control over your posts!' , 'layerswp' ),
+				'description' => __( 'Gain more layout and information customization options in your blog post pages by <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Blog%20Single">upgrading to Layers Pro</a>.' , 'layerswp' ),
 			),
 		);
 
@@ -420,7 +438,7 @@ class Layers_Customizer_Config {
 				'type'  => 'layers-heading',
 				'class' => 'layers-upsell-tag',
 				'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
-				'description' => __( 'Want more blog customzation? <a target="_blank" href="http://codecanyon.net/item/layers-pro-extended-customization-for-layers/11225042?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Blog%20Archive">Purchase Layers Pro</a> and take control over your post archive!' , 'layerswp' ),
+				'description' => __( 'Gain more layout and information customization options in your blog archive pages by <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Blog%20Archive">upgrading to Layers Pro</a>.' , 'layerswp' ),
 			),
 		);
 
@@ -434,6 +452,7 @@ class Layers_Customizer_Config {
 			'header-background-color' => array(
 				'label' => '',
 				'subtitle'		=> __( 'Header Color' , 'layerswp' ),
+				'class' => 'group',
 				'description' => __( 'This affects the background colors of your site header and page titles.', 'layerswp' ),
 				'type'		=> 'layers-color',
 				'default'	=> '#F3F3F3',
@@ -441,6 +460,7 @@ class Layers_Customizer_Config {
 			'site-accent-color' => array(
 				'label' => '',
 				'subtitle' => __( 'Site Accent Color', 'layerswp' ),
+				'class' => 'group',
 				'description' => __( 'Choose a color for your buttons and links.', 'layerswp' ),
 				'type' => 'layers-color',
 				'default' => FALSE,
@@ -448,6 +468,7 @@ class Layers_Customizer_Config {
 			'footer-background-color' => array(
 				'label' => '',
 				'subtitle' => __( 'Footer Color' , 'layerswp' ),
+				'class' => 'group',
 				'description' => __( 'This affects the background color of your site footer.', 'layerswp' ),
 				'type' => 'layers-color',
 				'default' => '#F3F3F3',
@@ -456,7 +477,7 @@ class Layers_Customizer_Config {
 				'type'  => 'layers-heading',
 				'class' => 'layers-upsell-tag',
 				'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
-				'description' => __( 'Want more color customzation? <a target="_blank" href="http://codecanyon.net/item/layers-pro-extended-customization-for-layers/11225042?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Footer%20Layout">Purchase Layers Pro</a> and get the full box of crayons!' , 'layerswp' ),
+				'description' => __( 'Want more color customzation? <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Footer%20Layout">Purchase Layers Pro</a> and get the full box of crayons!' , 'layerswp' ),
 			),
 		);
 
@@ -488,18 +509,30 @@ class Layers_Customizer_Config {
 			),
 		);
 
-		// Header -> Additional Scripts
-		$layers_customizer_controls['header-scripts'] = array(
+
+		$layers_customizer_controls['site-scripts'] = array(
 			'header-google-id' => array(
 				'type'     => 'layers-text',
 				'label'    => __( 'Google Analytics ID' , 'layerswp' ),
 				'description' => __( 'Enter in your Google Analytics ID to enable website traffic reporting. eg. "UA-xxxxxx-xx' , 'layerswp' ),
 				'default' => '',
 			),
+			'google-maps-api' => array(
+				'type'     => 'layers-text',
+				'label'    => __( 'Google Maps API Key' , 'layerswp' ),
+				'description' => __( sprintf( 'Enter in your Maps API Key to enable your contact widget. <a href="%s" target="_blank">Click Here</a> to get your API Key.', 'https://developers.google.com/maps/documentation/javascript/get-api-key' ), 'layerswp' ),
+				'default' => '',
+			),
 			'header-custom-scripts' => array(
 				'type'     => 'layers-code',
-				'label'    => __( 'Custom Scripts' , 'layerswp' ),
+				'label'    => __( 'Custom Header Scripts' , 'layerswp' ),
 				'description' => __( 'Enter in any custom script to include in your site\'s header. Be sure to use double quotes for strings.' , 'layerswp' ),
+				'default' => '',
+			),
+			'footer-custom-scripts' => array(
+				'type'     => 'layers-code',
+				'label'    => __( 'Custom Footer Scripts' , 'layerswp' ),
+				'description' => __( 'Enter in any custom script to include in your site\'s footer. Be sure to use double quotes for strings.' , 'layerswp' ),
 				'default' => '',
 			),
 		);
@@ -545,17 +578,7 @@ class Layers_Customizer_Config {
 				'type'  => 'layers-heading',
 				'class' => 'layers-upsell-tag',
 				'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
-				'description' => __( 'Want more control over your Footer Layout? <a target="_blank" href="http://codecanyon.net/item/layers-pro-extended-customization-for-layers/11225042?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Site%20Settings%20Footer%20Layout">Purchase Layers Pro</a> to unlock the full power of Layers!' , 'layerswp' ),
-			),
-		);
-
-		// Footer -> Additional Scripts
-		$layers_customizer_controls['footer-scripts'] = array(
-			'footer-custom-scripts' => array(
-				'type'     => 'layers-code',
-				'label'    => __( 'Custom Scripts' , 'layerswp' ),
-				'description' => __( 'Enter in any custom script to include in your site\'s footer. Be sure to use double quotes for strings.' , 'layerswp' ),
-				'default' => '',
+				'description' => __( 'Want more control over your Footer Layout? <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Site%20Settings%20Footer%20Layout">Purchase Layers Pro</a> to unlock the full power of Layers!' , 'layerswp' ),
 			),
 		);
 
@@ -608,6 +631,40 @@ class Layers_Customizer_Config {
 				),
 			);
 		} // if WooCommerce
+
+		/*
+		* Layers Pro Upsells
+		*/
+
+		if( !class_exists( 'Layers_Pro' ) ){
+
+			$layers_customizer_controls[ 'header-menu-styling' ] = array(
+				'menu-upsell-layers-pro' => array(
+					'type'  => 'layers-heading',
+					'class' => 'layers-upsell-tag',
+					'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
+					'description' => __( 'Customize your menu colors, spacing and styles but upgrading to <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Menu%20Styling">Layers Pro</a>.' , 'layerswp' ),
+				),
+			);
+
+			$layers_customizer_controls['buttons'] = array(
+				'buttons-upsell-layers-pro' => array(
+					'type'  => 'layers-heading',
+					'class' => 'layers-upsell-tag',
+					'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
+					'description' => __( 'Want to customize the color of your buttons as well as their hover states? <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Buttons">Purchase Layers Pro</a> and gain full control over your button styling!' , 'layerswp' ),
+				),
+			);
+
+			$layers_customizer_controls['blog-styling'] = array(
+				'blog-styling-upsell-layers-pro' => array(
+					'type'  => 'layers-heading',
+					'class' => 'layers-upsell-tag',
+					'label'    => __( 'Upgrade to Layers Pro' , 'layerswp' ),
+					'description' => __( 'Want to customize the colors in your blog pages? <a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&utm_source=layers%20theme&utm_medium=link&utm_campaign=Layers%20Pro%20Upsell&utm_content=Blog%20Styling">Purchase Layers Pro</a> and gain full control over your blog!' , 'layerswp' ),
+				),
+			);
+		}
 
 		do_action( 'layers_customizer_controls_modify' );
 

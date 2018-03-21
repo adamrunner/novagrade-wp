@@ -250,10 +250,10 @@ object{
 		padding: 0 10px;
 		position: relative;
 	}
-	.container.list-masonry > *:not(.masonry-loading){
+	.container.list-masonry .grid.loaded > *:not(.masonry-loading){
 		opacity: 0;
 	}
-	.container.list-masonry.loaded > *:not(.masonry-loading){
+	.container.list-masonry .grid.loaded > *:not(.masonry-loading){
 		opacity: 1;
 	}
 	.container.list-masonry .masonry-loading{
@@ -269,12 +269,16 @@ object{
 		opacity: 0;
 	}
 	.list-masonry .grid{
-		margin-left: 0px;
-		margin-right: 0px;
+		margin-left: 10px;
+		margin-right: -10px;
 	}
 	.list-masonry .column{
 		margin-left: 0;
 		margin-right: 0;
+	}
+	.container-full-width.list-masonry .grid{
+		margin-left: 0px;
+		margin-right: 0px;
 	}
 
 /*-------------------------------*/
@@ -1896,10 +1900,17 @@ object{
 
 	/*---------------------------*/
 	/*- PILL NAV ----------------*/
+	.nav-pills {}
+	.nav-pills li {
+		display: inline-block;
+	}
 	.nav-pills a{
 		border: 2px solid #ddd;
 		color: #8f8f8f;
 		font-weight: 700;
+		padding: 2px 10px;
+		border-radius: 3px;
+		display: block;
 	}
 	.nav-pills a:hover{
 		background-color: #8f8f8f;
@@ -1918,7 +1929,8 @@ object{
 
 	/*---------------------------*/
 	/*- SUB NAV -----------------*/
-	.sub-menu{
+	.sub-menu,
+	.nav .children{
 		background-color: #fff;
 		visibility: hidden;
 		opacity: 0;
@@ -1930,7 +1942,8 @@ object{
 		transition: all 0.4s ease-in-out;
 		line-height: normal;
 	}
-	.sub-menu li{
+	.sub-menu li,
+	.nav .children li{
 		clear: both;
 		display: block;
 		width: 180px;
@@ -1938,10 +1951,12 @@ object{
 		border: none;
 		border-bottom: 1px solid #ddd;
 	}
-	.sub-menu li:last-child{
+	.sub-menu li:last-child,
+	.nav .children li:last-child{
 		border-bottom: none;
 	}
-	.sub-menu li a{
+	.sub-menu li a,
+	.nav .children li a{
 		display: block;
 		padding: 8px 10px;
 		background: none;
@@ -1949,40 +1964,49 @@ object{
 		text-transform: none;
 		text-align: left;
 	}
-	.sub-menu li a:hover{
+	.sub-menu li a:hover,
+	.nav .children li a:hover{
 		background-color: #333;
 		color: #fff;
 	}
-	.nav li:hover > .sub-menu{
+	.nav li:hover > .sub-menu,
+	.nav li:hover .children{
 		visibility: visible;
 		opacity: 1;
 		top: 40px;
 		transition: all 0.2s ease-in-out;
 	}
 	.nav > ul > li .sub-menu .sub-menu,
-	.nav li:hover > .sub-menu .sub-menu{
+	.nav li:hover > .sub-menu .sub-menu,
+	.nav > ul > li .children .children,
+	.nav li:hover > .children .children{
 		left: 185px;
 		top: -3px;
 	}
-	.nav > ul > li:last-child .sub-menu{
+	.nav > ul > li:last-child .sub-menu,
+	.nav > ul > li:last-child .children{
 		right: 0;
 		left: auto;
 	}
-	.nav li:last-child .sub-menu .sub-menu{
+	.nav li:last-child .sub-menu .sub-menu,
+	.nav li:last-child .children .children{
 		right: 185px;
 		left: auto;
 	}
-	.nav-vertical .sub-menu{
+	.nav-vertical .sub-menu,
+	.nav-vertical .children{
 		left: 180px;
 		right: auto;
 		top: -3px;
 		box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.05);
 	}
-	.nav-vertical li:hover > .sub-menu{
+	.nav-vertical li:hover > .sub-menu,
+	.nav-vertical li:hover > .children{
 		top: -3px;
 		left: 140px;
 	}
-	.nav-vertical li:hover > .sub-menu .sub-menu{
+	.nav-vertical li:hover > .sub-menu .sub-menu,
+	.nav-vertical li:hover > .chilren .children{
 		left: 155px;
 		right: auto;
 		top: -3px;
@@ -2306,6 +2330,9 @@ object{
 		position: relative;
 		overflow: hidden;
 	}
+	.thumbnail.hide{
+		display: none;
+	}
 	.thumbnail-title{
 		padding: 0 20px 20px;
 	}
@@ -2369,6 +2396,15 @@ object{
 	.thumbnail .btn-collection{
 		margin: 20px 0 0;
 	}
+
+		/*-----------------------*/
+		/*- THUMBNAIL ALIGNMENT -*/
+		.thumbnail-body .article-title + .excerpt{
+			margin-top: 10px;
+		}
+		.thumbnail-body .article-title + .meta-info{
+			margin-top: 10px;
+		}
 
 
 /*-------------------------------*/
@@ -2531,54 +2567,6 @@ object{
 	}
 	.text-justify{
 		text-align: justify;
-	}
-
-
-/*-------------------------------*/
-/*- WORDPRESS STANDARDS ---------*/
-/*-------------------------------*/
-
-	.wp-caption{
-		max-width: 100%;
-		padding: 10px;
-		background: #f0f0f0;
-	}
-	.wp-caption-text{
-		padding: 10px 5px 5px;
-		margin: 0;
-		color: #777;
-		font-size: 1.4rem;
-	}
-	.gallery-caption{
-		display: block;
-		position: absolute;
-		bottom: -5px;
-		left: 0;
-		width: 100%;
-		padding: 5px 5px 10px;
-		margin: 0;
-		background: rgba(255, 255, 255, 0.95);
-		color: #777;
-		font-size: 1.2rem;
-		opacity: 0;
-	}
-	.alignleft{
-		float: left;
-	}
-	.alignright{
-		float: right;
-	}
-	.aligncenter{
-		clear: both;
-		margin-left: auto;
-		margin-right: auto;
-		text-align: center;
-	}
-	.bypostauthor{
-		color: #777;
-	}
-	.wp-caption p.wp-caption-text{
-		font-size: 1.4rem;
 	}
 
 /*-------------------------------*/

@@ -1,3 +1,12 @@
+<?php
+/**
+ * View template to display a verfication result.
+ *
+ * @package WC_Stamps_Integration/View
+ */
+
+?>
+
 <?php if ( ! empty( $result['matched'] ) ) : ?>
 
 	<p><?php _e( 'Stamps.com matched the following address:', 'woocommerce-shipping-stamps' ); ?></p>

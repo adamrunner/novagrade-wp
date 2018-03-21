@@ -115,6 +115,12 @@ class Net_Socket extends PEAR
     function connect($addr, $port = 0, $persistent = null,
                      $timeout = null, $options = null)
     {
+	    if (defined('UPDRAFTPLUS_SSL_DISABLE_VERIFY_SSL')) {
+	    	$ssl_disable_verify = UPDRAFTPLUS_SSL_DISABLE_VERIFY_SSL;
+	    } else {
+		    $ssl_disable_verify = UpdraftPlus_Options::get_updraft_option('updraft_ssl_disableverify', false);
+	    }
+	    
         if (is_resource($this->fp)) {
             @fclose($this->fp);
             $this->fp = null;
@@ -144,14 +150,39 @@ class Net_Socket extends PEAR
         $errstr   = '';
 
         $old_track_errors = @ini_set('track_errors', 1);
-
+        
+        //Check if Options are set and sslverify is true if so set options so that stream context can be used to disable ssl
+        if (!$options && $ssl_disable_verify){
+			$options = 1;
+		}	
         if ($options && function_exists('stream_context_create')) {
             if ($this->timeout) {
                 $timeout = $this->timeout;
             } else {
-                $timeout = 0;
+                $timeout = 100;
             }
-            $context = stream_context_create($options);
+                                        
+		    if ($ssl_disable_verify){
+				if (is_array($options)) {
+					if (empty($options['ssl'])) {
+						$options['ssl'] = array(
+							'verify_peer'      => false,
+							'verify_peer_name' => false,
+						);
+					} else {
+						$options['ssl']['verify_peer'] = false;
+						$options['ssl']['verify_peer_name'] = false;
+					}
+				} else {
+					$options = array(
+						'ssl' => array(
+							'verify_peer'      => false,
+							'verify_peer_name' => false,
+						)
+					);
+				}
+		    }
+			$context = stream_context_create($options);
 
             // Since PHP 5 fsockopen doesn't allow context specification
             if (function_exists('stream_socket_client')) {
@@ -160,7 +191,7 @@ class Net_Socket extends PEAR
                 if ($this->persistent) {
                     $flags = STREAM_CLIENT_PERSISTENT;
                 }
-
+			    
                 $addr = $this->addr . ':' . $this->port;
                 $fp   = stream_socket_client($addr, $errno, $errstr,
                                              $timeout, $flags, $context);

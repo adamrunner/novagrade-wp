@@ -1,5 +1,5 @@
 <tr valign="top" id="packing_options">
-	<th scope="row" class="titledesc"><?php _e( 'Box Sizes', 'wc_fedex' ); ?></th>
+	<th scope="row" class="titledesc"><?php _e( 'Box Sizes', 'woocommerce-shipping-fedex' ); ?></th>
 	<td class="forminp">
 		<style type="text/css">
 			.fedex_boxes td, .fedex_services td {
@@ -33,23 +33,23 @@
 			<thead>
 				<tr>
 					<th class="check-column"><input type="checkbox" /></th>
-					<th><?php _e( 'Name', 'wc_fedex' ); ?></th>
-					<th><?php _e( 'Length', 'wc_fedex' ); ?></th>
-					<th><?php _e( 'Width', 'wc_fedex' ); ?></th>
-					<th><?php _e( 'Height', 'wc_fedex' ); ?></th>
-					<th><?php _e( 'Box Weight', 'wc_fedex' ); ?></th>
-					<th><?php _e( 'Max Weight', 'wc_fedex' ); ?></th>
-					<th><?php _e( 'Enabled', 'wc_fedex' ); ?></th>
+					<th><?php _e( 'Name', 'woocommerce-shipping-fedex' ); ?></th>
+					<th><?php _e( 'Length', 'woocommerce-shipping-fedex' ); ?></th>
+					<th><?php _e( 'Width', 'woocommerce-shipping-fedex' ); ?></th>
+					<th><?php _e( 'Height', 'woocommerce-shipping-fedex' ); ?></th>
+					<th><?php _e( 'Weight of Box', 'woocommerce-shipping-fedex' ); ?></th>
+					<th><?php _e( 'Max Weight', 'woocommerce-shipping-fedex' ); ?></th>
+					<th><?php _e( 'Enabled', 'woocommerce-shipping-fedex' ); ?></th>
 				</tr>
 			</thead>
 			<tfoot>
 				<tr>
 					<th colspan="3">
-						<a href="#" class="button plus insert"><?php _e( 'Add Box', 'wc_fedex' ); ?></a>
-						<a href="#" class="button minus remove"><?php _e( 'Remove selected box(es)', 'wc_fedex' ); ?></a>
+						<a href="#" class="button plus insert"><?php _e( 'Add Box', 'woocommerce-shipping-fedex' ); ?></a>
+						<a href="#" class="button minus remove"><?php _e( 'Remove selected box(es)', 'woocommerce-shipping-fedex' ); ?></a>
 					</th>
 					<th colspan="6">
-						<small class="description"><?php _e( 'Items will be packed into these boxes depending based on item dimensions and volume. Dimensions will be passed to FedEx and used for packing. Items not fitting into boxes will be packed individually.', 'wc_fedex' ); ?></small>
+						<small class="description"><?php _e( 'Items will be packed into these boxes depending based on item dimensions and volume. Dimensions will be passed to FedEx and used for packing. Items not fitting into boxes will be packed individually.', 'woocommerce-shipping-fedex' ); ?></small>
 					</th>
 				</tr>
 			</tfoot>
@@ -78,7 +78,7 @@
 							?>
 							<tr>
 								<td class="check-column"><input type="checkbox" /></td>
-								<td>&nbsp;</td>
+								<td><input type="text" size="10" name="boxes_name[<?php echo $key; ?>]" value="<?php echo isset( $box['name'] ) ? esc_attr( $box['name'] ) : ''; ?>" /></td>
 								<td><input type="text" size="5" name="boxes_length[<?php echo $key; ?>]" value="<?php echo esc_attr( $box['length'] ); ?>" />in</td>
 								<td><input type="text" size="5" name="boxes_width[<?php echo $key; ?>]" value="<?php echo esc_attr( $box['width'] ); ?>" />in</td>
 								<td><input type="text" size="5" name="boxes_height[<?php echo $key; ?>]" value="<?php echo esc_attr( $box['height'] ); ?>" />in</td>
@@ -127,7 +127,7 @@
 					var size = $tbody.find('tr').size();
 					var code = '<tr class="new">\
 							<td class="check-column"><input type="checkbox" /></td>\
-							<td>&nbsp;</td>\
+							<td><input type="text" size="10" name="boxes_name[' + size + ']" /></td>\
 							<td><input type="text" size="5" name="boxes_length[' + size + ']" />in</td>\
 							<td><input type="text" size="5" name="boxes_width[' + size + ']" />in</td>\
 							<td><input type="text" size="5" name="boxes_height[' + size + ']" />in</td>\

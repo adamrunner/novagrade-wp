@@ -1,3 +1,12 @@
+<?php
+/**
+ * View template to display a single custom item.
+ *
+ * @package WC_Stamps_Integration/View
+ */
+
+?>
+
 <div class="wc-stamps-customs-item">
 	<table class="form-table">
 		<tr>

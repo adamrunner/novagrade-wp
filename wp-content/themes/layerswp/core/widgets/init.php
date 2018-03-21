@@ -94,7 +94,7 @@ class Layers_Widgets {
 		register_sidebar( array(
 			'id'		=> 'obox-layers-builder-' . $post_id,
 			'name'		=> $post_title . __( ' Body' , 'layerswp' ),
-			'before_widget'	=> '<div id="%1$s" class="widget %2$s">',
+			'before_widget'	=> '<div id="%1$s" class="widget container push-bottom-medium %2$s">',
 			'after_widget'	=> '</div>',
 			'before_title'	=> '<div class="section-title clearfix"><h4 class="heading">',
 			'after_title'	=> '</h4></div>',
@@ -178,8 +178,10 @@ class Layers_Widgets {
 
 		$layers_sidebar_key = 'obox-layers-builder-' . $post_id;
 
-		$migrator = new Layers_Widget_Migrator();
-		$migrator->clear_page_sidebars_widget( $layers_sidebar_key );
+		if( class_exists( 'Layers_Widget_Migrator' ) ) {
+			$migrator = new Layers_Widget_Migrator();
+			$migrator->clear_page_sidebars_widget( $layers_sidebar_key );
+		}
 	}
 
 	public function add_revision_fields( $fields ) {
@@ -223,11 +225,15 @@ class Layers_Widgets {
 
 			$parent  = get_post( $parent_id );
 
-			$migrator = new Layers_Widget_Migrator();
-			$export_data = $migrator->page_widget_data( $parent );
+			if( class_exists( 'Layers_Widget_Migrator' ) ) {
 
-			if ( false !== $export_data )
-				add_metadata( 'post', $post_id, '_layers_widget_order', $migrator->page_widgets_as_content( $export_data ) );
+				$migrator = new Layers_Widget_Migrator();
+				$export_data = $migrator->page_widget_data( $parent );
+
+				if ( false !== $export_data )
+					add_metadata( 'post', $post_id, '_layers_widget_order', $migrator->page_widgets_as_content( $export_data ) );
+
+			}
 		}
 	}
 
@@ -345,8 +351,10 @@ class Layers_Widgets {
 			LAYERS_VERSION,
 			true
 		);
-		wp_localize_script( LAYERS_THEME_SLUG . '-admin-repeater-widget' , 'contentwidgeti18n', array(
-			'confirm_message' => __( 'Are you sure you want to remove this column?' , 'layerswp' )
+		wp_localize_script( LAYERS_THEME_SLUG . '-admin-repeater-widget' , 'repeateri18n', array(
+			'confirm_message' => __( 'Are you sure you want to remove this column?' , 'layerswp' ),
+			'duplicate_text' => __( 'Duplicate' , 'layerswp' ),
+			'edit_text' => __( 'Edit' , 'layerswp' ),
 		) );
 		wp_enqueue_script( LAYERS_THEME_SLUG . '-admin-repeater-widget' );
 

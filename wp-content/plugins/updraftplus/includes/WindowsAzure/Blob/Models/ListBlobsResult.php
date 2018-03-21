@@ -125,7 +125,7 @@ class ListBlobsResult
         foreach ($rawBlobs as $value) {
             $blob = new Blob();
             $blob->setName($value['Name']);
-            $blob->setUrl($value['Url']);
+            if (isset($value['Url'])) $blob->setUrl($value['Url']);
             $blob->setSnapshot(Utilities::tryGetValue($value, 'Snapshot'));
             $blob->setProperties(
                 BlobProperties::create(

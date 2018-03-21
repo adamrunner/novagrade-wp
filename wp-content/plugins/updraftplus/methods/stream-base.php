@@ -2,17 +2,13 @@
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
 
-class UpdraftPlus_AddonStorage_viastream {
+if (!class_exists('UpdraftPlus_RemoteStorage_Addons_Base_v2')) require_once(UPDRAFTPLUS_DIR.'/methods/addon-base-v2.php');
+
+class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addons_Base_v2 {
 
 	public function __construct($method, $desc) {
 		$this->method = $method;
 		$this->desc = $desc;
-		add_action('updraft_'.$method.'_credentials_test', array($this, 'credentials_test'));
-		add_filter('updraft_'.$method.'_upload_files', array($this, 'upload_files'), 10, 2);
-		add_filter('updraft_'.$method.'_delete_files', array($this, 'delete_files'), 10, 3);
-		add_filter('updraft_'.$method.'_download_file', array($this, 'download_file'), 10, 2);
-		add_filter('updraft_'.$method.'_config_print', array($this, 'config_print'));
-		add_filter('updraft_'.$method.'_listfiles', array($this, 'listfiles'), 10, 2);
 	}
 
 	public function delete_files($ret, $files, $storage_arr = false) {
@@ -25,10 +21,10 @@ class UpdraftPlus_AddonStorage_viastream {
 			$url = $storage_arr['url'];
 		} else {
 			$this->bootstrap();
-			$options = UpdraftPlus_Options::get_updraft_option('updraft_'.$this->method.'_settings');
+			$options = $this->get_options();
 			if (!array($options) || !isset($options['url'])) {
 				$updraftplus->log('No '.$this->desc.' settings were found');
-				$updraftplus->log(sprintf(__('No %s settings were found','updraftplus'), $this->desc), 'error');
+				$updraftplus->log(sprintf(__('No %s settings were found', 'updraftplus'), $this->desc), 'error');
 				return false;
 			}
 			$url = untrailingslashit($options['url']);
@@ -67,7 +63,7 @@ class UpdraftPlus_AddonStorage_viastream {
 
 		$chunks = floor($orig_file_size / 2097152);
 		// There will be a remnant unless the file size was exactly on a 5MB boundary
-		if ($orig_file_size % 2097152 > 0 ) $chunks++;
+		if ($orig_file_size % 2097152 > 0) $chunks++;
 
 		if (!$fh = fopen($url, 'a')) {
 			$updraftplus->log($this->desc.': Failed to open remote file');
@@ -78,14 +74,14 @@ class UpdraftPlus_AddonStorage_viastream {
 			return false;
 		}
 
-		# A hack, to pass information to a modified version of the PEAR library
+		// A hack, to pass information to a modified version of the PEAR library
 		if ('webdav' == $this->method) {
 			global $updraftplus_webdav_filepath;
 			$updraftplus_webdav_filepath = $file;
 		}
 
 		$last_time = time();
-		for ($i = 1 ; $i <= $chunks; $i++) {
+		for ($i = 1; $i <= $chunks; $i++) {
 
 			$chunk_start = ($i-1)*2097152;
 			$chunk_end = min($i*2097152-1, $orig_file_size);
@@ -102,19 +98,22 @@ class UpdraftPlus_AddonStorage_viastream {
 					if ($buf = fread($rh, 131072)) {
 						if (fwrite($fh, $buf, strlen($buf))) {
 							$bytes_left = $bytes_left - strlen($buf);
-							if (time()-$last_time > 15) { $last_time = time(); touch($file); }
+							if (time()-$last_time > 15) {
+								$last_time = time();
+								touch($file);
+							}
 						} else {
-							$updraftplus->log($this->desc.': '.sprintf(__("Chunk %s: A %s error occurred",'updraftplus'),$i,'write'), 'error');
+							$updraftplus->log($this->desc.': '.sprintf(__("Chunk %s: A %s error occurred", 'updraftplus'), $i, 'write'), 'error');
 							return false;
 						}
 					} else {
-						$updraftplus->log($this->desc.': '.sprintf(__("Chunk %s: A %s error occurred",'updraftplus'),$i,'read'), 'error');
+						$updraftplus->log($this->desc.': '.sprintf(__("Chunk %s: A %s error occurred", 'updraftplus'), $i, 'read'), 'error');
 						return false;
 					}
 				}
 			}
 
-			$updraftplus->record_uploaded_chunk(round(100*$i/$chunks,1), "$i", $file);
+			$updraftplus->record_uploaded_chunk(round(100*$i/$chunks, 1), "$i", $file);
 
 		}
 
@@ -136,16 +135,21 @@ class UpdraftPlus_AddonStorage_viastream {
 
 	}
 
-	public function listfiles($x, $match = 'backup_') {
+	public function listfiles($match = 'backup_') {
 
 		$storage = $this->bootstrap();
 		if (is_wp_error($storage)) return $storage;
 
-		$options = UpdraftPlus_Options::get_updraft_option('updraft_'.$this->method.'_settings');
-		if (!array($options) || empty($options['url'])) return new WP_Error('no_settings', sprintf(__('No %s settings were found','updraftplus'), $this->desc));
+		$options = $this->get_options();
+		if (!array($options) || empty($options['url'])) return new WP_Error('no_settings', sprintf(__('No %s settings were found', 'updraftplus'), $this->desc));
 
 		$url = trailingslashit($options['url']);
 
+		// A change to how WebDAV settings are saved resulted in near-empty URLs being saved, like webdav:/// . Detect 'empty URLs'.
+		if (preg_match('/^[a-z]+:$/', untrailingslashit($url))) {
+			return new WP_Error('no_settings', sprintf(__('No %s settings were found', 'updraftplus'), $this->desc));
+		}
+		
 		if (false == ($handle = opendir($url))) return new WP_Error('no_access', sprintf('Failed to gain %s access', $this->desc));
 
 		$results = array();
@@ -174,10 +178,10 @@ class UpdraftPlus_AddonStorage_viastream {
 			return false;
 		}
 
-		$options = UpdraftPlus_Options::get_updraft_option('updraft_'.$this->method.'_settings');
+		$options = $this->get_options();
 		if (!array($options) || !isset($options['url'])) {
 			$updraftplus->log('No '.$this->desc.' settings were found');
-			$updraftplus->log(sprintf(__('No %s settings were found','updraftplus'), $this->desc), 'error');
+			$updraftplus->log(sprintf(__('No %s settings were found', 'updraftplus'), $this->desc), 'error');
 			return false;
 		}
 
@@ -193,7 +197,7 @@ class UpdraftPlus_AddonStorage_viastream {
 			} else {
 				$any_failures = true;
 				$updraftplus->log('ERROR: '.$this->desc.': Failed to upload file: '.$file);
-				$updraftplus->log(__('Error','updraftplus').': '.$this->desc.': '.sprintf(__('Failed to upload to %s','updraftplus'),$file), 'error');
+				$updraftplus->log(__('Error', 'updraftplus').': '.$this->desc.': '.sprintf(__('Failed to upload to %s', 'updraftplus'), $file), 'error');
 			}
 		}
 
@@ -201,26 +205,19 @@ class UpdraftPlus_AddonStorage_viastream {
 
 	}
 
-	public function config_print() {
-
-		$options = UpdraftPlus_Options::get_updraft_option('updraft_'.$this->method.'_settings');
-		$url = isset($options['url']) ? htmlspecialchars($options['url']) : '';
-
-		?>
-			<tr class="updraftplusmethod <?php echo $this->method;?>">
-				<td></td>
-				<td><em><?php printf(__('%s is a great choice, because UpdraftPlus supports chunked uploads - no matter how big your site is, UpdraftPlus can upload it a little at a time, and not get thwarted by timeouts.','updraftplus'), $this->desc);?></em></td>
-			</tr>
-
-			<?php $this->config_print_middlesection($url); ?>
-
-			<tr class="updraftplusmethod <?php echo $this->method;?>">
-			<th></th>
-			<td><p><button id="updraft-<?php echo $this->method;?>-test" type="button" class="button-primary updraft-test-button" data-method="<?php echo $this->method;?>" data-method_label="<?php esc_attr_e($this->desc);?>"><?php printf(__('Test %s Settings','updraftplus'), $this->desc);?></button></p></td>
-			</tr>
-
-		<?php
-
+	/**
+	 * Get the configuration template
+	 *
+	 * @return String - the template, ready for substitutions to be carried out
+	 */
+	public function get_configuration_template() {
+		$template_str = '<tr class="'.$this->get_css_classes().'">
+			<td></td>
+			<td><em>'.sprintf(__('%s is a great choice, because UpdraftPlus supports chunked uploads - no matter how big your site is, UpdraftPlus can upload it a little at a time, and not get thwarted by timeouts.', 'updraftplus'), $this->desc).'</em></td>
+		</tr>';
+		$template_str .= $this->get_configuration_middlesection_template();
+		$template_str .= $this->get_test_button_html($this->desc);
+		return $template_str;
 	}
 
 	public function download_file($ret, $files) {
@@ -238,11 +235,11 @@ class UpdraftPlus_AddonStorage_viastream {
 			return false;
 		}
 
-		$options = UpdraftPlus_Options::get_updraft_option('updraft_'.$this->method.'_settings');
+		$options = $this->get_options();
 
 		if (!array($options) || !isset($options['url'])) {
 			$updraftplus->log('No '.$this->desc.' settings were found');
-			$updraftplus->log(sprintf(__('No %s settings were found','updraftplus'), $this->desc), 'error');
+			$updraftplus->log(sprintf(__('No %s settings were found', 'updraftplus'), $this->desc), 'error');
 			return false;
 		}
 
@@ -252,20 +249,23 @@ class UpdraftPlus_AddonStorage_viastream {
 			$fullpath = $updraftplus->backups_dir_location().'/'.$file;
 			$url = untrailingslashit($options['url']).'/'.$file;
 
-			$start_offset =  (file_exists($fullpath)) ? filesize($fullpath): 0;
+			$start_offset = (file_exists($fullpath)) ? filesize($fullpath) : 0;
 
-			if (@filesize($url) == $start_offset) { $ret = false; continue; }
+			if (@filesize($url) == $start_offset) {
+				$ret = false;
+				continue;
+			}
 
 			if (!$fh = fopen($fullpath, 'a')) {
 				$updraftplus->log($this->desc.": Error opening local file: Failed to download: $file");
-				$updraftplus->log("$file: ".sprintf(__("%s Error",'updraftplus'), $this->desc).": ".__('Error opening local file: Failed to download','updraftplus'), 'error');
+				$updraftplus->log("$file: ".sprintf(__("%s Error", 'updraftplus'), $this->desc).": ".__('Error opening local file: Failed to download', 'updraftplus'), 'error');
 				$ret = false;
 				continue;
 			}
 
 			if (!$rh = fopen($url, 'rb')) {
 				$updraftplus->log($this->desc.": Error opening remote file: Failed to download: $file");
-				$updraftplus->log("$file: ".sprintf(__("%s Error",'updraftplus'), $this->desc).": ".__('Error opening remote file: Failed to download','updraftplus'), 'error');
+				$updraftplus->log("$file: ".sprintf(__("%s Error", 'updraftplus'), $this->desc).": ".__('Error opening remote file: Failed to download', 'updraftplus'), 'error');
 				$ret = false;
 				continue;
 			}
@@ -278,7 +278,7 @@ class UpdraftPlus_AddonStorage_viastream {
 			while (!feof($rh) && $buf = fread($rh, 262144)) {
 				if (!fwrite($fh, $buf, strlen($buf))) {
 					$updraftplus->log($this->desc." Error: Local write failed: Failed to download: $file");
-					$updraftplus->log("$file: ".sprintf(__("%s Error",'updraftplus'), $this->desc).": ".__('Local write failed: Failed to download','updraftplus'), 'error');
+					$updraftplus->log("$file: ".sprintf(__("%s Error", 'updraftplus'), $this->desc).": ".__('Local write failed: Failed to download', 'updraftplus'), 'error');
 					$ret = false;
 					continue;
 				}
@@ -293,8 +293,8 @@ class UpdraftPlus_AddonStorage_viastream {
 
 		$storage = $this->bootstrap();
 
-		if (is_wp_error($storage) || $storage !== true) {
-			echo __("Failed",'updraftplus').": ";
+		if (is_wp_error($storage) || true !== $storage) {
+			echo __("Failed", 'updraftplus').": ";
 			foreach ($storage->get_error_messages() as $key => $msg) {
 				echo "$msg\n";
 			}
@@ -305,12 +305,10 @@ class UpdraftPlus_AddonStorage_viastream {
 
 		$testfile = $url.'/'.md5(time().rand());
 		if (file_put_contents($testfile, 'test')) {
-			_e("Success",'updraftplus');
+			_e("Success", 'updraftplus');
 			@unlink($testfile);
 		} else {
-			_e("Failed: We were not able to place a file in that directory - please check your credentials.",'updraftplus');
+			_e("Failed: We were not able to place a file in that directory - please check your credentials.", 'updraftplus');
 		}
-
-		return;
 	}
 }

@@ -12,7 +12,7 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 		/**
 		*  Widget construction
 		*/
-	 	function Layers_Contact_Widget(){
+	 	function __construct() {
 
 			/**
 			* Widget variables
@@ -28,21 +28,22 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 			$this->post_type = '';
 			$this->taxonomy = '';
 			$this->checkboxes = array(
-					'show_google_map',
-					'show_address',
-					'show_contact_form'
-				);
+				'show_google_map',
+				'show_address',
+				'show_contact_form'
+			);
 
 	 		/* Widget settings. */
 			$widget_ops = array(
-
-				'classname'   => 'obox-layers-' . $this->widget_id .'-widget',
+				'classname' => 'obox-layers-' . $this->widget_id .'-widget',
 				'description' => __( 'This widget is used to display your ', 'layerswp' ) . $this->widget_title . '.',
+				'customize_selective_refresh' => TRUE,
 			);
 
 			/* Widget control settings. */
-			$control_ops = array( 'width' => LAYERS_WIDGET_WIDTH_SMALL,
-				'height'  => NULL,
+			$control_ops = array(
+				'width' => LAYERS_WIDGET_WIDTH_SMALL,
+				'height' => NULL,
 				'id_base' => LAYERS_THEME_SLUG . '-widget-' . $this->widget_id
 			);
 
@@ -98,7 +99,7 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 			if( empty( $instance ) && ! empty( $this->defaults ) ) {
 				$instance = wp_parse_args( $instance, $this->defaults );
 			}
-			
+
 			// Mix in new/unset defaults on every instance load (NEW)
 			$instance = $this->apply_defaults( $instance );
 
@@ -106,7 +107,7 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 			if( isset( $instance['show_google_map'] ) && ( '' != $instance['google_maps_location'] || '' != $instance['google_maps_long_lat'] ) ) {
 				$hasmap = true;
 			}
-			
+
 			// Set the background styling
 			if( !empty( $instance['design'][ 'background' ] ) ) $this->inline_css .= layers_inline_styles( '#' . $widget_id, 'background', array( 'background' => $instance['design'][ 'background' ] ) );
 			if( !empty( $instance['design']['fonts'][ 'color' ] ) ) $this->inline_css .= layers_inline_styles( '#' . $widget_id, 'color', array( 'selectors' => array( '.section-title .heading' , '.section-title div.excerpt' , '.section-title small', '.form.content' , 'form p' , 'form label' ) , 'color' => $instance['design']['fonts'][ 'color' ] ) );
@@ -122,6 +123,9 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 			// Set Display Variables
 			$show_address_or_contactform = ( ( '' != $instance['address_shown'] && isset( $instance['show_address'] ) ) || ( $this->check_and_return( $instance, 'contact_form' ) && $this->check_and_return( $instance, 'show_contact_form' ) ) ) ? TRUE : FALSE ;
 			$show_title_or_excerpt = ( '' != $instance['title'] || '' != $instance['excerpt'] ) ? TRUE : FALSE ;
+
+			// Apply the advanced widget styling
+			$this->apply_widget_advanced_styling( $widget_id, $instance );
 
 			/**
 			* Generate the widget container class
@@ -139,10 +143,12 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 			if( !$show_title_or_excerpt && !$show_address_or_contactform  ) $widget_container_class[] = 'no-inset-top no-inset-bottom';
 
 			$widget_container_class = apply_filters( 'layers_contact_widget_container_class' , $widget_container_class, $this, $instance );
-			$widget_container_class = implode( ' ', $widget_container_class ); ?>
+			$widget_container_class = implode( ' ', $widget_container_class );
 
-			<?php echo $this->custom_anchor( $instance ); ?>
-			<div id="<?php echo esc_attr( $widget_id ); ?>" class="<?php echo esc_attr( $widget_container_class ); ?>">
+			// Custom Anchor
+			echo $this->custom_anchor( $instance ); ?>
+
+			<div id="<?php echo esc_attr( $widget_id ); ?>" class="<?php echo esc_attr( $widget_container_class ); ?>" <?php $this->selective_refresh_atts( $args ); ?>>
 
 				<?php do_action( 'layers_before_contact_widget_inner', $this, $instance ); ?>
 
@@ -219,12 +225,9 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 			</div>
 
 			<?php if ( !isset( $wp_customize ) ) {
-				wp_enqueue_script( LAYERS_THEME_SLUG . " -map-api" );
+				wp_enqueue_script( LAYERS_THEME_SLUG . "-map-api" );
 				wp_enqueue_script( LAYERS_THEME_SLUG . "-map-trigger" );
 			}  // Enqueue the map js
-
-			// Apply the advanced widget styling
-			$this->apply_widget_advanced_styling( $widget_id, $instance );
 		}
 
 		/**
@@ -253,10 +256,10 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 			if( empty( $instance ) && ! empty( $this->defaults ) ) {
 				$instance = wp_parse_args( $instance, $this->defaults );
 			}
-			
+
 			// Mix in new/unset defaults on every instance load (NEW)
 			$instance = $this->apply_defaults( $instance );
-			
+
 			$this->design_bar(
 				'side', // CSS Class Name
 				array( // Widget Object
@@ -382,83 +385,70 @@ if( !class_exists( 'Layers_Contact_Widget' ) ) {
 
 						</div>
 					</div>
-					<div class="layers-row clearfix">
-						<div class="layers-panel">
-							<?php $this->form_elements()->section_panel_title(
+					<div class="layers-row layers-push-bottom clearfix">
+
+						<p class="layers-form-item">
+							<label for="<?php echo $this->get_layers_field_id( 'google_maps_location' ); ?>"><?php _e( 'Google Maps Location' , 'layerswp' ); ?></label>
+							<?php echo $this->form_elements()->input(
 								array(
-									'type' => 'panel',
-									'title' => __( 'Address' , 'layerswp' ),
-									'tooltip' => __(  'Place your help text here please.' , 'layerswp' )
+									'type' => 'text',
+									'name' => $this->get_layers_field_name( 'google_maps_location' ) ,
+									'id' => $this->get_layers_field_id( 'google_maps_location' ) ,
+									'placeholder' => __( 'e.g. 300 Prestwich Str, Cape Town, South Africa' , 'layerswp' ),
+									'value' => ( isset( $instance['google_maps_location'] ) ) ? $instance['google_maps_location'] : NULL
 								)
 							); ?>
-							<div class="layers-content">
-								<p class="layers-form-item">
-									<label for="<?php echo $this->get_layers_field_id( 'google_maps_location' ); ?>"><?php _e( 'Google Maps Location' , 'layerswp' ); ?></label>
-									<?php echo $this->form_elements()->input(
-										array(
-											'type' => 'text',
-											'name' => $this->get_layers_field_name( 'google_maps_location' ) ,
-											'id' => $this->get_layers_field_id( 'google_maps_location' ) ,
-											'placeholder' => __( 'e.g. 300 Prestwich Str, Cape Town, South Africa' , 'layerswp' ),
-											'value' => ( isset( $instance['google_maps_location'] ) ) ? $instance['google_maps_location'] : NULL
-										)
-									); ?>
-								</p>
-								<p class="layers-form-item">
-									<label for="<?php echo $this->get_layers_field_id( 'google_maps_long_lat' ); ?>"><?php _e( 'Google Maps Latitude & Longitude (Optional)' , 'layerswp' ); ?></label>
-									<?php echo $this->form_elements()->input(
-										array(
-											'type' => 'text',
-											'name' => $this->get_layers_field_name( 'google_maps_long_lat' ) ,
-											'id' => $this->get_layers_field_id( 'google_maps_long_lat' ) ,
-											'placeholder' => __( 'e.g. -34.038181, 18.363826' , 'layerswp' ),
-											'value' => ( isset( $instance['google_maps_long_lat'] ) ) ? $instance['google_maps_long_lat'] : NULL
-										)
-									); ?>
-								</p>
-								<p class="layers-form-item">
-									<label for="<?php echo $this->get_layers_field_id( 'address_shown' ); ?>"><?php _e( 'Address Shown' , 'layerswp' ); ?></label>
-									<?php echo $this->form_elements()->input(
-										array(
-											'type' => 'rte',
-											'name' => $this->get_layers_field_name( 'address_shown' ) ,
-											'id' => $this->get_layers_field_id( 'address_shown' ) ,
-											'placeholder' => __( 'e.g. Prestwich Str, Cape Town' , 'layerswp' ),
-											'value' => ( isset( $instance['address_shown'] ) ) ? $instance['address_shown'] : NULL,
-											'class' => 'layers-textarea'
-										)
-									); ?>
-								</p>
-							</div>
-						</div>
+						</p>
+						<p class="layers-form-item">
+							<label for="<?php echo $this->get_layers_field_id( 'google_maps_long_lat' ); ?>"><?php _e( 'Google Maps Latitude & Longitude (Optional)' , 'layerswp' ); ?></label>
+							<?php echo $this->form_elements()->input(
+								array(
+									'type' => 'text',
+									'name' => $this->get_layers_field_name( 'google_maps_long_lat' ) ,
+									'id' => $this->get_layers_field_id( 'google_maps_long_lat' ) ,
+									'placeholder' => __( 'e.g. -34.038181, 18.363826' , 'layerswp' ),
+									'value' => ( isset( $instance['google_maps_long_lat'] ) ) ? $instance['google_maps_long_lat'] : NULL
+								)
+							); ?>
+						</p>
+
+						<small class="layers-small-note layers-push-bottom">
+							Having issues with your maps not displaying? Make sure you have updated your Google Maps API Key under <strong>Site Settings > Additional Scripts</strong>.
+						</small>
+
+						<p class="layers-form-item layers-push-top">
+							<label for="<?php echo $this->get_layers_field_id( 'address_shown' ); ?>"><?php _e( 'Address Shown' , 'layerswp' ); ?></label>
+							<?php echo $this->form_elements()->input(
+								array(
+									'type' => 'rte',
+									'name' => $this->get_layers_field_name( 'address_shown' ) ,
+									'id' => $this->get_layers_field_id( 'address_shown' ) ,
+									'placeholder' => __( 'e.g. Prestwich Str, Cape Town' , 'layerswp' ),
+									'value' => ( isset( $instance['address_shown'] ) ) ? $instance['address_shown'] : NULL,
+									'class' => 'layers-textarea'
+								)
+							); ?>
+						</p>
 					</div>
 					<div class="layers-row clearfix">
-						<div class="layers-panel">
-							<?php $this->form_elements()->section_panel_title(
+						<p class="layers-form-item">
+
+							<label for="<?php echo $this->get_layers_field_id( 'contact_form' ); ?>"><?php _e( 'Contact Form Embed Code' , 'layerswp' ); ?></label>
+
+							<?php echo $this->form_elements()->input(
 								array(
-									'type' => 'panel',
-									'title' => __( 'Contact Form' , 'layerswp' ),
-									'tooltip' => __(  'Place your help text here please.' , 'layerswp' )
+									'type' => 'textarea',
+									'name' => $this->get_layers_field_name( 'contact_form' ) ,
+									'id' => $this->get_layers_field_id( 'contact_form' ) ,
+									'placeholder' =>  __( 'Contact form embed code' , 'layerswp' ),
+									'value' => ( isset( $instance['contact_form'] ) ) ? $instance['contact_form'] : NULL ,
+									'class' => 'layers-textarea'
 								)
 							); ?>
-							<div class="layers-content">
-								<p class="layers-form-item">
-									<?php echo $this->form_elements()->input(
-										array(
-											'type' => 'textarea',
-											'name' => $this->get_layers_field_name( 'contact_form' ) ,
-											'id' => $this->get_layers_field_id( 'contact_form' ) ,
-											'placeholder' =>  __( 'Contact form embed code' , 'layerswp' ),
-											'value' => ( isset( $instance['contact_form'] ) ) ? $instance['contact_form'] : NULL ,
-											'class' => 'layers-textarea'
-										)
-									); ?>
-									<small class="layers-small-note">
-										<?php _e( sprintf( 'Need to create a contact form? Try <a href="%1$s" target="ejejcsingle">Gravity Forms</a>', 'https://www.e-junkie.com/ecom/gb.php?cl=54585&c=ib&aff=221037' ) , 'layerswp' ); ?>
-									</small>
-								</p>
-							</div>
-						</div>
+							<small class="layers-small-note">
+								<?php _e( sprintf( 'Need to create a contact form? Try <a href="%1$s" target="ejejcsingle">Gravity Forms</a>', 'https://www.e-junkie.com/ecom/gb.php?cl=54585&c=ib&aff=221037' ) , 'layerswp' ); ?>
+							</small>
+						</p>
 					</div>
 				</section>
 			</div>

@@ -1,22 +1,37 @@
 <?php
+/**
+ * Order handler class.
+ *
+ * @package WC_Stamps_Integration
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * WC_Stamps_Order class
+ * Order handler.
  *
- * Controls the meta box shown on orders in admin. Used for printing labels and address verification.
+ * Controls the meta box shown on orders in admin. Used for printing labels and
+ * address verification.
  */
 class WC_Stamps_Order {
 
+	/**
+	 * Package types.
+	 *
+	 * @var array
+	 */
 	private $package_types = array();
 
 	/**
-	 * Constructor
+	 * Constructor.
+	 *
+	 * Set WP hooks and basic props.
 	 */
 	public function __construct() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'styles' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'scripts' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 30 );
 		add_action( 'wp_ajax_wc_stamps_verify_address', array( $this, 'ajax_verify_address' ) );
 		add_action( 'wp_ajax_wc_stamps_override_address', array( $this, 'ajax_override_address' ) );
@@ -49,21 +64,39 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Enqueue styles
+	 * Enqueue styles.
 	 */
 	public function styles() {
 		wp_enqueue_style( 'wc_stamps_admin_css', plugins_url( 'assets/css/admin.css', WC_STAMPS_INTEGRATION_FILE ), array(), WC_STAMPS_INTEGRATION_VERSION );
 	}
 
 	/**
-	 * Add meta boxes
+	 * Enqueue scripts.
+	 *
+	 * @since 1.3.4
+	 * @version 1.3.4
+	 */
+	public function scripts() {
+		wp_enqueue_script( 'wc_stamps_clipboard_js', plugins_url( 'assets/js/clipboard.min.js', WC_STAMPS_INTEGRATION_FILE ), array(), WC_STAMPS_INTEGRATION_VERSION );
+		wp_enqueue_script( 'wc_stamps_admin_js', plugins_url( 'assets/js/admin.js', WC_STAMPS_INTEGRATION_FILE ), array( 'jquery', 'wc_stamps_clipboard_js' ), WC_STAMPS_INTEGRATION_VERSION );
+		wp_localize_script(
+			'wc_stamps_admin_js',
+			'wc_stamps_admin',
+			array(
+				'copy_to_clipboard_fallback_i18n' => __( 'Please press Ctrl/Cmd+C to copy.', 'woocommerce-shipping-stamps' ),
+			)
+		);
+	}
+
+	/**
+	 * Add meta boxes.
 	 */
 	public function add_meta_boxes() {
 		add_meta_box( 'wc_stamps_get_label', __( 'Shipping Labels', 'woocommerce-shipping-stamps' ), array( $this, 'output' ), 'shop_order', 'side' );
 	}
 
 	/**
-	 * Verify an address
+	 * Verify an address.
 	 */
 	public function ajax_verify_address() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -74,13 +107,29 @@ class WC_Stamps_Order {
 
 		$order  = wc_get_order( absint( $_POST['order_id'] ) );
 		$result = WC_Stamps_API::verify_address( $order );
+		$old_wc = version_compare( WC_VERSION, '3.0', '<' );
+		$order_id = $old_wc ? $order->id : $order->get_id();
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json( array( 'error' => $result->get_error_message() ) );
 		} else {
-			update_post_meta( $order->id, '_stamps_response', $result );
-			update_post_meta( $order->id, '_stamps_hash', isset( $result['hash'] ) ? $result['hash'] : '' );
-			update_post_meta( $order->id, '_stamps_override_hash', isset( $result['overide_hash'] ) ? $result['overide_hash'] : '' );
+			$result_hash  = isset( $result['hash'] ) ? $result['hash'] : '';
+			$overide_hash = isset( $result['overide_hash'] ) ? $result['overide_hash'] : '';
+
+			if ( $old_wc ) {
+				update_post_meta( $order_id, '_stamps_response', $result );
+				update_post_meta( $order_id, '_stamps_hash', $result_hash );
+				update_post_meta( $order_id, '_stamps_override_hash', $overide_hash );
+			} else {
+				$order->update_meta_data( '_stamps_response', $result );
+				$order->update_meta_data( '_stamps_hash', $result_hash );
+				$order->update_meta_data( '_stamps_override_hash', $overide_hash );
+
+				// To ensure get_address_verification_result_html uses the latest
+				// meta.
+				$order->save_meta_data();
+			}
+
 			wp_send_json( array( 'html' => $this->get_address_verification_result_html( $result ) ) );
 		}
 	}
@@ -96,15 +145,34 @@ class WC_Stamps_Order {
 		}
 
 		$order = wc_get_order( absint( $_POST['order_id'] ) );
+		$old_wc = version_compare( WC_VERSION, '3.0', '<' );
+		$order_id = $old_wc ? $order->id : $order->get_id();
 
-		update_post_meta( $order->id, '_stamps_hash', get_post_meta( $order->id, '_stamps_override_hash', true ) );
-		update_post_meta( $order->id, '_stamps_verified_address_hash', md5( $order->get_formatted_shipping_address() ) );
+		// To indicate that the merchant has elected to "continue without changes"
+		// we will overwrite the CleanseHash (if any) in _stamps_hash with the
+		// OverrideHash.
+		//
+		// Then, in WC_Stamps_API::get_label, we'll see that has happened and we will
+		// send the OverrideHash field in the request instead of CleanseHash.
+		if ( $old_wc ) {
+			update_post_meta( $order_id, '_stamps_hash', get_post_meta( $order_id, '_stamps_override_hash', true ) );
+			update_post_meta( $order_id, '_stamps_verified_address_hash', md5( $order->get_formatted_shipping_address() ) );
+		} else {
+			$overide_hash = $order->get_meta( '_stamps_override_hash', true );
+			$order->update_meta_data( '_stamps_hash', $overide_hash );
+			$order->save_meta_data();
+			$verified_address_hash = md5( $order->get_formatted_shipping_address() );
+			$order->update_meta_data( '_stamps_verified_address_hash', $verified_address_hash );
+			$order->save_meta_data();
+		}
 
 		wp_send_json( array( 'reload' => true ) );
 	}
 
 	/**
 	 * Accept address - verification complete.
+	 *
+	 * This is AJAX handler for wc_stamps_accept_address action.
 	 */
 	public function ajax_accept_address() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -113,33 +181,63 @@ class WC_Stamps_Order {
 			die();
 		}
 
-		$order  = wc_get_order( absint( $_POST['order_id'] ) );
+		$order    = wc_get_order( absint( $_POST['order_id'] ) );
+		$old_wc   = version_compare( WC_VERSION, '3.0', '<' );
+		$order_id = $old_wc ? $order->id : $order->get_id();
 
-		// Update address to stamps version
-		$result         = get_post_meta( $order->id, '_stamps_response', true );
+		// Update address to stamps version.
+		if ( $old_wc ) {
+			$result = get_post_meta( $order_id, '_stamps_response', true );
+		} else {
+			$result = $order->get_meta( '_stamps_response', true );
+		}
 		$shipping_name  = explode( ' ' , $result['address']['full_name'] );
 		$shipping_last  = array_pop( $shipping_name );
 		$shipping_first = implode( ' ', $shipping_name );
 
-		update_post_meta( $order->id, '_shipping_first_name', $shipping_first );
-		update_post_meta( $order->id, '_shipping_last_name', $shipping_last );
-		update_post_meta( $order->id, '_shipping_company', $result['address']['company'] );
-		update_post_meta( $order->id, '_shipping_address_1', $result['address']['address_1'] );
-		update_post_meta( $order->id, '_shipping_address_2', $result['address']['address_2'] );
-		update_post_meta( $order->id, '_shipping_city', $result['address']['city'] );
-		update_post_meta( $order->id, '_shipping_state', $result['address']['state'] );
-		update_post_meta( $order->id, '_shipping_postcode', $result['address']['postcode'] );
-		if ( ! empty( $result['address']['country'] ) ) {
-			update_post_meta( $order->id, '_shipping_country', $result['address']['country'] );
+		if ( $old_wc ) {
+			update_post_meta( $order_id, '_shipping_first_name', $shipping_first );
+			update_post_meta( $order_id, '_shipping_last_name', $shipping_last );
+			update_post_meta( $order_id, '_shipping_company', $result['address']['company'] );
+			update_post_meta( $order_id, '_shipping_address_1', $result['address']['address_1'] );
+			update_post_meta( $order_id, '_shipping_address_2', $result['address']['address_2'] );
+			update_post_meta( $order_id, '_shipping_city', $result['address']['city'] );
+			update_post_meta( $order_id, '_shipping_state', $result['address']['state'] );
+			update_post_meta( $order_id, '_shipping_postcode', $result['address']['postcode'] );
+			if ( ! empty( $result['address']['country'] ) ) {
+				update_post_meta( $order_id, '_shipping_country', $result['address']['country'] );
+			}
+		} else {
+			$order->set_shipping_first_name( $shipping_first );
+			$order->set_shipping_last_name( $shipping_last );
+			$order->set_shipping_company( $result['address']['company'] );
+			$order->set_shipping_address_1( $result['address']['address_1'] );
+			$order->set_shipping_address_2( $result['address']['address_2'] );
+			$order->set_shipping_city( $result['address']['city'] );
+			$order->set_shipping_state( $result['address']['state'] );
+			$order->set_shipping_postcode( $result['address']['postcode'] );
+			if ( ! empty( $result['address']['country'] ) ) {
+				$order->set_shipping_country( $result['address']['country'] );
+			}
+			$order->save();
 		}
 
-		update_post_meta( $order->id, '_stamps_verified_address_hash', md5( $order->get_formatted_shipping_address() ) );
+		$formatted_shipping_address_hash = md5( $order->get_formatted_shipping_address() );
+
+		if ( $old_wc ) {
+			update_post_meta( $order_id, '_stamps_verified_address_hash', $formatted_shipping_address_hash );
+		} else {
+			$order->update_meta_data( '_stamps_verified_address_hash', $formatted_shipping_address_hash );
+			$order->save_meta_data();
+		}
 
 		wp_send_json( array( 'reload' => true ) );
 	}
 
 	/**
-	 * Define packages
+	 * Define packages.
+	 *
+	 * This is AJAX handler for wc_stamps_define_package action.
 	 */
 	public function ajax_define_package() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -153,7 +251,9 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get rates from stamps
+	 * Get rates from stamps.
+	 *
+	 * This is AJAX handler for wc_stamps_get_rates action.
 	 */
 	public function ajax_get_rates() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -167,13 +267,13 @@ class WC_Stamps_Order {
 		parse_str( stripslashes( $_POST['data'] ), $params );
 
 		$rates = WC_Stamps_API::get_rates( $order, array(
-			'date'    => sanitize_text_field( $params['stamps_package_date'] ),
-			'type'    => sanitize_text_field( $params['stamps_package_type'] ),
-			'weight'  => wc_get_weight( wc_format_decimal( $params['stamps_package_weight'] ), 'lbs' ),
-			'value'   => wc_format_decimal( $params['stamps_package_value'] ),
-			'length'  => wc_get_dimension( wc_format_decimal( $params['stamps_package_length'] ), 'in' ),
-			'width'   => wc_get_dimension( wc_format_decimal( $params['stamps_package_width'] ), 'in' ),
-			'height'  => wc_get_dimension( wc_format_decimal( $params['stamps_package_height'] ), 'in' )
+			'date'   => sanitize_text_field( $params['stamps_package_date'] ),
+			'type'   => sanitize_text_field( $params['stamps_package_type'] ),
+			'weight' => wc_get_weight( wc_format_decimal( $params['stamps_package_weight'] ), 'lbs' ),
+			'value'  => wc_format_decimal( $params['stamps_package_value'] ),
+			'length' => wc_get_dimension( wc_format_decimal( $params['stamps_package_length'] ), 'in' ),
+			'width'  => wc_get_dimension( wc_format_decimal( $params['stamps_package_width'] ), 'in' ),
+			'height' => wc_get_dimension( wc_format_decimal( $params['stamps_package_height'] ), 'in' ),
 		) );
 
 		if ( is_wp_error( $rates ) ) {
@@ -184,14 +284,17 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get a posted rate object as well as addons
-	 * @return array Stamps Rate in array format
+	 * Get a posted rate object as well as addons.
+	 *
+	 * @param array $posted Posted data.
+	 *
+	 * @return array Stamps Rate in array format.
 	 */
 	public function get_posted_rate( $posted ) {
 		if ( ! empty( $posted['stamps_rate'] ) ) {
 			$rate = $posted['stamps_rate'];
 
-			// Stripslashes needed
+			// Stripslashes needed.
 			if ( get_magic_quotes_gpc() ) {
 				$rate = stripslashes( $rate );
 			}
@@ -208,12 +311,10 @@ class WC_Stamps_Order {
 					}
 				}
 			}
-
-		// This rate has been processed already
-		} elseif ( ! empty( $posted['parsed_rate'] ) ) {
+		} elseif ( ! empty( $posted['parsed_rate'] ) ) { // This rate has been processed already.
 			$rate = stripslashes( $posted['parsed_rate'] );
 
-			// Needed again
+			// Needed again.
 			if ( get_magic_quotes_gpc() ) {
 				$rate = stripslashes( $rate );
 			}
@@ -224,10 +325,9 @@ class WC_Stamps_Order {
 			return false;
 		}
 
-		// Put rate in array, keeping only the data we need
-		return array(
+		// Put rate in array, keeping only the data we need.
+		$posted_rates = array(
 			'FromZIPCode'   => wc_clean( $rate->FromZIPCode ),
-			'ToZIPCode'     => wc_clean( $rate->ToZIPCode ),
 			'ToCountry'     => wc_clean( $rate->ToCountry ),
 			'WeightLb'      => wc_clean( isset( $rate->WeightLb ) ? $rate->WeightLb : '' ),
 			'WeightOz'      => wc_clean( isset( $rate->WeightOz ) ? $rate->WeightOz : '' ),
@@ -242,13 +342,21 @@ class WC_Stamps_Order {
 			'ServiceType'   => wc_clean( $rate->ServiceType ),
 			'PrintLayout'   => get_option( 'wc_settings_stamps_print_layout', 'Normal' ),
 			'AddOns'        => array(
-				'AddOnV7' => $chosen_addons
-			)
+				'AddOnV7' => $chosen_addons,
+			),
 		);
+
+		if ( ! empty( $rate->ToZIPCode ) ) {
+			$posted_rates['ToZIPCode'] = wc_clean( $rate->ToZIPCode );
+		}
+
+		return $posted_rates;
 	}
 
 	/**
-	 * Get chosen rate and ask for customs information
+	 * Get chosen rate and ask for customs information.
+	 *
+	 * This is AJAX handler for wc_stamps_customs action.
 	 */
 	public function ajax_customs() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -265,7 +373,9 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get label for a rate
+	 * Get label for a rate.
+	 *
+	 * This is AJAX handler for wc_stamps_request_label action.
 	 */
 	public function ajax_request_label() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -287,7 +397,7 @@ class WC_Stamps_Order {
 				'CertificateNumber' => sanitize_text_field( $params['stamps_customs_certificate'] ),
 				'InvoiceNumber'     => $order->get_order_number(),
 				'OtherDescribe'     => sanitize_text_field( $params['stamps_customs_other'] ),
-				'CustomsLines'      => array()
+				'CustomsLines'      => array(),
 			);
 
 			if ( ! empty( $params['stamps_customs_item_description'] ) ) {
@@ -298,7 +408,7 @@ class WC_Stamps_Order {
 						'Value'           => wc_format_decimal( $params['stamps_customs_item_value'][ $key ] ),
 						'WeightLb'        => wc_format_decimal( $params['stamps_customs_item_weight'][ $key ] ),
 						'HSTariffNumber'  => sanitize_text_field( $params['stamps_customs_item_hs_tariff'][ $key ] ),
-						'CountryOfOrigin' => sanitize_text_field( $params['stamps_customs_item_origin'][ $key ] )
+						'CountryOfOrigin' => sanitize_text_field( $params['stamps_customs_item_origin'][ $key ] ),
 					);
 					if ( empty( $line['HSTariffNumber'] ) ) {
 						unset( $line['HSTariffNumber'] );
@@ -313,7 +423,8 @@ class WC_Stamps_Order {
 			$customs = false;
 		}
 
-		if ( $rate = $this->get_posted_rate( $params ) ) {
+		$rate = $this->get_posted_rate( $params );
+		if ( $rate ) {
 			$label = WC_Stamps_API::get_label( $order, array( 'rate' => $rate, 'customs' => $customs ) );
 		} else {
 			$label = new WP_Error( 'stamps', 'No rate posted' );
@@ -327,7 +438,9 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get labels
+	 * Get labels.
+	 *
+	 * This is AJAX handler for wc_stamps_get_labels action.
 	 */
 	public function ajax_get_labels() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -337,13 +450,16 @@ class WC_Stamps_Order {
 		}
 
 		$order  = wc_get_order( absint( $_POST['order_id'] ) );
-		$labels = WC_Stamps_Labels::get_order_labels( $order->id );
+		$order_id = version_compare( WC_VERSION, '3.0', '<' ) ? $order->id : $order->get_id();
+		$labels = WC_Stamps_Labels::get_order_labels( $order_id );
 
 		wp_send_json( array( 'html' => $this->get_labels_html( $labels ), 'step' => 'labels' ) );
 	}
 
 	/**
-	 * Cancel/refund a label
+	 * Cancel/refund a label.
+	 *
+	 * This is AJAX handler for wc_stamps_cancel_label action.
 	 */
 	public function ajax_cancel_label() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -364,7 +480,8 @@ class WC_Stamps_Order {
 			wp_send_json( array( 'error' => $cancel->get_error_message() ) );
 		} else {
 			WC_Stamps_Labels::delete_label( $label_id );
-			$labels = WC_Stamps_Labels::get_order_labels( $order->id );
+			$order_id = version_compare( WC_VERSION, '3.0', '<' ) ? $order->id : $order->get_id();
+			$labels = WC_Stamps_Labels::get_order_labels( $order_id );
 			ob_start();
 			echo '<div class="success updated"><p>' . __( 'The label was refunded. Refund requests are generally processed within 1 to 2 weeks.', 'woocommerce-shipping-stamps' ) . '</p></div>';
 			echo $this->get_labels_html( $labels );
@@ -373,7 +490,9 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Delete a label
+	 * Delete a label.
+	 *
+	 * This is AJAX handler for wc_stamps_delete_label action.
 	 */
 	public function ajax_delete_label() {
 		check_ajax_referer( 'stamps', 'security' );
@@ -383,16 +502,19 @@ class WC_Stamps_Order {
 		}
 
 		$order    = wc_get_order( absint( $_POST['order_id'] ) );
+		$order_id = version_compare( WC_VERSION, '3.0', '<' ) ? $order->id : $order->get_id();
 		$label_id = absint( $_POST['action_id'] );
 
 		WC_Stamps_Labels::delete_label( $label_id );
-		$labels = WC_Stamps_Labels::get_order_labels( $order->id );
+		$labels = WC_Stamps_Labels::get_order_labels( $order_id );
 		wp_send_json( array( 'html' => $this->get_labels_html( $labels ), 'step' => 'labels' ) );
 	}
 
 	/**
-	 * Address verification html - step 1
-	 * @param  WC_Order $order
+	 * Address verification html - step 1.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
 	 * @return string
 	 */
 	public function get_address_verification_html( $order ) {
@@ -402,7 +524,9 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get address verification html based on stored results
+	 * Get address verification html based on stored results.
+	 *
+	 * @param array $result Result from Stamps API.
 	 */
 	public function get_address_verification_result_html( $result ) {
 		ob_start();
@@ -411,8 +535,10 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get html for defining packages
-	 * @param  WC_Order $order
+	 * Get html for defining packages.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
 	 * @return string
 	 */
 	public function get_packages_html( $order ) {
@@ -423,6 +549,14 @@ class WC_Stamps_Order {
 
 		foreach ( $order->get_items() as $item_id => $item ) {
 			$product = $order->get_product_from_item( $item );
+
+			if ( ! is_a( $product, 'WC_Product' ) ) {
+				continue;
+			}
+
+			if ( ! is_callable( array( $product, 'needs_shipping' ) ) ) {
+				continue;
+			}
 
 			if ( ! $product->needs_shipping() ) {
 				continue;
@@ -445,8 +579,11 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get html for listing rates
-	 * @param  WC_Order $order
+	 * Get html for listing rates.
+	 *
+	 * @param WC_Order $order Order object.
+	 * @param array    $rates Rates from Stamps API.
+	 *
 	 * @return string
 	 */
 	public function get_rates_html( $order, $rates ) {
@@ -456,21 +593,22 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Output html for listing addons
-	 * @param array $raw_addons
+	 * Output html for listing addons.
+	 *
+	 * @param object $rate Rate.
 	 */
 	public static function addons_html( $rate ) {
 		$raw_addons = $rate->rate_object->AddOns->AddOnV7;
 		$rate_code  = md5( $rate->rate_object->ServiceType . $rate->rate_object->PackageType );
 		$addons     = array();
 
-		// Build array of addons
+		// Build array of addons.
 		foreach ( $raw_addons as $addon ) {
 			$addons[ $addon->AddOnType ]['addon']      = $addon;
 			$addons[ $addon->AddOnType ]['sub_addons'] = array();
 		}
 
-		// RequiresAllOf
+		// RequiresAllOf.
 		foreach ( $raw_addons as $addon ) {
 			if ( ! empty( $addon->RequiresAllOf ) ) {
 				if ( is_array( $addon->RequiresAllOf->RequiresOneOf->AddOnTypeV7 ) ) {
@@ -503,16 +641,18 @@ class WC_Stamps_Order {
 
 			if ( ! empty( $addon['sub_addons'] ) ) {
 				echo '<ul style="display:none">';
-					foreach ( $addon['sub_addons'] as $sub_addon_key => $sub_addon ) {
-						$disable_addons = array();
-						if ( ! empty( $sub_addon->ProhibitedWithAnyOf ) ) {
-							foreach ( $sub_addon->ProhibitedWithAnyOf->AddOnTypeV7 as $prohibited_addon_key ) {
-								$disable_addons[] = trim( $prohibited_addon_key );
-							}
-						}
 
-						echo '<li><label><input type="checkbox" name="' . esc_attr( 'rate-' . $rate_code . '[' . $sub_addon_key . ']' ) . '" data-type="' . esc_attr( $sub_addon_key ) . '" data-disable_addons="' . esc_attr( json_encode( $disable_addons ) ) . '" /> ' . esc_html( WC_Stamps_API::get_addon_type_name( $sub_addon->AddOnType ) . ( isset( $sub_addon->Amount ) ? ' (' . strip_tags( wc_price( $sub_addon->Amount ) ) . ')' : '' ) ) . '</label></li>';
+				foreach ( $addon['sub_addons'] as $sub_addon_key => $sub_addon ) {
+					$disable_addons = array();
+					if ( ! empty( $sub_addon->ProhibitedWithAnyOf ) ) {
+						foreach ( $sub_addon->ProhibitedWithAnyOf->AddOnTypeV7 as $prohibited_addon_key ) {
+							$disable_addons[] = trim( $prohibited_addon_key );
+						}
 					}
+
+					echo '<li><label><input type="checkbox" name="' . esc_attr( 'rate-' . $rate_code . '[' . $sub_addon_key . ']' ) . '" data-type="' . esc_attr( $sub_addon_key ) . '" data-disable_addons="' . esc_attr( json_encode( $disable_addons ) ) . '" /> ' . esc_html( WC_Stamps_API::get_addon_type_name( $sub_addon->AddOnType ) . ( isset( $sub_addon->Amount ) ? ' (' . strip_tags( wc_price( $sub_addon->Amount ) ) . ')' : '' ) ) . '</label></li>';
+				}
+
 				echo '</ul>';
 			}
 			echo '</li>';
@@ -521,7 +661,11 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get HTML for customs information
+	 * Get HTML for customs information.
+	 *
+	 * @param WC_Order $order       Order object.
+	 * @param array    $stamps_rate Rates from Stamps API.
+	 *
 	 * @return string
 	 */
 	public function get_customs_html( $order, $stamps_rate ) {
@@ -531,7 +675,10 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get HTML for listing labels
+	 * Get HTML for listing labels.
+	 *
+	 * @param WP_Error|WC_Stamps_Label $label Label or WP_Error.
+	 *
 	 * @return string
 	 */
 	public function get_label_html( $label ) {
@@ -549,7 +696,10 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Get HTML for listing labels
+	 * Get HTML for listing labels.
+	 *
+	 * @param array $labels List of labels of an order.
+	 *
 	 * @return string
 	 */
 	public function get_labels_html( $labels ) {
@@ -559,24 +709,62 @@ class WC_Stamps_Order {
 	}
 
 	/**
-	 * Output the meta box
+	 * Output the meta box.
 	 */
 	public function output() {
 		global $post;
 
 		$step         = 'address';
 		$order        = wc_get_order( $post->ID );
-		$address_hash = get_post_meta( $post->ID, '_stamps_verified_address_hash', true );
+		if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
+			$address_hash = get_post_meta( $post->ID, '_stamps_verified_address_hash', true );
+		} else {
+			$address_hash = $order->get_meta( '_stamps_verified_address_hash', true );
+		}
 
-		if ( $address_hash && $address_hash == md5( $order->get_formatted_shipping_address() ) ) {
+		if ( $address_hash && md5( $order->get_formatted_shipping_address() ) === $address_hash ) {
 			$step = 'rates';
 		}
 
-		if ( ( $labels = WC_Stamps_Labels::get_order_labels( $order->id ) ) && sizeof( $labels ) > 0 ) {
+		$labels = WC_Stamps_Labels::get_order_labels( $post->ID );
+		if ( $labels && sizeof( $labels ) > 0 ) {
 			$step = 'labels';
 		}
 
 		include( 'views/html-meta-box.php' );
+	}
+
+	/**
+	 * Check whether a given order needs customs step to print label.
+	 *
+	 * @since 1.3.3
+	 * @version 1.3.3
+	 *
+	 * @see https://github.com/woocommerce/woocommerce-shipping-stamps/issues/73.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return bool Returns true if given country and/or state in an order needs custom step.
+	 */
+	public function needs_customs_step( $order ) {
+		$shipping_country = version_compare( WC_VERSION, '3.0', '<' )
+			? $order->shipping_country
+			: $order->get_shipping_country();
+
+		// Non US countries will require customs step.
+		if ( 'US' !== $shipping_country ) {
+			return true;
+		}
+
+		// Army address will require customs step.
+		$shipping_state = version_compare( WC_VERSION, '3.0', '<' )
+			? $order->shipping_state
+			: $order->get_shipping_state();
+		if ( in_array( $shipping_state, array( 'AA', 'AE', 'AP' ) ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }
 new WC_Stamps_Order();

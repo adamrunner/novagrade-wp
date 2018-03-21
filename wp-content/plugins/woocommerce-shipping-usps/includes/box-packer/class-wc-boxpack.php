@@ -3,7 +3,7 @@
 /**
  * WooCommerce Box Packer
  *
- * @version 2.0
+ * @version 2.0.1
  * @author WooThemes / Mike Jolley
  */
 class WC_Boxpack {
@@ -167,7 +167,6 @@ class WC_Boxpack {
 			if ( current_user_can( 'manage_options' ) ) {
 				echo 'Packing error: ',  $e->getMessage(), "\n";
 			}
-
     	}
 	}
 

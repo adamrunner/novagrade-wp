@@ -1,11 +1,13 @@
 <?php
+// @codingStandardsIgnoreStart
 /*
 UpdraftPlus Addon: importer:Import a WordPress backup made by another backup plugin
 Description: Import a backup made by other supported WordPress backup plugins (see shop page for a list of supported plugins)
-Version: 3.0
+Version: 3.1
 Shop: /shop/importer/
-Latest Change: 1.11.18
+Latest Change: 1.12.19
 */
+// @codingStandardsIgnoreEnd
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
 
@@ -31,15 +33,21 @@ class UpdraftPlus_Addons_Importer {
 		return ('dropbox-wpadm' == $foreign) ? true : $allow;
 	}
 	
-	// This only does something with multi-zip sets
+	/**
+	 * This only does something with multi-zip sets
+	 *
+	 * @param  string $files
+	 * @param  string $foreign
+	 * @return string
+	 */
 	public function select_wpcore_file_with_db($files, $foreign) {
 		switch ($foreign) {
-			case 'dropbox-wpadm';
+			case 'dropbox-wpadm':
 				// The database gets put in the last one. If they ever change this, we can just scan all the files instead.
 				sort($files);
 				$last_one = array_pop($files);
 				return array($last_one);
-			break;
+				break;
 		}
 		return $files;
 	}
@@ -70,47 +78,54 @@ class UpdraftPlus_Addons_Importer {
 		return '<p><a href="https://updraftplus.com/support/using-third-party-backups/">'.__('Was this a backup created by a different backup plugin? If so, then you might first need to rename it so that it can be recognised - please follow this link.', 'updraftplus').'</a></p><p>'.sprintf(__('Supported backup plugins: %s', 'updraftplus'), $supported).'</p>';
 	}
 
-	// Given a backup type and filename, get the time
+	/**
+	 * Given a backup type and filename, get the time
+	 *
+	 * @param  string $btime
+	 * @param  string $accepted_foreign
+	 * @param  string $entry
+	 * @return string
+	 */
 	public function foreign_gettime($btime, $accepted_foreign, $entry) {
 		$plugins = $this->accept_archivename(array());
 		if (empty($plugins[$accepted_foreign])) return $btime;
-		# mktime(): H, M, S, M, D, Y
+		// mktime(): H, M, S, M, D, Y
 		switch ($accepted_foreign) {
 			case 'infinitewp':
-			if (preg_match('/_(([0-9]{4})-([0-9]{2})-([0-9]{2})_).*\.zip$/i', $entry, $tmatch)) {
-				return mktime(12, 0, 0, $tmatch[3], $tmatch[4], $tmatch[2]);
-			}
-			break;
+				if (preg_match('/_(([0-9]{4})-([0-9]{2})-([0-9]{2})_).*\.zip$/i', $entry, $tmatch)) {
+					return mktime(12, 0, 0, $tmatch[3], $tmatch[4], $tmatch[2]);
+				}
+				break;
 			case 'backupwordpress':
 			case 'backupwordpress2':
-			# e.g. example-com-default-1-complete-2014-03-10-11-44-57.zip
-			if (preg_match('/(([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2}))\.zip$/i', $entry, $tmatch)) {
-				return mktime($tmatch[5], $tmatch[6], $tmatch[7], $tmatch[3], $tmatch[4], $tmatch[2]);
-			}
-			break;
+				// e.g. example-com-default-1-complete-2014-03-10-11-44-57.zip
+				if (preg_match('/(([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2}))\.zip$/i', $entry, $tmatch)) {
+					return mktime($tmatch[5], $tmatch[6], $tmatch[7], $tmatch[3], $tmatch[4], $tmatch[2]);
+				}
+				break;
 			case 'simple_backup':
-			# e.g. db_backup_2014-03-15_133344.sql.gz | backup-2014-03-15-133345.zip
-			# Note that a backup of both files and DB started at the same time may not have the same timestamp on both entities
-			// Can also do tar and tar.gz and tar.bz2
-			if (preg_match('/^(db_)?backup.([0-9]{4})-([0-9]{2})-([0-9]{2}).([0-9]{2})([0-9]{2})([0-9]{2})\.(zip|tar(\.(bz2|gz))?|sql(\.(gz))?)$/i', $entry, $tmatch)) {
-				$btime = mktime($tmatch[5], $tmatch[6], $tmatch[7], $tmatch[3], $tmatch[4], $tmatch[2]);
-				return $btime - ($btime % 60);
-			}
-			break;
+				// e.g. db_backup_2014-03-15_133344.sql.gz | backup-2014-03-15-133345.zip
+				// Note that a backup of both files and DB started at the same time may not have the same timestamp on both entities
+				// Can also do tar and tar.gz and tar.bz2
+				if (preg_match('/^(db_)?backup.([0-9]{4})-([0-9]{2})-([0-9]{2}).([0-9]{2})([0-9]{2})([0-9]{2})\.(zip|tar(\.(bz2|gz))?|sql(\.(gz))?)$/i', $entry, $tmatch)) {
+					$btime = mktime($tmatch[5], $tmatch[6], $tmatch[7], $tmatch[3], $tmatch[4], $tmatch[2]);
+					return $btime - ($btime % 60);
+				}
+				break;
 			case 'backwpup':
-			// e.g. backwpup_430908_2014-03-30_11-41-05.tar
-			if (preg_match('/^backwpup_[0-9a-f]+_([0-9]{4})-([0-9]{2})-([0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2})\.(zip|tar|tar\.gz|tar\.bz2)/i', $entry, $tmatch)) {
-				return mktime($tmatch[4], $tmatch[5], $tmatch[6], $tmatch[2], $tmatch[3], $tmatch[1]);
-			}
-			break;
+				// e.g. backwpup_430908_2014-03-30_11-41-05.tar
+				if (preg_match('/^backwpup_[0-9a-f]+_([0-9]{4})-([0-9]{2})-([0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2})\.(zip|tar|tar\.gz|tar\.bz2)/i', $entry, $tmatch)) {
+					return mktime($tmatch[4], $tmatch[5], $tmatch[6], $tmatch[2], $tmatch[3], $tmatch[1]);
+				}
+				break;
 			case 'dropbox-wpadm':
-			// e.g. example_com-full-2015_10_21_10_41-69.zip - where the last numeral runs from 1 upwards (they use multi-zip sets)
-			if (preg_match('/^(.*)-full-([0-9]{4})_([0-9]{2})_([0-9]{2})_([0-9]{2})_([0-9]{2})-([0-9]+)\.zip$/i', $entry, $tmatch)) {
-				return mktime($tmatch[5], $tmatch[6], 0, $tmatch[3], $tmatch[4], $tmatch[2]);
-			}
-			break;
+				// e.g. example_com-full-2015_10_21_10_41-69.zip - where the last numeral runs from 1 upwards (they use multi-zip sets)
+				if (preg_match('/^(.*)-full-([0-9]{4})_([0-9]{2})_([0-9]{2})_([0-9]{2})_([0-9]{2})-([0-9]+)\.zip$/i', $entry, $tmatch)) {
+					return mktime($tmatch[5], $tmatch[6], 0, $tmatch[3], $tmatch[4], $tmatch[2]);
+				}
+				break;
 			case 'wpb2d':
-				if (!class_exists('UpdraftPlus_PclZip') && file_exists(UPDRAFTPLUS_DIR.'/class-zip.php')) require_once(UPDRAFTPLUS_DIR.'/class-zip.php');
+				if (!class_exists('UpdraftPlus_PclZip') && file_exists(UPDRAFTPLUS_DIR.'/class-zip.php')) include_once(UPDRAFTPLUS_DIR.'/class-zip.php');
 				global $updraftplus;
 				$updraft_dir = trailingslashit($updraftplus->backups_dir_location());
 				if (file_exists($updraft_dir.$entry) && class_exists('UpdraftPlus_PclZip')) {
@@ -126,7 +141,7 @@ class UpdraftPlus_Addons_Importer {
 						$btime = time();
 					} else {
 
-						# Don't put this in the for loop, or the magic __get() method gets called and opens the zip file every time the loop goes round
+						// Don't put this in the for loop, or the magic __get() method gets called and opens the zip file every time the loop goes round
 						$numfiles = $zip->numFiles;
 
 						$latest_mtime = -1;
@@ -147,11 +162,11 @@ class UpdraftPlus_Addons_Importer {
 					}
 					set_transient($transkey, $btime, 86400*365);
 
-					return ($btime !== false) ? $btime : filemtime($updraft_dir.$entry);
+					return (false !== $btime) ? $btime : filemtime($updraft_dir.$entry);
 				}
 				return time();
 			break;
-			case 'genericsql';
+			case 'genericsql':
 				global $updraftplus;
 				$updraft_dir = $updraftplus->backups_dir_location();
 				// Using filemtime prevents a new backup being discovered each time 'rescan' is pressed
@@ -168,7 +183,7 @@ class UpdraftPlus_Addons_Importer {
 				if ($separatedb) {
 					$filename = (is_array($backupinfo['db'])) ? $backupinfo['db'][0] : $backupinfo['db'];
 				} else {
-					$filename = (is_array($backupinfo['wpcore'])) ? $backupinfo['wpcore'][0] :  $backupinfo['wpcore'];
+					$filename = (is_array($backupinfo['wpcore'])) ? $backupinfo['wpcore'][0] : $backupinfo['wpcore'];
 				}
 				if (preg_match('/^(.*)-(\d+)-(database|complete)-\d/i', $filename, $matches)) {
 					$try_filename = 'database-'.$matches[1].'-'.$matches[2].'.sql';
@@ -201,7 +216,7 @@ class UpdraftPlus_Addons_Importer {
 								trigger_error("Multiple .sql files found in backwpup backup - don't know which to use ($found_sql, $file)", E_USER_WARNING);
 								return false;
 							} else {
-								$found_sql = 'iwp_db/'.(string)$file;
+								$found_sql = 'iwp_db/'.(string) $file;
 							}
 						}
 					}
@@ -216,9 +231,12 @@ class UpdraftPlus_Addons_Importer {
 			$latest_mtime = -1;
 			$found_sql = false;
 
-			# Rather hack-ish
-			if (file_exists($working_dir_localpath.'/wp-config.php')) {
-				$wp_config = file($working_dir_localpath.'/wp-config.php');
+			// Rather hack-ish
+			if (file_exists($working_dir_localpath.'/wp-config.php') || file_exists($working_dir_localpath.'/wpb2d/wp-config.php')) {
+			
+				$wp_config_file = file_exists($working_dir_localpath.'/wp-config.php') ? $working_dir_localpath.'/wp-config.php' : $working_dir_localpath.'/wpb2d/wp-config.php';
+			
+				$wp_config = file($wp_config_file);
 				foreach ($wp_config as $line) {
 					if (!defined('UPDRAFTPLUS_OVERRIDE_IMPORT_PREFIX') && preg_match("#\\\$table_prefix\s+=\s+'(.*)';#", $line, $matches)) {
 						global $updraftplus;
@@ -228,20 +246,22 @@ class UpdraftPlus_Addons_Importer {
 				}
 			}
 
-			if ($handle = opendir($working_dir_localpath.'/wp-content/backups')) {
+			$backups_dir = file_exists($working_dir_localpath.'/wpb2d/wp-content/backups') ? 'wpb2d/wp-content/backups' : 'wp-content/backups';
+			
+			if ($handle = opendir($working_dir_localpath.'/'.$backups_dir)) {
 				while (($file = readdir($handle)) !== false) {
 					if (strtolower(substr($file, -4, 4)) == '.sql') {
-						if (filemtime($working_dir_localpath.'/wp-content/backups/'.$file) > $latest_mtime) {
-							$latest_mtime = filemtime($working_dir_localpath.'/wp-content/backups/'.$file);
-							$found_sql = (string)$file;
+						if (filemtime($working_dir_localpath.'/'.$backups_dir.'/'.$file) > $latest_mtime) {
+							$latest_mtime = filemtime($working_dir_localpath.'/'.$backups_dir.'/'.$file);
+							$found_sql = (string) $file;
 						}
 					}
 				}
 				closedir($handle);
-				if (is_string($found_sql)) return 'wp-content/backups/'.$found_sql;
+				if (is_string($found_sql)) return $backups_dir.'/'.$found_sql;
 			}
 
-			$db_basename = 'wp-content/backups/wordpress-db-backup.sql';
+			$db_basename = $backups_dir.'/wordpress-db-backup.sql';
 		} elseif (!$separatedb) {
 			$db_basename = $backupinfo['wpcore'];
 			if (is_array($db_basename)) $db_basename = array_shift($db_basename);
@@ -257,7 +277,13 @@ class UpdraftPlus_Addons_Importer {
 		return array('wpcore' => $backupable_plus_db['wpcore']);
 	}
 
-	// Scan filename and see if we recognise its pattern
+	/**
+	 * Scan filename and see if we recognise its pattern
+	 *
+	 * @param  string $accepted_foreign
+	 * @param  string $entry
+	 * @return string
+	 */
 	public function accept_foreign($accepted_foreign, $entry) {
 
 		$accept = $this->accept_archivename(array());
@@ -267,7 +293,12 @@ class UpdraftPlus_Addons_Importer {
 		return $accepted_foreign;
 	}
 
-	// Return array of supported backup types
+	/**
+	 * Return array of supported backup types
+	 *
+	 * @param  string $x [description]
+	 * @return string
+	 */
 	public function accept_archivename($x) {
 		if (!is_array($x)) return $x;
 
@@ -322,9 +353,14 @@ class UpdraftPlus_Addons_Importer {
 		return $x;
 	}
 
-	// Return JavaScript array of supported backup types
+	/**
+	 * Return JavaScript array of supported backup types
+	 *
+	 * @param  string $x [description]
+	 * @return string
+	 */
 	public function accept_archivename_js($x) {
-		#backup_([\-0-9]{15})_.*_([0-9a-f]{12})-[\-a-z]+([0-9]+(of[0-9]+)?)?\.(zip|gz|gz\.crypt)
+		// backup_([\-0-9]{15})_.*_([0-9a-f]{12})-[\-a-z]+([0-9]+(of[0-9]+)?)?\.(zip|gz|gz\.crypt)
 		$accepted = $this->accept_archivename(array());
 		$x = '[ ';
 		$ind = 0;
@@ -335,5 +371,4 @@ class UpdraftPlus_Addons_Importer {
 		}
 		return $x.' ]';
 	}
-
 }

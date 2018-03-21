@@ -1,13 +1,13 @@
 <tr valign="top" id="service_options">
-	<th scope="row" class="titledesc"><?php _e( 'Services', 'woocommerce-shipping-usps' ); ?></th>
+	<th scope="row" class="titledesc"><?php esc_html_e( 'Services', 'woocommerce-shipping-usps' ); ?></th>
 	<td class="forminp">
 		<table class="usps_services widefat">
 			<thead>
 				<th class="sort">&nbsp;</th>
-				<th><?php _e( 'Name', 'woocommerce-shipping-usps' ); ?></th>
-				<th><?php _e( 'Service(s)', 'woocommerce-shipping-usps' ); ?></th>
-				<th><?php echo sprintf( __( 'Price Adjustment (%s)', 'woocommerce-shipping-usps' ), get_woocommerce_currency_symbol() ); ?></th>
-				<th><?php _e( 'Price Adjustment (%)', 'woocommerce-shipping-usps' ); ?></th>
+				<th><?php esc_html_e( 'Name', 'woocommerce-shipping-usps' ); ?></th>
+				<th><?php esc_html_e( 'Service(s)', 'woocommerce-shipping-usps' ); ?></th>
+				<th><?php printf( __( 'Price Adjustment (%s)', 'woocommerce-shipping-usps' ), get_woocommerce_currency_symbol() ); ?></th>
+				<th><?php esc_html_e( 'Price Adjustment (%)', 'woocommerce-shipping-usps' ); ?></th>
 			</thead>
 			<tbody>
 				<?php
@@ -38,39 +38,78 @@
 						?>
 						<tr>
 							<td class="sort">
-								<input type="hidden" class="order" name="usps_service[<?php echo $code; ?>][order]" value="<?php echo isset( $this->custom_services[ $code ]['order'] ) ? $this->custom_services[ $code ]['order'] : ''; ?>" />
+								<input type="hidden" class="order" name="usps_service[<?php echo esc_attr( $code ); ?>][order]" value="<?php echo isset( $this->custom_services[ $code ]['order'] ) ? esc_attr( $this->custom_services[ $code ]['order'] ) : ''; ?>" />
 							</td>
 							<td>
-								<input type="text" name="usps_service[<?php echo $code; ?>][name]" placeholder="<?php echo $values['name']; ?> (<?php echo $this->title; ?>)" value="<?php echo isset( $this->custom_services[ $code ]['name'] ) ? $this->custom_services[ $code ]['name'] : ''; ?>" size="35" />
+								<input type="text" name="usps_service[<?php echo esc_attr( $code ); ?>][name]" placeholder="<?php echo $values['name']; ?> (<?php echo $this->title; ?>)" value="<?php echo isset( $this->custom_services[ $code ]['name'] ) ? esc_attr( $this->custom_services[ $code ]['name'] ) : ''; ?>" size="35" />
 							</td>
 							<td>
 								<ul class="sub_services" style="font-size: 0.92em; color: #555">
-									<?php foreach ( $values['services'] as $key => $name ) : ?>
-									<li style="line-height: 23px;">
-										<label>
-											<input type="checkbox" name="usps_service[<?php echo $code; ?>][<?php echo $key; ?>][enabled]" <?php checked( ( ! isset( $this->custom_services[ $code ][ $key ]['enabled'] ) || ! empty( $this->custom_services[ $code ][ $key ]['enabled'] ) ), true ); ?> />
-											<?php echo $name; ?>
-										</label>
-									</li>
-									<?php endforeach; ?>
+									<?php foreach ( $values['services'] as $key => $name ) :
+										if ( 0 === $key ) {
+											foreach( $name as $subsub_service_key => $subsub_service ) {
+												?>
+												<li style="line-height: 23px;">
+													<label>
+														<input type="checkbox" name="usps_service[<?php echo esc_attr( $code ); ?>][<?php echo esc_attr( $key ); ?>][<?php echo esc_attr( $subsub_service_key ); ?>][enabled]" <?php checked( ( ! isset( $this->custom_services[ $code ][ $key ][ $subsub_service_key ]['enabled'] ) || ! empty( $this->custom_services[ $code ][ $key ][ $subsub_service_key ]['enabled'] ) ), true ); ?> />
+														<?php echo $subsub_service; ?>
+													</label>
+												</li>
+												<?php
+											}
+										} else {
+											?>
+											<li style="line-height: 23px;">
+												<label>
+													<input type="checkbox" name="usps_service[<?php echo esc_attr( $code ); ?>][<?php echo esc_attr( $key ); ?>][enabled]" <?php checked( ( ! isset( $this->custom_services[ $code ][ $key ]['enabled'] ) || ! empty( $this->custom_services[ $code ][ $key ]['enabled'] ) ), true ); ?> />
+													<?php echo $name; ?>
+												</label>
+											</li>
+											<?php 
+										}
+									endforeach; ?>
 								</ul>
 							</td>
 							<td>
 								<ul class="sub_services" style="font-size: 0.92em; color: #555">
-									<?php foreach ( $values['services'] as $key => $name ) : ?>
-									<li>
-										<?php echo get_woocommerce_currency_symbol(); ?><input type="text" name="usps_service[<?php echo $code; ?>][<?php echo $key; ?>][adjustment]" placeholder="N/A" value="<?php echo isset( $this->custom_services[ $code ][ $key ]['adjustment'] ) ? $this->custom_services[ $code ][ $key ]['adjustment'] : ''; ?>" size="4" />
-									</li>
-									<?php endforeach; ?>
+									<?php foreach ( $values['services'] as $key => $name ) :
+										if ( 0 === $key ) {
+											foreach( $name as $subsub_service_key => $subsub_service ) {
+												?>
+												<li>
+													<?php echo get_woocommerce_currency_symbol(); ?><input type="text" name="usps_service[<?php echo esc_attr( $code ); ?>][<?php echo esc_attr( $key ); ?>][<?php echo esc_attr( $subsub_service_key ); ?>][adjustment]" placeholder="N/A" value="<?php echo isset( $this->custom_services[ $code ][ $key ][ $subsub_service_key ]['adjustment'] ) ? esc_attr( $this->custom_services[ $code ][ $key ][ $subsub_service_key ]['adjustment'] ) : ''; ?>" size="4" />
+												</li>
+												<?php
+											}
+										} else {
+											?>
+											<li>
+												<?php echo get_woocommerce_currency_symbol(); ?><input type="text" name="usps_service[<?php echo esc_attr( $code ); ?>][<?php echo esc_attr( $key ); ?>][adjustment]" placeholder="N/A" value="<?php echo isset( $this->custom_services[ $code ][ $key ]['adjustment'] ) ? esc_attr( $this->custom_services[ $code ][ $key ]['adjustment'] ) : ''; ?>" size="4" />
+											</li>
+											<?php 
+										}
+									endforeach; ?>
 								</ul>
 							</td>
 							<td>
 								<ul class="sub_services" style="font-size: 0.92em; color: #555">
-									<?php foreach ( $values['services'] as $key => $name ) : ?>
-									<li>
-										<input type="text" name="usps_service[<?php echo $code; ?>][<?php echo $key; ?>][adjustment_percent]" placeholder="N/A" value="<?php echo isset( $this->custom_services[ $code ][ $key ]['adjustment_percent'] ) ? $this->custom_services[ $code ][ $key ]['adjustment_percent'] : ''; ?>" size="4" />%
-									</li>
-									<?php endforeach; ?>
+									<?php foreach ( $values['services'] as $key => $name ) :
+										if ( 0 === $key ) {
+											foreach( $name as $subsub_service_key => $subsub_service ) {
+												?>
+												<li>
+													<input type="text" name="usps_service[<?php echo esc_attr( $code ); ?>][<?php echo esc_attr( $key ); ?>][<?php echo esc_attr( $subsub_service_key ); ?>][adjustment_percent]" placeholder="N/A" value="<?php echo isset( $this->custom_services[ $code ][ $key ][ $subsub_service_key ]['adjustment_percent'] ) ? esc_attr( $this->custom_services[ $code ][ $key ][ $subsub_service_key ]['adjustment_percent'] ) : ''; ?>" size="4" />%
+												</li>
+												<?php
+											}
+										} else {
+											?>
+											<li>
+												<input type="text" name="usps_service[<?php echo esc_attr( $code ); ?>][<?php echo esc_attr( $key ); ?>][adjustment_percent]" placeholder="N/A" value="<?php echo isset( $this->custom_services[ $code ][ $key ]['adjustment_percent'] ) ? esc_attr( $this->custom_services[ $code ][ $key ]['adjustment_percent'] ) : ''; ?>" size="4" />%
+											</li>		
+											<?php 
+										}
+									endforeach; ?>
 								</ul>
 							</td>
 						</tr>

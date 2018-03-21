@@ -64,10 +64,10 @@ class WC_Boxpack_Box {
 
 		sort( $dimensions );
 
-		$this->outer_length = $this->length = $dimensions[2];
-		$this->outer_width  = $this->width  = $dimensions[1];
-		$this->outer_height = $this->height = $dimensions[0];
-		$this->weight       = $weight;
+		$this->outer_length = $this->length = floatval( $dimensions[2] );
+		$this->outer_width  = $this->width  = floatval( $dimensions[1] );
+		$this->outer_height = $this->height = floatval( $dimensions[0] );
+		$this->weight       = floatval( $weight );
 	}
 
 	/**
@@ -148,12 +148,12 @@ class WC_Boxpack_Box {
 		switch ( $this->type ) {
 			// Tubes are designed for long thin items so see if the item meets that criteria here.
 			case 'tube' :
-				$can_fit = ( $this->get_length() >= $item->get_length() && $this->get_width() >= $item->get_width() && $this->get_height() >= $item->get_height() && $item->get_volume() < $this->get_volume() ) ? true : false;
+				$can_fit = ( $this->get_length() >= $item->get_length() && $this->get_width() >= $item->get_width() && $this->get_height() >= $item->get_height() && $item->get_volume() <= $this->get_volume() ) ? true : false;
 				$can_fit = $can_fit && $item->get_length() >= ( ( $item->get_width() + $this->get_height() ) * 2 );
 			break;
 			// Packets are flexible
 			case 'packet' :
-				$can_fit = ( $this->get_packed_length() >= $item->get_length() && $this->get_packed_width() >= $item->get_width() && $item->get_volume() < $this->get_volume() ) ? true : false;
+				$can_fit = ( $this->get_packed_length() >= $item->get_length() && $this->get_packed_width() >= $item->get_width() && $item->get_volume() <= $this->get_volume() ) ? true : false;
 
 				if ( $can_fit && $item->get_height() > $this->get_packed_height() ) {
 					$this->maybe_packed_height = $item->get_height();
@@ -165,7 +165,7 @@ class WC_Boxpack_Box {
 			break;
 			// Boxes are easy
 			default :
-				$can_fit = ( $this->get_length() >= $item->get_length() && $this->get_width() >= $item->get_width() && $this->get_height() >= $item->get_height() && $item->get_volume() < $this->get_volume() ) ? true : false;
+				$can_fit = ( $this->get_length() >= $item->get_length() && $this->get_width() >= $item->get_width() && $this->get_height() >= $item->get_height() && $item->get_volume() <= $this->get_volume() ) ? true : false;
 			break;
 		}
 
@@ -255,11 +255,12 @@ class WC_Boxpack_Box {
 		$package->value    = $packed_value;
 
 		// Calculate packing success % based on % of weight and volume of all items packed
-		$packed_weight_ratio = null;
-		$packed_volume_ratio = null;
+		$packed_weight_ratio      = null;
+		$packed_volume_ratio      = null;
+		$packed_weight_to_compare = $packed_weight - $this->get_weight();
 
-		if ( $packed_weight + $unpacked_weight > 0 ) {
-			$packed_weight_ratio = $packed_weight / ( $packed_weight + $unpacked_weight );
+		if ( $packed_weight_to_compare + $unpacked_weight > 0 ) {
+			$packed_weight_ratio = $packed_weight_to_compare / ( $packed_weight_to_compare + $unpacked_weight );
 		}
 		if ( $packed_volume + $unpacked_volume ) {
 			$packed_volume_ratio = $packed_volume / ( $packed_volume + $unpacked_volume );

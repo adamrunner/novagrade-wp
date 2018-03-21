@@ -68,8 +68,8 @@ if( !function_exists( 'layers_post_meta' ) ) {
 
 					if( 'post' == get_post_type( $post_id ) ){
 						$the_tags = get_the_tags( $post_id );
-					} elseif( 'portfolio' == get_post_type( $post_id ) ) {
-						$the_tags = get_the_terms( $post_id , 'portfolio-tag' );
+					} elseif( 'layers-project' == get_post_type( $post_id ) ) {
+						$the_tags = get_the_terms( $post_id , 'project-tag' );
 					} else {
 						$the_tags = FALSE;
 					}
@@ -101,7 +101,7 @@ if( !function_exists( 'layers_post_meta' ) ) {
  */
 if ( ! function_exists( 'layers_get_the_author' ) ) {
 	function layers_get_the_author() {
-		return sprintf( __( '<a href="%1$s" title="%2$s" rel="author">%3$s</a>' , 'layerswp' ),
+		return sprintf( __( '<a href="%1$s" title="%2$s" rel="author" class="layers-author">%3$s</a>' , 'layerswp' ),
 			esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ),
 			esc_attr( sprintf( __( 'View all posts by %s', 'layerswp' ), get_the_author() ) ),
 			esc_attr( get_the_author() )
@@ -200,7 +200,7 @@ if( !function_exists( 'layers_post_class' ) ) {
 
 			$classes[] = 'column';
 			// Honor WC loop columns filter
-			$wc_span = 12 / apply_filters( 'loop_shop_columns', 4 );
+			$wc_span = 12 / apply_filters( 'loop_shop_columns', 3 );
 			$spans = array(12, 6, 3, 2, 1);
 			$span  = in_array($wc_span, $spans) ? $wc_span : 4;
 			$classes[] = 'span-'.$span;
@@ -499,3 +499,23 @@ if( !function_exists( 'layers_post_featured_media' ) ) {
 		return apply_filters('layers_post_featured_media', $output);
 	}
 } // layers_post_featured_media
+
+/**
+* Post Featured Media
+*
+* @param int $postid ID for post
+*
+* @return   book  TRUE or FALSE depending on whether or not a video has been added to the post
+*/
+if( !function_exists( 'layers_post_has_video' ) ) {
+	function layers_post_has_video( $postid = FALSE ){
+		if( FALSE == $postid ) {
+			global $post;
+			$postid = $post->ID;
+		}
+
+		$post_meta = get_post_meta( $postid, 'layers', true );
+
+		return ( isset( $post_meta[ 'video-url' ] )  && '' != $post_meta[ 'video-url' ] ? TRUE : FALSE );
+	}
+}

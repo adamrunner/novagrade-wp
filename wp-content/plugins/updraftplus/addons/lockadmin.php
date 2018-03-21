@@ -1,21 +1,24 @@
 <?php
+// @codingStandardsIgnoreStart
 /*
 UpdraftPlus Addon: lockadmin:Password-protect the UpdraftPlus Settings Screen
 Description: Provides the ability to lock the UpdraftPlus settings with a password
-Version: 1.1
+Version: 1.2
 Shop: /shop/lockadmin/
-Latest Change: 1.9.43
+Latest Change: 1.12.20
 */
+// @codingStandardsIgnoreEnd
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
 
 if (defined('UPDRAFTPLUS_NOADMINLOCK') && UPDRAFTPLUS_NOADMINLOCK) return;
 
-$updraftplus_addon_moredatabase = new UpdraftPlus_Addon_LockAdmin;
+$GLOBALS['updraftplus_addon_lockadmin'] = new UpdraftPlus_Addon_LockAdmin;
 
 class UpdraftPlus_Addon_LockAdmin {
 
 	private $correct_password_supplied = null;
+
 	private $default_support_url = 'https://updraftplus.com/faqs/locked-updraftplus-settings-page-forgotten-password-unlock/';
 
 	public function __construct() {
@@ -37,12 +40,12 @@ class UpdraftPlus_Addon_LockAdmin {
 		// Cookie in correct format?
 		if (!preg_match('/^(\d+):(.*)$/', $_COOKIE['updraft_unlockadmin'], $matches)) return false;
 
-		$cookie_time = $matches[1]; # The time when the session began
+		$cookie_time = $matches[1]; // The time when the session began
 		$cookie_hash = $matches[2];
 
 		$time_now = time();
 
-		# Cookie is older than session length
+		// Cookie is older than session length
 		if ($time_now > $cookie_time + $session_length) return false;
 
 		$cookie_session_began = $cookie_time - ($cookie_time % $session_length);
@@ -56,6 +59,11 @@ class UpdraftPlus_Addon_LockAdmin {
 		if ($correct_hash != $cookie_hash) return false;
 
 		return true;
+	}
+
+	public function return_opts() {
+		$this->get_opts();
+		return $this->opts;
 	}
 
 	private function get_opts() {
@@ -76,15 +84,15 @@ class UpdraftPlus_Addon_LockAdmin {
 			$this->old_password = $this->opts['password'];
 			$this->opts['password'] = $_POST['updraft_unlockadmin_password'];
 			$this->opts['support_url'] = $_POST['updraft_unlockadmin_support_url'];
-			$this->opts['session_length'] = (int)$_POST['updraft_unlockadmin_session_length'];
+			$this->opts['session_length'] = (int) $_POST['updraft_unlockadmin_session_length'];
 			UpdraftPlus_Options::update_updraft_option('updraft_adminlocking', $this->opts);
 			$this->password_length = strlen($this->opts['password']);
-			add_action('all_admin_notices', array($this,'show_admin_warning_passwordset') );
+			add_action('all_admin_notices', array($this, 'show_admin_warning_passwordset'));
 		}
 		// Note: this code also fires when the user sets a new password (because we don't want to immediately lock them)
 		$password = $this->opts['password'];
-		if ($password === (string)$_POST['updraft_unlockadmin_password']) {
-			$session_length = (int)$this->opts['session_length'];
+		if ($password === (string) $_POST['updraft_unlockadmin_password']) {
+			$session_length = (int) $this->opts['session_length'];
 			if ($session_length<1) $session_length = 86400;
 			// The cookie relies on the user ID, password and session time. So, someone stealing the cookie can't use it forever. They need the password to generate valid cookies.
 			$time_now = time();
@@ -101,7 +109,7 @@ class UpdraftPlus_Addon_LockAdmin {
 
 	public function show_admin_warning_passwordset() {
 		$msg = '<strong>';
-		if (strlen($this->old_password) >0 && $this->password_length ==0) {
+		if (strlen($this->old_password) >0 && 0 == $this->password_length) {
 			$msg .= __('The admin password has now been removed.', 'updraftplus');
 		} elseif (strlen($this->old_password) == 0 && $this->password_length > 0) {
 			$msg .= __('An admin password has been set.', 'updraftplus');
@@ -128,40 +136,48 @@ class UpdraftPlus_Addon_LockAdmin {
 		global $updraftplus_admin;
 		$this->get_opts();
 		?>
-		<h3><?php echo __('Lock access to the UpdraftPlus settings page','updraftplus'); ?></h3>
-		<p><em><a href="https://updraftplus.com/lock-updraftplus-settings/"><?php _e('Read more about how this works...','updraftplus');?></a></em></p>
-		<form method="post" onsubmit="if (jQuery('#updraft_unlockadmin_password').val() != '') { return(confirm('<?php echo esc_js(__('Please make sure that you have made a note of the password!', 'updraftplus'));?>')); } else { return true; }">
-		<input type="hidden" name="nonce" value="<?php echo wp_create_nonce('updraftplus-unlockadmin-nonce');?>">
-		<input type="hidden" name="page" value="updraftplus">
-		<input type="hidden" name="tab" value="expert">
-		<input type="hidden" name="updraft_unlockadmin_oldpassword" value="<?php echo esc_attr($this->opts['password']);?>">
-		<table>
-		<?php
+		<div class="advanced_tools lock_admin">
+			<h3>
+				<?php echo __('Lock access to the UpdraftPlus settings page', 'updraftplus'); ?>
+			</h3>
+			<p>
+				<a href="https://updraftplus.com/lock-updraftplus-settings/">
+					<em><?php _e('Read more about how this works...', 'updraftplus');?></em>
+				</a>
+			</p>
+			<form id="lock_form" method="post" onsubmit="if (jQuery('#updraft_unlockadmin_password').val() != '') { return(confirm('<?php echo esc_js(__('Please make sure that you have made a note of the password!', 'updraftplus'));?>')); } else { return true; }">
+				<input type="hidden" name="nonce" value="<?php echo wp_create_nonce('updraftplus-unlockadmin-nonce');?>">
+				<input type="hidden" name="page" value="updraftplus">
+				<input type="hidden" name="tab" value="expert">
+				<input id="updraft_unlockadmin_oldpassword" type="hidden" name="updraft_unlockadmin_oldpassword" value="<?php echo esc_attr($this->opts['password']);?>">
+				<table>
+				<?php
 
-			echo $updraftplus_admin->settings_debugrow(__('Password', 'updraftplus').':', '<input type="text" id="updraft_unlockadmin_password" name="updraft_unlockadmin_password" value="'.esc_attr($this->opts['password']).'" style="width:230px;">');
+					echo $updraftplus_admin->settings_debugrow(__('Password', 'updraftplus').':', '<input type="text" id="updraft_unlockadmin_password" name="updraft_unlockadmin_password" value="'.esc_attr($this->opts['password']).'" style="width:230px;">');
 
-			$session_lengths = array(
-				'3600' => __('1 hour', 'updraftplus'),
-				'10800' => sprintf(__('%s hours', 'updraftplus'), 3),
-				'86400' => sprintf(__('%s hours', 'updraftplus'), 24),
-				'604800' => __('1 week', 'updraftplus'),
-				'2419200' =>  sprintf(__('%s weeks', 'updraftplus'), 4),
-				'31449600' => sprintf(__('%s weeks', 'updraftplus'), 52)
-			);
+					$session_lengths = array(
+						'3600' => __('1 hour', 'updraftplus'),
+						'10800' => sprintf(__('%s hours', 'updraftplus'), 3),
+						'86400' => sprintf(__('%s hours', 'updraftplus'), 24),
+						'604800' => __('1 week', 'updraftplus'),
+						'2419200' => sprintf(__('%s weeks', 'updraftplus'), 4),
+						'31449600' => sprintf(__('%s weeks', 'updraftplus'), 52)
+					);
 
-			$session_options = '';
-			foreach ($session_lengths as $length => $text) {
-				$session_options .= "<option value=\"$length\"".(($this->opts['session_length'] == $length) ? ' selected="selected"' : '').">".htmlspecialchars($text)."</option>\n";
-			}
+					$session_options = '';
+					foreach ($session_lengths as $length => $text) {
+					$session_options .= "<option value=\"$length\"".(($this->opts['session_length'] == $length) ? ' selected="selected"' : '').">".htmlspecialchars($text)."</option>\n";
+					}
 
-			echo $updraftplus_admin->settings_debugrow(__('Require password again after', 'updraftplus').':', '<select name="updraft_unlockadmin_session_length" style="width:230px;">'.$session_options.'</select>');
+					echo $updraftplus_admin->settings_debugrow(__('Require password again after', 'updraftplus').':', '<select id="updraft_unlockadmin_session_length" name="updraft_unlockadmin_session_length" style="width:230px;">'.$session_options.'</select>');
 
-			echo $updraftplus_admin->settings_debugrow(__('Support URL', 'updraftplus').':', '<input name="updraft_unlockadmin_support_url" type="'.apply_filters('updraftplus_admin_secret_field_type', 'text').'" value="'.esc_attr($this->opts['support_url']).'" style="width:230px;"><br><em>'.__('Anyone seeing the lock screen will be shown this URL for support - enter a website address or an email address.', 'updraftplus').' <a href="'.$this->default_support_url.'">'.__('Otherwise, the default link will be shown.', 'updraftplus').'</a></em>');
+					echo $updraftplus_admin->settings_debugrow(__('Support URL', 'updraftplus').':', '<input id="updraft_unlockadmin_support_url" name="updraft_unlockadmin_support_url" type="'.apply_filters('updraftplus_admin_secret_field_type', 'text').'" value="'.esc_attr($this->opts['support_url']).'" style="width:230px;"><br><em>'.__('Anyone seeing the lock screen will be shown this URL for support - enter a website address or an email address.', 'updraftplus').' <a href="'.$this->default_support_url.'">'.__('Otherwise, the default link will be shown.', 'updraftplus').'</a></em>');
 
-		?>
-		<?php echo $updraftplus_admin->settings_debugrow('', '<input class="button-primary" type="submit" value="'.esc_attr(__('Change Lock Settings', 'updraftplus')).'">'); ?>
-		</table>
-		</form>
+					echo $updraftplus_admin->settings_debugrow('', '<input class="button-primary change_lock_settings" type="submit" value="'.esc_attr(__('Change Lock Settings', 'updraftplus')).'">');
+					?>
+				</table>
+			</form>
+		</div>
 	<?php
 	}
 
@@ -197,7 +213,7 @@ class UpdraftPlus_Addon_LockAdmin {
 			<p>
 				<?php
 					if (false === $this->correct_password_supplied) {
-						echo '<span style="color:red;">'.__('Password incorrect', 'updraftplus').'</span><br>';
+					echo '<span style="color:red;">'.__('Password incorrect', 'updraftplus').'</span><br>';
 					}
 				?>
 				<?php _e('To access the UpdraftPlus settings, please enter your unlock password', 'updraftplus'); ?><br>
@@ -206,17 +222,20 @@ class UpdraftPlus_Addon_LockAdmin {
 						$this->get_opts();
 						$url = (empty($this->opts['support_url'])) ? $this->default_support_url : $this->opts['support_url'];
 						if (preg_match('/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i', $url)) $url = 'mailto:'.$url;
-						if (!empty($url)) { echo '<a href="'.esc_attr($url).'">'; };
+						if (!empty($url)) {
+							echo '<a href="'.esc_attr($url).'">';
+						}
 						_e('For unlocking support, please contact whoever manages UpdraftPlus for you.', 'updraftplus');
-						if (!empty($url)) { echo '</a>'; };
+						if (!empty($url)) {
+							echo '</a>';
+						}
 					?>
 				</em></span>
 			</p>
 			
 		</div>
 		<?php
-		//settings_header opens a div
+		// settings_header opens a div
 		echo '</div>';
 	}
-
 }

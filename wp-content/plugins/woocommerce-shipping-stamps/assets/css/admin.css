@@ -21,7 +21,7 @@
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 }
-#wc_stamps_get_label ul.steps.non-us li {
+#wc_stamps_get_label ul.steps.needs-customs li {
 	width: 25%;
 }
 #wc_stamps_get_label ul.steps li.active {
@@ -118,4 +118,8 @@
 #wc_stamps_get_label .wc-stamps-customs-item .wc-stamps-customs-remove-line {
 	text-align: right;
 	display: block;
+}
+
+#wp-admin-bar-stamps-com.error-api {
+	background-color: #a50d0d;
 }

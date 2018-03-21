@@ -1,14 +1,14 @@
 <tr valign="top" id="service_options">
-	<th scope="row" class="titledesc"><?php _e( 'Services', 'wc_fedex' ); ?></th>
+	<th scope="row" class="titledesc"><?php _e( 'Services', 'woocommerce-shipping-fedex' ); ?></th>
 	<td class="forminp">
 		<table class="fedex_services widefat">
 			<thead>
 				<th class="sort">&nbsp;</th>
-				<th><?php _e( 'Service Code', 'wc_fedex' ); ?></th>
-				<th><?php _e( 'Name', 'wc_fedex' ); ?></th>
-				<th><?php _e( 'Enabled', 'wc_fedex' ); ?></th>
-				<th><?php echo sprintf( __( 'Price Adjustment (%s)', 'wc_fedex' ), get_woocommerce_currency_symbol() ); ?></th>
-				<th><?php _e( 'Price Adjustment (%)', 'wc_fedex' ); ?></th>
+				<th><?php _e( 'Service Code', 'woocommerce-shipping-fedex' ); ?></th>
+				<th><?php _e( 'Name', 'woocommerce-shipping-fedex' ); ?></th>
+				<th><?php _e( 'Enabled', 'woocommerce-shipping-fedex' ); ?></th>
+				<th><?php echo sprintf( __( 'Price Adjustment (%s)', 'woocommerce-shipping-fedex' ), get_woocommerce_currency_symbol() ); ?></th>
+				<th><?php _e( 'Price Adjustment (%)', 'woocommerce-shipping-fedex' ); ?></th>
 			</thead>
 			<tbody>
 				<?php

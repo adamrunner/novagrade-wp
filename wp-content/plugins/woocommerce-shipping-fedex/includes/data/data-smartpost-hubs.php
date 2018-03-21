@@ -13,6 +13,7 @@ return array(
 	'5481' => 'DTMI Detroit',
 	'5087' => 'EDNJ Edison',
 	'5431' => 'GCOH Grove City',
+	'5436' => 'GPOH Groveport Ohio',
 	'5771' => 'HOTX Houston',
 	'5465' => 'ININ Indianapolis',
 	'5648' => 'KCKS Kansas City',

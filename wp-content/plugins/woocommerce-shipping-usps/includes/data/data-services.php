@@ -11,13 +11,18 @@ return array(
 
 		// Services which costs are merged if returned (cheapest is used). This gives us the best possible rate.
 		'services' => array(
-			"0"  => "First-Class Mail&#0174; Parcel",
-			'12' => "First-Class&#8482; Postcard Stamped",
-			'15' => "First-Class&#8482; Large Postcards",
-			'19' => "First-Class&#8482; Keys and IDs",
-			'61' => "First-Class&#8482; Package Service",
-			'78' => "First-Class Mail&#0174; Metered Letter",
-			'53' => "First-Class&#8482; Package Service Hold For Pickup"
+			'0'  => array(
+				'first-class-mail-parcel'         => 'First-Class Mail&#0174; Parcel',
+				'first-class-mail-large-envelope' => 'First-Class Mail&#0174; Large Envelope',
+				'first-class-mail-postcards'      => 'First-Class Mail&#0174; Postcards',
+				'first-class-mail-stamped-letter' => 'First-Class Mail&#0174; Stamped Letter'
+			),
+			'12' => 'First-Class&#8482; Postcard Stamped',
+			'15' => 'First-Class&#8482; Large Postcards',
+			'19' => 'First-Class&#8482; Keys and IDs',
+			'61' => 'First-Class&#8482; Package Service',
+			'78' => 'First-Class Mail&#0174; Metered Letter',
+			'53' => 'First-Class&#8482; Package Service Hold For Pickup'
 		)
 	),
 	'D_EXPRESS_MAIL' => array(
@@ -33,11 +38,11 @@ return array(
 	),
 	'D_STANDARD_POST' => array(
 		// Name of the service shown to the user
-		'name'  => 'Standard Post&#8482;',
+		'name'  => 'Retail Ground&#8482;',
 
 		// Services which costs are merged if returned (cheapest is used). This gives us the best possible rate.
 		'services' => array(
-			'4'  => "Standard Post&#8482;"
+			'4'  => "Retail Ground&#8482;"
 		)
 	),
 	'D_MEDIA_MAIL' => array(

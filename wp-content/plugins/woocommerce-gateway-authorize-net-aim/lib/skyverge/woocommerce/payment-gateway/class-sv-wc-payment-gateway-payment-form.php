@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+defined( 'ABSPATH' ) or exit;
 
 if ( ! class_exists( 'SV_WC_Payment_Gateway_Payment_Form' ) ) :
 
@@ -49,7 +49,7 @@ class SV_WC_Payment_Gateway_Payment_Form {
 	/**
 	 * Setup Class
 	 *
-	 * @param \SV_WC_Payment_Gateway $gateway gateway for form
+	 * @param \SV_WC_Payment_Gateway|\SV_WC_Payment_Gateway_Direct $gateway gateway for form
 	 * @since 4.0.0
 	 */
 	public function __construct( $gateway ) {
@@ -113,7 +113,7 @@ class SV_WC_Payment_Gateway_Payment_Form {
 
 		if ( $this->tokenization_allowed() && is_user_logged_in() ) {
 
-			foreach ( $this->get_gateway()->get_payment_tokens( get_current_user_id() ) as $token ) {
+			foreach ( $this->get_gateway()->get_payment_tokens_handler()->get_tokens( get_current_user_id() ) as $token ) {
 
 				// some gateways return all tokens for each gateway, so ensure the token type matches the gateway type
 				if ( ( $this->get_gateway()->is_credit_card_gateway() && $token->is_check() ) || ( $this->get_gateway()->is_echeck_gateway() && $token->is_credit_card() ) ) {
@@ -138,7 +138,7 @@ class SV_WC_Payment_Gateway_Payment_Form {
 	 * Return the gateway for this form
 	 *
 	 * @since 4.0.0
-	 * @return SV_WC_Payment_Gateway
+	 * @return \SV_WC_Payment_Gateway|\SV_WC_Payment_Gateway_Direct
 	 */
 	public function get_gateway() {
 		return $this->gateway;
@@ -201,7 +201,7 @@ class SV_WC_Payment_Gateway_Payment_Form {
 	 */
 	public function tokenization_forced() {
 
-		$tokenization_forced = $this->get_gateway()->is_direct_gateway() && $this->get_gateway()->tokenization_forced();
+		$tokenization_forced = $this->get_gateway()->is_direct_gateway() && $this->get_gateway()->supports_tokenization() && $this->get_gateway()->get_payment_tokens_handler()->tokenization_forced();
 
 		// tokenization always "forced" on the add new payment method page
 		if ( $this->get_gateway()->is_direct_gateway() && $this->get_gateway()->supports_add_payment_method() && is_add_payment_method_page() ) {
@@ -520,6 +520,12 @@ class SV_WC_Payment_Gateway_Payment_Form {
 	 */
 	protected function get_manage_payment_methods_button_html() {
 
+		if ( SV_WC_Plugin_Compatibility::is_wc_version_lt_2_6() ) {
+			$url = wc_get_page_permalink( 'myaccount' ) . '#wc-' . $this->get_gateway()->get_plugin()->get_id_dasherized() . '-my-payment-methods';
+		} else {
+			$url = wc_get_endpoint_url( 'payment-methods', '', wc_get_page_permalink( 'myaccount' ) );
+		}
+
 		/**
 		 * Payment Form Manage Payment Methods Button Text Filter.
 		 *
@@ -530,7 +536,7 @@ class SV_WC_Payment_Gateway_Payment_Form {
 		 * @param string $button_text button text
 		 */
 		$html = sprintf( '<a class="button" style="float:right;" href="%s">%s</a>',
-			esc_url( wc_get_page_permalink( 'myaccount' ) . '#wc-' . $this->get_gateway()->get_plugin()->get_id_dasherized() . '-my-payment-methods' ),
+			esc_url( $url ),
 			/* translators: Payment method as in a specific credit card, eCheck or bank account */
 			wp_kses_post( apply_filters( 'wc_' . $this->get_gateway()->get_id() . '_manage_payment_methods_text', esc_html__( 'Manage Payment Methods', 'woocommerce-plugin-framework' ) ) )
 		);

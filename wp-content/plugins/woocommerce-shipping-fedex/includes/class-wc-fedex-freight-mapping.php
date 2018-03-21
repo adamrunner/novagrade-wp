@@ -7,30 +7,55 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Map freight classes to shipping classes
  */
 class WC_Fedex_Freight_Mapping {
+	public $fedex_freight_class;
+	public $display_fedex_freight_class;
 
 	/**
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->classes = include( 'data/data-freight-classes.php' );
+		$this->classes = include( dirname( __FILE__ ) . '/data/data-freight-classes.php' );
 
-		add_action( 'product_shipping_class_add_form_fields', array( $this, 'add_form' ) );
-		add_action( 'product_shipping_class_edit_form_fields', array( $this, 'edit_form' ), 10, 2 );
-		add_action( 'created_term', array( $this, 'save' ), 10, 3 );
-		add_action( 'edit_term', array( $this, 'save' ), 10, 3 );
-		add_filter( 'manage_edit-product_shipping_class_columns', array( $this, 'columns' ) );
-		add_filter( 'manage_product_shipping_class_custom_column', array( $this, 'column' ), 10, 3 );
+		add_filter( 'woocommerce_get_shipping_classes', array( $this, 'get_shipping_classes' ) );
+		add_filter( 'woocommerce_shipping_classes_columns', array( $this, 'add_shipping_class_column' ) );
+		add_action( 'woocommerce_shipping_classes_column_fedex-freight-class', array( $this, 'display_freight_class_column' ) );
+		add_action( 'woocommerce_shipping_classes_save_class', array( $this, 'save_shipping_class' ), 10, 2 );
 	}
 
 	/**
-	 * Add term - fields
+	 * Change shipping classes data
+	 * @param  array
+	 * @return array
 	 */
-	public function add_form() {
+	public function get_shipping_classes( $classes ) {
+		foreach ( $classes as $class ) {
+			$class->fedex_freight_class         = get_woocommerce_term_meta( $class->term_id, 'fedex_freight_class', true );
+			$class->display_fedex_freight_class = $class->fedex_freight_class ? $this->classes[ $class->fedex_freight_class ] : '-';
+		}
+
+		return $classes;
+	}
+
+	/**
+	 * Change columns on shipping clases screen.
+	 * @param  array
+	 * @return array
+	 */
+	public function add_shipping_class_column( $columns ) {
+		$columns['fedex-freight-class'] = __( 'FedEx Freight Class', 'woocommerce-shipping-fedex' );
+
+		return $columns;
+	}
+
+	/**
+	 * Output html for column
+	 */
+	public function display_freight_class_column() {
 		?>
-		<div class="form-field">
-			<label for="fedex_freight_class"><?php _e( 'Fedex Freight Class', 'woocommerce-shipping-fedex' ); ?></label>
-			<select id="fedex_freight_class" name="fedex_freight_class" class="postform">
-				<option value=""><?php _e( 'Default', 'woocommerce' ); ?></option>
+		<div class="view">{{ data.display_fedex_freight_class }}</div>
+		<div class="edit">
+			<select name="fedex_freight_class" data-attribute="fedex_freight_class" data-value="{{ data.fedex_freight_class }}">
+				<option value=""><?php esc_html_e( 'Default', 'woocommerce-shipping-fedex' ); ?></option>
 				<?php foreach ( $this->classes as $key => $value ) : ?>
 					<option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $value ); ?></option>
 				<?php endforeach; ?>
@@ -40,66 +65,18 @@ class WC_Fedex_Freight_Mapping {
 	}
 
 	/**
-	 * Edit term - fields
-	 * @param mixed $term Term (category) being edited
-	 * @param mixed $taxonomy Taxonomy of the term being edited
+	 * Save class during ajax save event.
 	 */
-	public function edit_form( $term, $taxonomy ) {
-		$fedex_freight_class = get_woocommerce_term_meta( $term->term_id, 'fedex_freight_class', true );
-		?>
-		<tr class="form-field">
-			<th scope="row" valign="top"><label for="fedex_freight_class"><?php _e( 'Fedex Freight Class', 'woocommerce-shipping-fedex' ); ?></label></th>
-			<td>
-				<select id="fedex_freight_class" name="fedex_freight_class" class="postform">
-					<option value=""><?php _e( 'Default', 'woocommerce' ); ?></option>
-					<?php foreach ( $this->classes as $key => $value ) : ?>
-						<option <?php selected( $fedex_freight_class, $key ); ?> value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $value ); ?></option>
-					<?php endforeach; ?>
-				</select>
-			</td>
-		</tr>
-		<?php
-	}
+	public function save_shipping_class( $term_id, $data ) {
+		if ( ! empty( $term_id ) && isset( $data['fedex_freight_class'] ) ) {
+			// $term_id is an array when add new class and its int
+			// when editing the class.
+			if ( is_array( $term_id ) ) {
+				$term_id = $term_id['term_id'];
+			}
 
-	/**
-	 * Save the freight class
-	 *
-	 * @param  int $term_id
-	 * @param  int $tt_id
-	 * @param  string $taxonomy
-	 */
-	public function save( $term_id, $tt_id, $taxonomy ) {
-		if ( isset( $_POST['fedex_freight_class'] ) ) {
-			update_woocommerce_term_meta( $term_id, 'fedex_freight_class', sanitize_text_field( $_POST['fedex_freight_class'] ) );
+			update_term_meta( $term_id, 'fedex_freight_class', sanitize_text_field( $data['fedex_freight_class'] ) );
 		}
-	}
-	/**
-	 * Column added to shipping class admin.
-	 *
-	 * @param mixed $columns
-	 * @return array
-	 */
-	public function columns( $columns ) {
-		$columns['fedex_freight_class'] = __( 'Fedex Freight Class', 'woocommerce-shipping-fedex' );
-
-		return $columns;
-	}
-
-	/**
-	 * Column value added to shipping class admin.
-	 *
-	 * @param mixed $columns
-	 * @param mixed $column
-	 * @param mixed $id
-	 * @return array
-	 */
-	public function column( $columns, $column, $id ) {
-		if ( $column == 'fedex_freight_class' ) {
-			$fedex_freight_class = get_woocommerce_term_meta( $id, 'fedex_freight_class', true );
-			$columns             .= $fedex_freight_class ? $this->classes[ $fedex_freight_class ] : '-';
-		}
-
-		return $columns;
 	}
 }
 

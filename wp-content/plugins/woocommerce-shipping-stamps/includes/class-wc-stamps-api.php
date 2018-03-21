@@ -1,23 +1,55 @@
 <?php
+/**
+ * Stamps API wrapper class.
+ *
+ * @package WC_Stamps_Integration
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * WC_Stamps_API class
+ * Stamps API wrapper.
  *
  * Used to interact with the Stamps API
  */
 class WC_Stamps_API {
 
-	private static $client        = false;
-	private static $authenticator = false;
-	private static $logger        = false;
+	/**
+	 * Instance of SoapClient.
+	 *
+	 * @var SoapClient
+	 */
+	private static $client = false;
 
 	/**
-	 * Get rate name
-	 * @param  string $type
-	 * @return string
+	 * Authenticator.
+	 *
+	 * @var string|WP_Error.
+	 */
+	private static $authenticator = false;
+
+	/**
+	 * Instance of WC_Logger.
+	 *
+	 * @var WC_Logger
+	 */
+	private static $logger = false;
+
+	/**
+	 * Whether logging is enabled or not ('yes' or 'no').
+	 *
+	 * @var string
+	 */
+	private static $logging_enabled = null;
+
+	/**
+	 * Get rate name by type.
+	 *
+	 * @param string $type Type.
+	 *
+	 * @return string Rate name.
 	 */
 	public static function get_rate_type_name( $type ) {
 		switch ( $type ) {
@@ -58,9 +90,11 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Get addon name
-	 * @param  string $type
-	 * @return string
+	 * Get addon name by type.
+	 *
+	 * @param string $type Type.
+	 *
+	 * @return string Addon name.
 	 */
 	public static function get_addon_type_name( $type ) {
 		switch ( $type ) {
@@ -155,22 +189,53 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Get SOAP client for Stamps service
-	 * @return SoapClient|WP_Error
+	 * Get SOAP client for Stamps service.
+	 *
+	 * @return SoapClient
 	 */
 	public static function get_client() {
-		if ( self::$client ) {
-			return self::$client;
-		} else {
-			return self::$client = new SoapClient( plugin_dir_path( dirname( __FILE__ ) ) . 'includes/wsdl/' . WC_STAMPS_INTEGRATION_WSDL_FILE, array( 'trace' => 1 ) );
+		if ( ! self::$client ) {
+			try {
+				self::$client = new SoapClient( plugin_dir_path( dirname( __FILE__ ) ) . 'includes/wsdl/' . WC_STAMPS_INTEGRATION_WSDL_FILE, array( 'trace' => 1 ) );
+			} catch ( SoapFault $e ) {
+				self::log_soap_fault( $e, 'SoapFault during client construction' );
+
+				// Work around in case the first attempt over ssl fails.
+				self::$client = new SoapClient(
+					plugin_dir_path( dirname( __FILE__ ) ) . 'includes/wsdl/' . WC_STAMPS_INTEGRATION_WSDL_FILE,
+					array(
+						'trace'          => 1,
+						'stream_context' => stream_context_create( array(
+								'ssl' => array(
+									'verify_peer'       => false,
+									'verify_peer_name'  => true,
+									'allow_self_signed' => false,
+								),
+							)
+						),
+					)
+				);
+			}
 		}
+
+		return self::$client;
 	}
 
 	/**
-	 * Logging
-	 * @param  string $message
+	 * Log a message.
+	 *
+	 * @param string $message Message to log.
 	 */
 	public static function log( $message ) {
+		// Cache it, so we don't call `get_option()` everytime log is called.
+		if ( is_null( self::$logging_enabled ) ) {
+			self::$logging_enabled = get_option( 'wc_settings_stamps_logging', 'no' );
+		}
+
+		if ( 'yes' !== self::$logging_enabled ) {
+			return;
+		}
+
 		if ( ! self::$logger ) {
 			self::$logger = new WC_Logger();
 		}
@@ -179,52 +244,67 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Make an API request
-	 * @param  string $endpoint
-	 * @param  array $request
-	 * @return array|WP_Error response on success
+	 * Log SoapFault.
+	 *
+	 * @since 1.3.3
+	 * @version 1.3.3
+	 *
+	 * @param SoapFault $e      Instance of SoapFault.
+	 * @param string    $prefix Message prefix.
+	 */
+	private static function log_soap_fault( SoapFault $e, $prefix ) {
+		self::log( $prefix . ' : ' . $e->getMessage() );
+		self::log( 'Detailed exception:' );
+		self::log( print_r( $e, true ) );
+	}
+
+	/**
+	 * Make an API request.
+	 *
+	 * @param string $endpoint Endpoint.
+	 * @param array  $request  Request params.
+	 * @param bool   $retry    Whether to retry when failed.
+	 *
+	 * @return array|WP_Error Response on success, WP_Error if failed.
 	 */
 	public static function do_request( $endpoint, $request = array(), $retry = false ) {
 		$response = array();
 
-		@ini_set( "soap.wsdl_cache_enabled", 0 );
+		@ini_set( 'soap.wsdl_cache_enabled', 0 );
 
 		try {
 			if ( empty( $request['Authenticator'] ) ) {
 				$request['Authenticator'] = self::get_authenticator();
 			}
 
-			if ( 'yes' === get_option( 'wc_settings_stamps_logging' ) ) {
-				self::log( "Endpoint {$endpoint} Request: " . print_r( $request, true ) );
-			}
+			self::log( "Endpoint {$endpoint} Request: " . print_r( $request, true ) );
 
 			$client   = self::get_client();
 			$response = $client->$endpoint( $request );
 
-			if ( 'yes' === get_option( 'wc_settings_stamps_logging' ) ) {
-				self::log( "Endpoint {$endpoint} Response: " . print_r( $response, true ) );
-			}
+			self::log( "Endpoint {$endpoint} Response: " . print_r( $response, true ) );
 
 			self::update_authenticator( $response );
 			self::update_balance( $response );
 			return $response;
-		} catch( SoapFault $e ) {
-			// Try again if authenticator is bad
-			if ( ! $retry && isset( $e->detail->sdcerror ) && ( strstr( $e->detail->sdcerror, '0x002b0201' ) || strstr( $e->detail->sdcerror, '0x002b0202' ) || strstr( $e->detail->sdcerror, '0x002b0203' ) || strstr( $e->detail->sdcerror, '0x002b0204' ) ) ) {
+		} catch ( SoapFault $e ) {
+			self::log_soap_fault( $e, 'SoapFault during call to endpoint ' . $endpoint );
+
+			// Try again if authenticator is bad.
+			if ( ! $retry && isset( $e->detail->sdcerror ) && ( strstr( $e->detail->sdcerror, '002b0201' ) || strstr( $e->detail->sdcerror, '002b0202' ) || strstr( $e->detail->sdcerror, '002b0203' ) || strstr( $e->detail->sdcerror, '002b0204' ) ) ) {
 				self::$authenticator      = false;
 				$request['Authenticator'] = false;
 				delete_transient( 'stamps_authenticator' );
 				return self::do_request( $endpoint, $request, true );
 			}
-			if ( 'yes' === get_option( 'wc_settings_stamps_logging' ) ) {
-				self::log( "Endpoint {$endpoint} SoapFault: " . $e->faultstring );
-			}
+
 			return new WP_Error( $e->faultcode, $e->faultstring );
 		}
 	}
 
 	/**
-	 * Authenticate a user
+	 * Authenticate a user.
+	 *
 	 * @return string|WP_Error
 	 */
 	public static function authenticate() {
@@ -235,8 +315,8 @@ class WC_Stamps_API {
 			'user-agent'  => 'WooCommerce/' . WC_VERSION . '; ' . get_bloginfo( 'url' ),
 			'body'        => array(
 				'username' => get_option( 'wc_settings_stamps_username' ),
-				'password' => get_option( 'wc_settings_stamps_password' )
-			)
+				'password' => get_option( 'wc_settings_stamps_password' ),
+			),
 		) );
 		if ( ! is_wp_error( $response ) && ! empty( $response['body'] ) && ! strstr( $response['body'], 'error' ) ) {
 			self::$authenticator = trim( $response['body'], '"' );
@@ -251,13 +331,14 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Get authenticator for requests
+	 * Get authenticator for requests.
+	 *
 	 * @return string|bool
 	 */
 	public static function get_authenticator() {
 		if ( self::$authenticator ) {
 			return self::$authenticator;
-		} elseif ( ( $authenticator = get_transient( 'stamps_authenticator' ) ) ) {
+		} elseif ( ( $authenticator = get_transient( 'stamps_authenticator_v50' ) ) ) {
 			return $authenticator;
 		} else {
 			$authenticator = self::authenticate();
@@ -270,8 +351,9 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Update authenticator after a request
-	 * @param string $authenticator
+	 * Update authenticator after a request.
+	 *
+	 * @param object $response Response from SOAP request.
 	 */
 	public static function update_authenticator( $response ) {
 		if ( isset( $response->Authenticator ) ) {
@@ -281,7 +363,16 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Update stamps balance
+	 * Update stamps balance.
+	 *
+	 * Called after every successful request (by self::do_request) to the stamps.com
+	 * API.
+	 *
+	 * Note that this also kicks off the top-up code - that will result in
+	 * postage being purchased for accounts that fall below the merchant's
+	 * minimum (if any).
+	 *
+	 * @param object $response Response from SOAP request.
 	 */
 	public static function update_balance( $response ) {
 		if ( isset( $response->PostageBalance ) ) {
@@ -293,33 +384,38 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Purchase postage on behalf of the user
-	 * @param  int $amount Amount to top up. Must be an integer.
-	 * @param  float $control_total Current balance
+	 * Purchase postage on behalf of the user.
+	 *
+	 * @param int   $amount        Amount to top up. Must be an integer.
+	 * @param float $control_total This is the amount of postage that the user
+	 *                             has CONSUMED over the LIFETIME of the account.
+	 *
 	 * @return array|WP_Error
 	 */
 	public static function purchase_postage( $amount, $control_total ) {
 		$request = array(
 			'PurchaseAmount' => absint( $amount ),
-			'ControlTotal'   => number_format( $control_total, 2, '.', '' )
+			'ControlTotal'   => number_format( $control_total, 2, '.', '' ),
 		);
 		return self::do_request( 'PurchasePostage', $request );
 	}
 
 	/**
 	 * Check purchase status.
-	 * @param  string $transaction_id
+	 *
+	 * @param  string $transaction_id Transaction ID.
 	 * @return array|WP_Error
 	 */
 	public static function get_purchase_status( $transaction_id ) {
 		$request = array(
-			'TransactionID' => $transaction_id
+			'TransactionID' => $transaction_id,
 		);
 		return self::do_request( 'GetPurchaseStatus', $request );
 	}
 
 	/**
-	 * Get account info
+	 * Get account info.
+	 *
 	 * @return string|WP_Error
 	 */
 	public static function get_account_info() {
@@ -327,30 +423,47 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Verify an address
-	 * @param  WC_Order $order
+	 * Verify an address.
+	 *
+	 * @param  WC_Order $order Order object.
 	 * @return array
 	 */
 	public static function verify_address( $order ) {
+		$pre_wc_30 = version_compare( WC_VERSION, '3.0', '<' );
+
 		$address = array(
-			'FullName' => $order->shipping_first_name . ' ' . $order->shipping_last_name,
-			'Company'  => $order->shipping_company,
-			'Address1' => $order->shipping_address_1,
-			'Address2' => $order->shipping_address_2,
-			'City'     => $order->shipping_city
+			'FullName' => $pre_wc_30 ? $order->shipping_first_name . ' ' . $order->shipping_last_name : $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+			'Company'  => $pre_wc_30 ? $order->shipping_company : $order->get_shipping_company(),
+			'Address1' => $pre_wc_30 ? $order->shipping_address_1 : $order->get_shipping_address_1(),
+			'Address2' => $pre_wc_30 ? $order->shipping_address_2 : $order->get_shipping_address_2(),
+			'City'     => $pre_wc_30 ? $order->shipping_city : $order->get_shipping_city(),
 		);
 
-		if ( 'US' === $order->shipping_country ) {
-			$address['State']   = $order->shipping_state;
-			$address['ZIPCode'] = substr( $order->shipping_postcode, 0, 5 );
+		$shipping_country = $pre_wc_30 ? $order->shipping_country : $order->get_shipping_country();
+		$state            = $pre_wc_30 ? $order->shipping_state : $order->get_shipping_state();
+		$postcode         = $pre_wc_30 ? $order->shipping_postcode : $order->get_shipping_postcode();
+
+		if ( 'US' === $shipping_country ) {
+			$postcode_pieces = explode( '-', $postcode );
+			$zipcode         = $postcode_pieces[0];
+			$zipcode_addon   = 1 < count( $postcode_pieces ) ? $postcode_pieces[1] : '';
+
+			$address['State']   = $state;
+			$address['ZIPCode'] = substr( $zipcode, 0, 5 );
+
+			// Add in the ZIP+4 (ZIPCodeAddOn) if present in the address
+			// Otherwise the "To Address Cleanse Hash" match will fail.
+			if ( $zipcode_addon ) {
+				$address['ZIPCodeAddOn'] = substr( $zipcode_addon, 0, 4 );
+			}
 		} else {
-			$address['Province']   = $order->shipping_state;
-			$address['PostalCode'] = $order->shipping_postcode;
-			$address['Country']    = $order->shipping_country;
+			$address['Province']   = $state;
+			$address['PostalCode'] = $postcode;
+			$address['Country']    = $shipping_country;
 		}
 
 		$request = array(
-			'Address' => $address
+			'Address' => $address,
 		);
 
 		$result = self::do_request( 'CleanseAddress', $request );
@@ -360,8 +473,17 @@ class WC_Stamps_API {
 		}
 
 		if ( $result->AddressMatch ) {
-			// Return address in our own format
-			return array(
+			// If we get a ZIP and a ZIP+4 returned by Stamps.com (which we usually will), pack
+			// them into the postcode. We need both parts to use this cleansed address when
+			// buying a label (otherwise the Cleanse Hash will not match).
+			$zip_code       = isset( $result->Address->ZIPCode ) ? $result->Address->ZIPCode : '';
+			$zip_code_addon = isset( $result->Address->ZIPCodeAddOn ) ? $result->Address->ZIPCodeAddOn : '';
+			if ( ! empty( $zip_code_addon ) ) {
+				$zip_code .= '-' . $zip_code_addon;
+			}
+
+			// Return address in our own format.
+			$matched_result = array(
 				'matched'      => true,
 				'matched_zip'  => true,
 				'hash'         => $result->Address->CleanseHash,
@@ -373,14 +495,15 @@ class WC_Stamps_API {
 					'address_2' => $result->Address->Address2,
 					'city'      => $result->Address->City,
 					'state'     => isset( $result->Address->Province ) ? $result->Address->Province : $result->Address->State,
-					'postcode'  => isset( $result->Address->PostalCode ) ? $result->Address->PostalCode : $result->Address->ZIPCode,
+					'postcode'  => isset( $result->Address->PostalCode ) ? $result->Address->PostalCode : $zip_code,
 					'country'   => isset( $result->Address->Country ) ? $result->Address->Country : '',
-				)
+				),
 			);
+			return $matched_result;
 		}
 
-		if ( 'US' == $order->shipping_country ) {
-			// User can proceed anyway
+		if ( 'US' === ( $pre_wc_30 ? $order->shipping_country : $order->get_shipping_country() ) ) {
+			// User can proceed anyway.
 			if ( $result->CityStateZipOK ) {
 				return array(
 					'matched'      => false,
@@ -392,22 +515,24 @@ class WC_Stamps_API {
 
 		return array(
 			'matched'      => false,
-			'matched_zip'  => false
+			'matched_zip'  => false,
 		);
 	}
 
 	/**
-	 * Get rates for a package
-	 * @param  WC_Order $order
-	 * @param  array $args
+	 * Get rates for a package.
+	 *
+	 * @param  WC_Order $order Order object.
+	 * @param  array    $args  Request args.
 	 * @return array
 	 */
 	public static function get_rates( $order, $args ) {
+		$pre_wc_30 = version_compare( WC_VERSION, '3.0', '<' );
+
 		$request = array(
-			'Rate'       => array(
+			'Rate' => array(
 				'FromZIPCode'   => get_option( 'wc_settings_stamps_zip' ),
-				'ToZIPCode'     => $order->shipping_postcode,
-				'ToCountry'     => $order->shipping_country,
+				'ToCountry'     => $pre_wc_30 ? $order->shipping_country : $order->get_shipping_country(),
 				'WeightLb'      => floor( $args['weight'] ),
 				'WeightOz'      => number_format( ( $args['weight'] - floor( $args['weight'] ) ) * 16, 2 ),
 				'ShipDate'      => $args['date'],
@@ -418,9 +543,15 @@ class WC_Stamps_API {
 				'Width'         => $args['width'],
 				'Height'        => $args['height'],
 				'PackageType'   => $args['type'],
-				'PrintLayout'   => 'Normal4X6'
-			)
+				'PrintLayout'   => 'Normal4X6',
+			),
 		);
+
+		$postcode = $pre_wc_30 ? $order->shipping_postcode : $order->get_shipping_postcode();
+
+		if ( ! empty( $postcode ) ) {
+			$request['Rate']['ToZIPCode'] = $postcode;
+		}
 
 		$result = self::do_request( 'GetRates', $request );
 
@@ -429,8 +560,11 @@ class WC_Stamps_API {
 			return $result;
 		}
 
-		if ( empty( $result->Rates ) ) {
-			return false;
+		// It is possible $results->Rates is empty or an empty stdClass Object, so let's test for both
+		// A safe way to do so is to cast to array and then test for an empty array.
+		$temp_array = (array) $result->Rates;
+		if ( empty( $temp_array ) ) {
+			return new WP_Error( 'no_rates', __( 'No rates were returned for the selected package type, weight and dimensions. Please select a different package type and try again.', 'woocommerce-shipping-stamps' ) );
 		}
 
 		if ( ! is_array( $result->Rates->Rate ) ) {
@@ -446,7 +580,7 @@ class WC_Stamps_API {
 				'package'       => $rate->PackageType,
 				'name'          => self::get_rate_type_name( $rate->ServiceType ),
 				'dim_weighting' => isset( $rate->DimWeighting ) ? $rate->DimWeighting : 0,
-				'rate_object'   => $rate
+				'rate_object'   => $rate,
 			);
 		}
 
@@ -454,17 +588,31 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Get label for a rate
-	 * @param  WC_Order $order
-	 * @param  object $args
+	 * Get (purchase) label for a rate.
+	 *
+	 * @version 1.3.2
+	 *
+	 * @todo The name for this should be `purchase_label` as `get_something`
+	 *       should refers to a method to retrieve something that's already
+	 *       stored / purchased.
+	 *
+	 * @param  WC_Order $order Order object.
+	 * @param  array    $args Request args.
 	 * @return array
 	 */
 	public static function get_label( $order, $args ) {
+		$pre_wc_30 = version_compare( WC_VERSION, '3.0', '<' );
+
+		$order_id = $pre_wc_30 ? $order->id : $order->get_id();
 		$rate    = $args['rate'];
 		$customs = $args['customs'];
-		$tx_id   = uniqid( 'wc_' . $order->id . '_' );
+		$tx_id   = uniqid( 'wc_' . $order_id . '_' );
 
-		update_post_meta( $order->id, '_last_label_tx_id', $tx_id );
+		if ( $pre_wc_30 ) {
+			update_post_meta( $order_id, '_last_label_tx_id', $tx_id );
+		} else {
+			$order->update_meta_data( '_last_label_tx_id', $tx_id );
+		}
 
 		$request = array(
 			'IntegratorTxID' => $tx_id,
@@ -482,39 +630,67 @@ class WC_Stamps_API {
 				'ZIPCode'     => get_option( 'wc_settings_stamps_zip' ),
 				'Country'     => 'US',
 				'PhoneNumber' => get_option( 'wc_settings_stamps_phone' ),
-			)
+			),
 		);
 
-		if ( $customs ) {
-			$request['Customs'] = $customs;
-			$request['To'] = array(
-				'FullName'    => $order->shipping_first_name . ' ' . $order->shipping_last_name,
-				'Company'     => $order->shipping_company,
-				'Address1'    => $order->shipping_address_1,
-				'Address2'    => $order->shipping_address_2,
-				'City'        => $order->shipping_city,
-				'Province'    => $order->shipping_state,
-				'PostalCode'  => $order->shipping_postcode,
-				'Country'     => $order->shipping_country,
-				'CleanseHash' => $order->_stamps_hash,
-				'PhoneNumber' => $order->billing_phone,
+		$shipping_country = $pre_wc_30 ? $order->shipping_country : $order->get_shipping_country();
+
+		$request['To'] = array(
+			'FullName'    => $pre_wc_30 ? $order->shipping_first_name . ' ' . $order->shipping_last_name : $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+			'Company'     => $pre_wc_30 ? $order->shipping_company : $order->get_shipping_company(),
+			'Address1'    => $pre_wc_30 ? $order->shipping_address_1 : $order->get_shipping_address_1(),
+			'Address2'    => $pre_wc_30 ? $order->shipping_address_2 : $order->get_shipping_address_2(),
+			'City'        => $pre_wc_30 ? $order->shipping_city : $order->get_shipping_city(),
+			'Country'     => $shipping_country,
+		);
+
+		// Figure out which tag to use for the address hash. We want to use
+		// 'CleanseHash' if the merchant accepted stamps.com's changes to the To Address or
+		// 'OverrideHash' if the merchant selected to "continue without changes" to the To Address
+		// See also WC_Stamps_Order::ajax_override_address.
+		$cleanse_hash = $pre_wc_30 ? get_post_meta( $order_id, '_stamps_hash', true ) : $order->get_meta( '_stamps_hash', true );
+		$override_hash = $pre_wc_30 ? get_post_meta( $order_id, '_stamps_override_hash', true ) : $order->get_meta( '_stamps_override_hash', true );
+		if ( $cleanse_hash === $override_hash ) {
+			$request['To'] += array(
+				'OverrideHash' => $override_hash,
 			);
 		} else {
-			$request['To'] = array(
-				'FullName'    => $order->shipping_first_name . ' ' . $order->shipping_last_name,
-				'Company'     => $order->shipping_company,
-				'Address1'    => $order->shipping_address_1,
-				'Address2'    => $order->shipping_address_2,
-				'City'        => $order->shipping_city,
-				'State'       => $order->shipping_state,
-				'ZIPCode'     => $order->shipping_postcode,
-				'Country'     => $order->shipping_country,
-				'CleanseHash' => $order->_stamps_hash
+			$request['To'] += array(
+				'CleanseHash' => $cleanse_hash,
 			);
 		}
 
-		$result   = self::do_request( 'CreateIndicium', $request );
+		$postcode = $pre_wc_30 ? $order->shipping_postcode : $order->get_shipping_postcode();
+		$state    = $pre_wc_30 ? $order->shipping_state : $order->get_shipping_state();
 
+		if ( 'US' === $shipping_country ) {
+			$postcode_pieces = explode( '-', $postcode );
+			$zipcode         = $postcode_pieces[0];
+			$zipcode_addon   = 1 < count( $postcode_pieces ) ? $postcode_pieces[1] : '';
+
+			$request['To'] += array(
+				'State'   => $state,
+				'ZIPCode' => substr( $zipcode, 0, 5 ),
+			);
+
+			// Add in the ZIP+4 (ZIPCodeAddOn) if present in the address
+			// Otherwise the "To Address Cleanse Hash" match will fail.
+			if ( $zipcode_addon ) {
+				$request['To']['ZIPCodeAddOn'] = substr( $zipcode_addon, 0, 4 );
+			}
+		} else {
+			$request['To'] += array(
+				'Province'    => $state,
+				'PostalCode'  => $postcode,
+				'PhoneNumber' => $pre_wc_30 ? $order->billing_phone : $order->get_billing_phone(),
+			);
+		}
+
+		if ( $customs ) {
+			$request['Customs'] = $customs;
+		}
+
+		$result = self::do_request( 'CreateIndicium', $request );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
@@ -532,14 +708,15 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Cancel a label
-	 * @param  WC_Order $order
-	 * @param  string $tx_id
-	 * @return bool|WP_Error true on success
+	 * Cancel a label.
+	 *
+	 * @param  WC_Order $order Order object.
+	 * @param  string   $tx_id Transaction ID.
+	 * @return bool|WP_Error true on success.
 	 */
 	public static function cancel_label( $order, $tx_id ) {
 		$request = array(
-			'StampsTxID' => $tx_id
+			'StampsTxID' => $tx_id,
 		);
 		$result  = self::do_request( 'CancelIndicium', $request );
 
@@ -551,14 +728,15 @@ class WC_Stamps_API {
 	}
 
 	/**
-	 * Get a URL to an account page
-	 * @param  string $endpoint
+	 * Get a URL to an account page.
+	 *
+	 * @param  string $endpoint Endpoint.
 	 * @return string|bool
 	 */
 	public static function get_url( $endpoint ) {
 		$request = array(
 			'URLType'            => $endpoint,
-			'ApplicationContext' => ''
+			'ApplicationContext' => '',
 		);
 		$result  = self::do_request( 'GetURL', $request );
 

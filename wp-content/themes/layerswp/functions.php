@@ -10,7 +10,7 @@
 /**
  * The current version of the theme. Use a random number for SCRIPT_DEBUG mode
  */
-define( 'LAYERS_VERSION', '1.5.0' );
+define( 'LAYERS_VERSION', '1.5.7' );
 define( 'LAYERS_TEMPLATE_URI' , get_template_directory_uri() );
 define( 'LAYERS_TEMPLATE_DIR' , get_template_directory() );
 define( 'LAYERS_THEME_TITLE' , 'Layers' );
@@ -195,6 +195,11 @@ if( ! function_exists( 'layers_setup' ) ) {
 			wp_safe_redirect( admin_url('admin.php?page=' . LAYERS_THEME_SLUG . '-get-started'));
 		}
 
+		/**
+		 * Add support for Partial Widget Refresh.
+		 */
+		add_theme_support( 'customize-selective-refresh-widgets' );
+
 	} // function layers_setup
 } // if !function layers_setup
 add_action( 'after_setup_theme' , 'layers_setup', 100 );
@@ -361,15 +366,15 @@ if( ! function_exists( 'layers_scripts' ) ) {
 			wp_enqueue_script( 'comment-reply' );
 		} // Comment reply script
 
+		// Google Maps
 		wp_register_script(
-			LAYERS_THEME_SLUG . " -map-api",
-			"//maps.googleapis.com/maps/api/js"
+			LAYERS_THEME_SLUG . '-map-api',
+			'//maps.googleapis.com/maps/api/js?key=' . layers_get_theme_mod( 'google-maps-api' )
 		);
-
 		wp_register_script(
-			LAYERS_THEME_SLUG . "-map-trigger",
-			get_template_directory_uri()."/core/widgets/js/maps.js",
-			array( "jquery" ),
+			LAYERS_THEME_SLUG . '-map-trigger',
+			get_template_directory_uri().'/core/widgets/js/maps.js',
+			array( 'jquery' ),
 			LAYERS_VERSION
 		);
 
@@ -436,6 +441,32 @@ if( ! function_exists( 'layers_scripts' ) ) {
 			array(),
 			LAYERS_VERSION
 		); // Font Awesome
+
+
+		// Swiper Slider
+		wp_register_script(
+			LAYERS_THEME_SLUG . '-slider-js',
+			get_template_directory_uri() . '/core/widgets/js/swiper.js',
+			array( 'jquery' ),
+			LAYERS_VERSION
+		);
+		wp_register_style(
+			LAYERS_THEME_SLUG . '-slider',
+			get_template_directory_uri() . '/core/widgets/css/swiper.css',
+			array(),
+			LAYERS_VERSION
+		);
+
+		// Layers Masonry.
+		wp_register_script(
+			LAYERS_THEME_SLUG . '-layers-masonry-js',
+			get_template_directory_uri() . '/assets/js/layers.masonry.js',
+			array(
+				'jquery',
+				'masonry', // Wordpress Masonry
+			),
+			LAYERS_VERSION
+		);
 
 	}
 }

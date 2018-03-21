@@ -12,7 +12,7 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 		/**
 		*  Widget construction
 		*/
-	 	function Layers_Slider_Widget(){
+	 	function __construct() {
 
 			/**
 			* Widget variables
@@ -28,23 +28,23 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 			$this->post_type = '';
 			$this->taxonomy = '';
 			$this->checkboxes = array(
-					'show_slider_arrows',
-					'show_slider_dots',
-					'autoplay_slides',
-					'autoheight_slides',
-				);
+				'show_slider_arrows',
+				'show_slider_dots',
+				'autoplay_slides',
+				'autoheight_slides',
+			);
 
 	 		/* Widget settings. */
 			$widget_ops = array(
-
-				'classname'   => 'obox-layers-' . $this->widget_id .'-widget',
+				'classname' => 'obox-layers-' . $this->widget_id .'-widget',
 				'description' => __( 'This widget is used to display slides and can be used to display a page-banner.', 'layerswp' ) ,
+				'customize_selective_refresh' => TRUE,
 			);
 
 			/* Widget control settings. */
 			$control_ops = array(
-				'width'   => LAYERS_WIDGET_WIDTH_LARGE,
-				'height'  => NULL,
+				'width' => LAYERS_WIDGET_WIDTH_LARGE,
+				'height' => NULL,
 				'id_base' => LAYERS_THEME_SLUG . '-widget-' . $this->widget_id,
 			);
 
@@ -101,21 +101,9 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 		*/
 		function enqueue_scripts(){
 
-			// Slider JS enqueue
-			wp_enqueue_script(
-				LAYERS_THEME_SLUG . '-slider-js' ,
-				get_template_directory_uri() . '/core/widgets/js/swiper.js',
-				array( 'jquery' ),
-				LAYERS_VERSION
-			); // Slider
-
-			// Slider CSS enqueue
-			wp_enqueue_style(
-				LAYERS_THEME_SLUG . '-slider',
-				get_template_directory_uri() . '/core/widgets/css/swiper.css',
-				array(),
-				LAYERS_VERSION
-			); // Slider
+			// Enqueue Swiper Slider
+			wp_enqueue_script( LAYERS_THEME_SLUG . '-slider-js' );
+			wp_enqueue_style( LAYERS_THEME_SLUG . '-slider' );
 		}
 
 		/**
@@ -133,7 +121,7 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 			if( empty( $instance ) && ! empty( $this->defaults ) ) {
 				$instance = wp_parse_args( $instance, $this->defaults );
 			}
-			
+
 			// Mix in new/unset defaults on every instance load (NEW)
 			$instance = $this->apply_defaults( $instance );
 
@@ -153,6 +141,9 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 				$slider_height_css = 'height: ' . $instance['slide_height'] . 'px; ';
 			}
 
+			// Apply the advanced widget styling
+			$this->apply_widget_advanced_styling( $widget_id, $instance );
+
 			/**
 			* Generate the widget container class
 			*/
@@ -162,6 +153,7 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 			$widget_container_class[] = 'row';
 			$widget_container_class[] = 'slide';
 			$widget_container_class[] = 'swiper-container';
+			$widget_container_class[] = 'loading'; // `loading` will be changed to `loaded` to fade in the slider.
 			$widget_container_class[] = $this->check_and_return( $instance , 'design', 'advanced', 'customclass' ); // Apply custom class from design-bar's advanced control.
 			$widget_container_class[] = $this->get_widget_spacing_class( $instance );
 			$widget_container_class[] = $this->get_widget_layout_class( $instance );
@@ -194,8 +186,12 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 			 */
 
 			if( ! empty( $instance[ 'slides' ] ) ) { ?>
-				<?php echo $this->custom_anchor( $instance ); ?>
-				<div id="<?php echo esc_attr( $widget_id ); ?>" class="<?php echo esc_attr( $widget_container_class ); ?>" style="<?php echo esc_attr( $slider_height_css ); ?>">
+
+				<?php
+				// Custom Anchor
+				echo $this->custom_anchor( $instance ); ?>
+
+				<div id="<?php echo esc_attr( $widget_id ); ?>" class="<?php echo esc_attr( $widget_container_class ); ?>" style="<?php echo esc_attr( $slider_height_css ); ?>" <?php $this->selective_refresh_atts( $args ); ?>>
 
 					<?php do_action( 'layers_before_slider_widget_inner', $this, $instance ); ?>
 
@@ -220,7 +216,7 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 
 							// Setup the relevant slide
 							$item_instance = $instance[ 'slides' ][ $slide_key ];
-							
+
 							// Mix in new/unset defaults on every instance load (NEW)
 							$item_instance = $this->apply_defaults( $item_instance, 'slide' );
 
@@ -307,7 +303,7 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 									$overlay_class[] = 'content';
 								}
 								$overlay_classes = implode( ' ', $overlay_class ); ?>
-								
+
 								<div class="<?php echo $overlay_classes; ?>" >
 									<div class="container clearfix">
 										<?php if( '' != $item_instance['title'] || '' != $item_instance['excerpt'] || '' != $link_array['link'] ) { ?>
@@ -423,14 +419,23 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 							});
 
 							<?php echo $swiper_js_obj; ?>.init();
+
+							// Do stuff if this is the first widget.
+							if ( ! $('#<?php echo $widget_id; ?>').prev('.widget').length ) {
+								if ( ! $('#<?php echo $widget_id; ?>').hasClass( '.full-screen' ) ) {
+									jQuery('.header-site.header-overlay').css( 'transition', '0s' );
+									setTimeout( function(){ jQuery('.header-site.header-overlay').css( 'transition', '' ); }, 1000 );
+									jQuery('body').addClass( 'header-overlay-no-push' );
+								}
+							}
+
+							// Fade-in slider after it's been initilaized (FOUC).
+							$( '#<?php echo $widget_id; ?>' ).removeClass('loading').addClass('loaded');
 						});
 					</script>
 
 				</div>
 			<?php }
-
-			// Apply the advanced widget styling
-			$this->apply_widget_advanced_styling( $widget_id, $instance );
 
 		}
 
@@ -466,10 +471,10 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 			if( empty( $instance ) && ! empty( $this->defaults ) ) {
 				$instance = wp_parse_args( $instance, $this->defaults );
 			}
-			
+
 			// Mix in new/unset defaults on every instance load (NEW)
 			$instance = $this->apply_defaults( $instance );
-			
+
 			$components = apply_filters( 'layers_slide_widget_design_bar_components', array(
 				'layout' => array(
 					'icon-css' => 'icon-layout-fullwidth',
@@ -524,7 +529,7 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 							'name' => $this->get_layers_field_name( 'slider_arrow_color' ) ,
 							'id' => $this->get_layers_field_id( 'slider_arrow_color' ) ,
 							'value' => ( isset( $instance['slider_arrow_color'] ) ) ? $instance['slider_arrow_color'] : NULL,
-							'label' => __( 'Slider Controls Color' , 'layers-woocommerce' ),
+							'label' => __( 'Slider Controls Color' , 'layerswp' ),
 							'data' => array(
 								'show-if-selector' => '#' . $this->get_layers_field_id( 'show_slider_arrows' ),
 								'show-if-value' => 'true',
@@ -544,9 +549,9 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 							'value' => ( isset(  $instance['animation_type'] ) ) ?  $instance['animation_type'] : 'slide',
 							'label' => __( 'Animation Type' , 'layerswp' ),
 							'options' => array(
-								'slide' => __( 'Slide', 'layers_wp' ),
-								'fade' => __( 'Fade', 'layers_wp' ),
-								'parallax' => __( 'Parallax', 'layers_wp' ),
+								'slide' => __( 'Slide', 'layerswp' ),
+								'fade' => __( 'Fade', 'layerswp' ),
+								'parallax' => __( 'Parallax', 'layerswp' ),
 							),
 						),
 						'autoplay_slides' => array(
@@ -574,7 +579,7 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 				),
 				'advanced',
 			), $this, $instance );
-	
+
 			// Legacy application of this filter - Do Not Use! (will be removed soon)
 			$components = apply_filters( 'layers_slide_widget_design_bar_custom_components', $components );
 
@@ -619,15 +624,20 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 
 		function slide_item( $item_guid, $item_instance ) {
 			
+			// Required - Get the name of this type.
+			$type = str_replace( '_item', '', __FUNCTION__ );
+
 			// Mix in new/unset defaults on every instance load (NEW)
 			$item_instance = $this->apply_defaults( $item_instance, 'slide' );
 			?>
 			<li class="layers-accordion-item <?php echo $this->item_count; ?>" data-guid="<?php echo $item_guid; ?>">
+				
 				<a class="layers-accordion-title">
 					<span>
-						<?php _e( 'Slide' , 'layerswp' ); ?><span class="layers-detail"><?php echo ( isset( $item_instance['title'] ) ? ': ' . substr( stripslashes( strip_tags( $item_instance['title'] ) ), 0 , 50 ) : NULL ); ?><?php echo ( isset( $item_instance['title'] ) && strlen( $item_instance['title'] ) > 50 ? '...' : NULL ); ?></span>
+						<?php echo ucfirst( $type ); ?><span class="layers-detail"><?php if ( isset( $item_instance['title'] ) ) echo $this->format_repeater_title( $item_instance['title'] ); ?></span>
 					</span>
 				</a>
+				
 				<section class="layers-accordion-section layers-content">
 					<?php $this->design_bar(
 						'top', // CSS Class Name
@@ -655,6 +665,24 @@ if( !class_exists( 'Layers_Slider_Widget' ) ) {
 								),
 							),
 							'fonts',
+							'buttons' => array(
+								'icon-css' => 'icon-call-to-action',
+								'label' => __( 'Buttons', 'layerswp' ),
+								'elements' => array(
+									'layers-pro-upsell' =>array(
+										'type' => 'html',
+										'html' => '<div class="layers-upsell-tag">
+											<span class="layers-upsell-title">Upgrade to Layers Pro</span>
+											<div class="description customize-control-description">
+												Want more control over your button styling and sizes?
+												<a target="_blank" href="https://www.layerswp.com/layers-pro/?ref=obox&amp;utm_source=layers%20theme&amp;utm_medium=link&amp;utm_campaign=Layers%20Pro%20Upsell&amp;utm_content=Widget%20Button%20Control">Purchase Layers Pro</a>
+												and gain more control over your button styling!
+											</div>
+										</div>'
+									)
+								),
+								'elements_combine' => 'replace',
+							),
 							'advanced' => array(
 								'elements' => array(
 									'customclass'

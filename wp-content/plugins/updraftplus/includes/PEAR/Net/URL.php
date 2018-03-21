@@ -111,7 +111,7 @@ class Net_URL
     *                            multiple querystrings with the same name
     *                            exist
     */
-    function __construct($url = null, $useBrackets = true)
+    public function __construct($url = null, $useBrackets = true)
     {
         $this->url = $url;
         $this->useBrackets = $useBrackets;

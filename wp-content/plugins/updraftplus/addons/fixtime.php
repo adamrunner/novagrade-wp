@@ -1,4 +1,5 @@
 <?php
+// @codingStandardsIgnoreStart
 /*
 UpdraftPlus Addon: fixtime:Time and Scheduling
 Description: Allows you to specify the exact time at which backups will run, and create more complex retention rules
@@ -6,6 +7,7 @@ Version: 2.1
 Shop: /shop/fix-time/
 Latest Change: 1.12.3
 */
+// @codingStandardsIgnoreEnd
 
 if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
 
@@ -29,9 +31,14 @@ class UpdraftPlus_AddOn_FixTime {
 		add_filter('updraftplus_get_settings_meta', array($this, 'get_settings_meta'));
 	}
 
-	// $backup_history - must be already sorted in date order (most recent first)
-	// $type = (string)'db'|'files'
-	// Purpose of this function: place the backups into groups, where each backup in the same group is governed by the same pruning rule
+	/**
+	 * Purpose of this function: place the backups into groups, where each backup in the same group is governed by the same pruning rule
+	 *
+	 * @param  String $groups
+	 * @param  Array  $backup_history must be already sorted in date order (most recent first)
+	 * @param  String $type           'db'|'files'
+	 * @return Array
+	 */
 	public function group_backups_for_pruning($groups, $backup_history, $type) {
 
 		if (is_array($groups)) return $groups;
@@ -87,7 +94,7 @@ class UpdraftPlus_AddOn_FixTime {
 			
 			$process_order = 'keep_newest';
 			
-			if ($latest_relevant_index !== false) {
+			if (false !== $latest_relevant_index) {
 			
 				// The last set needs splitting up into further sets - one set for each period specified in the rule. Only the final set-within-the-last-set should be keep_newest - that gets set later, once we know how many sets there actually are
 				$process_order = 'keep_oldest';
@@ -140,19 +147,31 @@ class UpdraftPlus_AddOn_FixTime {
 		$after_period = $rule['after-period'];
 		if (!is_numeric($after_howmany) || $after_howmany < 0) return false;
 		// Fix historic bug - 'week' got saved as the number of seconds in 4 weeks instead...
-		if ($after_period == 2419200) $after_period = 604800;
+		if (2419200 == $after_period) $after_period = 604800;
 		if ($after_period < 3600) $after_period = 3600;
 		$every_howmany = $rule['every-howmany'];
 		$every_period = $rule['every-period'];
 		// Fix historic bug - 'week' got saved as the number of seconds in 4 weeks instead...
 		if (!is_numeric($every_howmany) || $every_howmany < 1) return false;
-		if ($every_period == 2419200) $every_period = 604800;
+		if (2419200 == $every_period) $every_period = 604800;
 		if ($every_period < 3600) $every_period = 3600;
 		return array($after_howmany, $after_period, $every_howmany, $every_period);
 	}
 	
-	// Backup sets will get run through this filter in "keep" order (i.e. within the same group, they are sent through in order of "keep first") - which is assumed (in the function below) to be by time, either ascending or descending
-	// $type is 'files' or 'db', not to be confused with entity (plugins/themes/db/db1 etc.)
+	/**
+	 * TODO: Sort this doc block out
+	 * Backup sets will get run through this filter in "keep" order (i.e. within the same group, they are sent through in order of "keep first") - which is assumed (in the function below) to be by time, either ascending or descending
+	 * $type is 'files' or 'db', not to be confused with entity (plugins/themes/db/db1 etc.)
+	 *
+	 * @param  string $prune_it
+	 * @param  string $type
+	 * @param  string $backup_datestamp
+	 * @param  string $entity
+	 * @param  string $entity_how_many
+	 * @param  string $rule
+	 * @param  string $group_id
+	 * @return boolean
+	 */
 	public function prune_or_not($prune_it, $type, $backup_datestamp, $entity, $entity_how_many, $rule, $group_id) {
 
 		$debug = UpdraftPlus_Options::get_updraft_option('updraft_debug_mode');
@@ -240,7 +259,7 @@ class UpdraftPlus_AddOn_FixTime {
 			return false;
 		}
 
-// 		if ($debug) $updraftplus->log("last_relevant_backup_kept_at=$last_relevant_backup_kept_at[$group_id][$entity], last_backup_seen_at=".$last_backup_seen_at[$group_id][$entity].", rule=".serialize($rule), 'debug');
+// if ($debug) $updraftplus->log("last_relevant_backup_kept_at=$last_relevant_backup_kept_at[$group_id][$entity], last_backup_seen_at=".$last_backup_seen_at[$group_id][$entity].", rule=".serialize($rule), 'debug');
 
 		// Is this the first relevant (i.e. old enough) backup we've come across?
 		if (!$last_backup_seen_at[$group_id][$entity] || !$last_relevant_backup_kept_at[$group_id][$entity]) {
@@ -274,8 +293,15 @@ class UpdraftPlus_AddOn_FixTime {
 
 	}
 
-	// WP 3.7+ has __return_empty_string() - but we support 3.2+
-	public function return_empty_string($x) { return ''; }
+	/**
+	 * WP 3.7+ has __return_empty_string() - but we support 3.2+
+	 *
+	 * @param  String $x
+	 * @return String
+	 */
+	public function return_empty_string($x) {
+		return '';
+	}
 
 	public function after_dbconfig() {
 		echo '<div id="updraft_retain_db_rules" style="float:left;clear:both;"></div><div style="float:left;clear:both;"><a href="#" id="updraft_retain_db_addnew">'.__('Add an additional retention rule...', 'updraftplus').'</a></div>';
@@ -391,25 +417,25 @@ class UpdraftPlus_AddOn_FixTime {
 			$after_period = $rule['after-period'];
 			
 			// Fix historic bug - stored the value of 28 days' worth of seconds, instead of 7
-			if ($after_period == 2419200) $after_period = 604800;
+			if (2419200 == $after_period) $after_period = 604800;
 			
-			// Best not to just drop the rule if it is invalid 
+			// Best not to just drop the rule if it is invalid
 			if (!is_numeric($after_howmany) || $after_howmany < 0) continue;
 			if ($after_period <3600) $after_period = 3600;
-			if ($after_period != 3600 && $after_period != 86400 && $after_period != 604800) continue;
+			if (3600 != $after_period && 86400 != $after_period && 604800 != $after_period) continue;
 			$every_howmany = $rule['every-howmany'];
 			$every_period = $rule['every-period'];
 			
 			// Fix historic bug - stored the value of 28 days' worth of seconds, instead of 7
-			if ($every_period == 2419200) $every_period = 604800;
+			if (2419200 == $every_period) $every_period = 604800;
 
-			// Best not to just drop the rule if it is invalid 
+			// Best not to just drop the rule if it is invalid
 			if (!is_numeric($every_howmany) || $every_howmany < 1) continue;
 			if ($every_period <3600) $every_period = 3600;
-			if ($every_period != 3600 && $every_period != 86400 && $every_period != 604800) continue;
+			if (3600 != $every_period && 86400 != $every_period && 604800 != $every_period) continue;
 
 			$processed_rules[] = array('index' => $i, 'after_howmany' => $after_howmany, 'after_period' => $after_period, 'every_howmany' => $every_howmany, 'every_period' => $every_period);
-// 			echo "add_rule('$type', $i, $after_howmany, $after_period, $every_howmany, $every_period);\n";
+			// echo "add_rule('$type', $i, $after_howmany, $after_period, $every_howmany, $every_period);\n";
 		}
 		if ('return' == $format) {
 			return $processed_rules;
@@ -435,17 +461,17 @@ class UpdraftPlus_AddOn_FixTime {
 		if (empty($matches[1]) || !is_numeric($matches[1]) || $matches[1]>23) {
 			$start_hour = 0;
 		} else {
-			$start_hour = (int)$matches[1];
+			$start_hour = (int) $matches[1];
 		}
 		if (empty($matches[2]) || !is_numeric($matches[2]) || $matches[1]>59) {
 			$start_minute = 5;
 			if ($start_minute>60) {
 				$start_minute = $start_minute-60;
 				$start_hour++;
-				if ($start_hour>23) $start_hour=0;
+				if ($start_hour>23) $start_hour =0;
 			}
 		} else {
-			$start_minute = (int)$matches[2];
+			$start_minute = (int) $matches[2];
 		}
 		return array($start_hour, $start_minute);
 	}
@@ -465,7 +491,7 @@ class UpdraftPlus_AddOn_FixTime {
 
 		// HH:MM, in blog time zone
 		// This function is only called from the options validator, so we don't read the current option
-		//$start_time = UpdraftPlus_Options::get_updraft_option('updraft_starttime_'.$whichtime);
+		// $start_time = UpdraftPlus_Options::get_updraft_option('updraft_starttime_'.$whichtime);
 		$start_time = (isset($_POST['updraft_starttime_'.$whichtime])) ? $_POST['updraft_starttime_'.$whichtime] : '00:00';
 
 		list ($start_hour, $start_minute) = $this->parse($start_time);
@@ -478,7 +504,7 @@ class UpdraftPlus_AddOn_FixTime {
 				$startday = min(absint($_POST['updraft_startday_'.$whichtime]), 28);
 				if ($startday < 1) $startday = 1;
 				// Get today's day of month in range 1-31
-// 				$day_today_blogzone = get_date_from_gmt($now_timestring_gmt, 'j');
+// $day_today_blogzone = get_date_from_gmt($now_timestring_gmt, 'j');
 
 				$thismonth_timestring = 'Y-m-'.sprintf("%02d", $startday).' '.sprintf("%02d:%02d", $start_hour, $start_minute).':00';
 
@@ -497,7 +523,7 @@ class UpdraftPlus_AddOn_FixTime {
 				// Get today's day of week in range 0-6
 				$day_today_blogzone = get_date_from_gmt($now_timestring_gmt, 'w');
 				if ($day_today_blogzone != $startday) {
-					if ($startday<$day_today_blogzone) $startday+=7;
+					if ($startday<$day_today_blogzone) $startday +=7;
 					$new_startdate_unix = $unixtime_now + ($startday-$day_today_blogzone)*86400;
 					$now_timestring_blogzone = get_date_from_gmt(gmdate('Y-m-d H:i:s', $new_startdate_unix), 'Y-m-d H:i:s');
 				}
@@ -505,16 +531,16 @@ class UpdraftPlus_AddOn_FixTime {
 		}
 
 		// Now, convert the start time HH:MM from blog time to UNIX time
-		$start_time_unix = get_gmt_from_date(substr($now_timestring_blogzone,0,11).sprintf('%02d', $start_hour).':'.sprintf('%02d', $start_minute).':00', 'U');
+		$start_time_unix = get_gmt_from_date(substr($now_timestring_blogzone, 0, 11).sprintf('%02d', $start_hour).':'.sprintf('%02d', $start_minute).':00', 'U');
 
 		// That may have already passed for today
 		if ($start_time_unix<time()) {
-			if  ('weekly' == $sched || 'fortnightly' == $sched) {
+			if ('weekly' == $sched || 'fortnightly' == $sched) {
 				$start_time_unix = $start_time_unix + 86400*7;
 			} elseif ('monthly' == $sched) {
 				error_log("This code path is impossible, or so it was thought!");
 			} else {
-				$start_time_unix=$start_time_unix+86400;
+				$start_time_unix =$start_time_unix+86400;
 			}
 		}
 
@@ -542,7 +568,7 @@ class UpdraftPlus_AddOn_FixTime {
 	}
 
 	public function starting_widget($start_hour, $start_minute, $day_selector_id, $time_selector_id, $selected_interval = 'manual') {
-		return __('starting from next time it is','updraftplus').' '.$this->day_selector($day_selector_id, $selected_interval).'<input title="'.__('Enter in format HH:MM (e.g. 14:22).','updraftplus').' '.htmlspecialchars(__('The time zone used is that from your WordPress settings, in Settings -> General.', 'updraftplus')).'" type="text" class="fix-time" maxlength="5" name="'.$time_selector_id.'" value="'.sprintf('%02d', $start_hour).':'.sprintf('%02d', $start_minute).'">';
+		return __('starting from next time it is', 'updraftplus').' '.$this->day_selector($day_selector_id, $selected_interval).'<input title="'.__('Enter in format HH:MM (e.g. 14:22).', 'updraftplus').' '.htmlspecialchars(__('The time zone used is that from your WordPress settings, in Settings -> General.', 'updraftplus')).'" type="text" class="fix-time" maxlength="5" name="'.$time_selector_id.'" value="'.sprintf('%02d', $start_hour).':'.sprintf('%02d', $start_minute).'">';
 	}
 
 	public function schedule_showdbopts($disp, $selected_interval) {
@@ -556,5 +582,4 @@ class UpdraftPlus_AddOn_FixTime {
 		list ($start_hour, $start_minute) = $this->parse($start_time);
 		return $this->starting_widget($start_hour, $start_minute, 'updraft_startday_files', 'updraft_starttime_files', $selected_interval);
 	}
-
 }
