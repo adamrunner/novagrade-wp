@@ -1,3 +1,4 @@
+ginichi
 .DS_Store
 *log*
 *.log
@@ -22,9 +23,8 @@ digiscope
 wpdev
 /.ftpquota
 /error_log
+/.htaccess
 /license.txt
 /readme.html
 /sitemap.xml
 /sitemap.xml.gz
-wp-content/updraft/log.*
-phpinfo.php
