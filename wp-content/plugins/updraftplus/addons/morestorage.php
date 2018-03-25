@@ -20,6 +20,8 @@ class UpdraftPlus_Addon_MoreStorage {
 		add_filter('updraftplus_storage_printoptions_multi', array($this, 'storage_printoptions_multi'), 10, 1);
 		// add_action('updraftplus_config_print_after_storage', array($this, 'config_print_after_storage'));
 		add_action('updraftplus_config_print_before_storage', array($this, 'config_print_before_storage'), 10, 2);
+		add_action('updraftplus_config_print_add_multi_storage', array($this, 'config_print_add_multi_storage'), 10, 2);
+		add_action('updraftplus_config_print_add_instance_label', array($this, 'config_print_add_instance_label'), 10, 2);
 		add_filter('updraftplus_savestorage', array($this, 'savestorage'), 10, 2);
 		add_action('updraftplus_after_remote_storage_heading_message', array($this, 'after_remote_storage_heading_message'));
 	}
@@ -46,12 +48,76 @@ class UpdraftPlus_Addon_MoreStorage {
 		<?php
 	}
 
+	/**
+	 * This method will setup the HTML template that is added before each remote storage template.
+	 *
+	 * @param  String $storage        - the name of the remote storage method
+	 * @param  Object $storage_object - the remote storage object
+	 * @return String                 - the HTML template
+	 */
 	public function config_print_before_storage($storage, $storage_object = null) {
 		global $updraftplus;
-		?><tr class="<?php echo is_object($storage_object) ? $storage_object->get_css_classes() : "updraftplusmethod $storage";?>">
-			<th><h3><?php echo $updraftplus->backup_methods[$storage]; ?></h3></th>
-			<td></td>
-		</tr><?php
+		?>
+		<tr class="<?php echo is_object($storage_object) ? $storage_object->get_css_classes() . ' ' . $storage . '_updraft_remote_storage_border' : "updraftplusmethod $storage";?>">
+			<th>
+				<?php
+					if (is_object($storage_object) && $storage_object->supports_feature('multi_storage')) {
+					?>
+						<h3 class="updraft_edit_label_instance" data-instance_id="{{instance_id}}" data-method="<?php echo $storage; ?>"><?php echo "{{#if instance_label}}{{instance_label}}{{else}}" . $updraftplus->backup_methods[$storage] . "{{/if}}"; ?> <span class="dashicons dashicons-edit"></span></h3>
+					<?php
+					} else {
+					?>
+						<h3><?php echo $updraftplus->backup_methods[$storage]; ?></h3>
+					<?php
+					}
+					?>
+			</th>
+			<td>
+				<?php
+					if (is_object($storage_object) && $storage_object->supports_feature('multi_storage')) {
+						?>
+						<div class="updraft_multi_storage_options">
+							<input type="checkbox" class="updraft_instance_toggle" id="<?php echo 'updraft_' . $storage . '_instance_enabled' . '_{{instance_id}}';?>" name="<?php echo 'updraft_' . $storage . '[settings][{{instance_id}}][instance_enabled]';?>" value="1" {{#ifeq "1" instance_enabled}} checked="checked"{{/ifeq}}>
+							<label for="<?php echo 'updraft_' . $storage . '_instance_enabled' . '_{{instance_id}}';?>" class="updraft_toggle_instance_label">{{#ifeq "1" instance_enabled}}<?php echo __('Currently enabled', 'updraftplus'); ?>{{else}} <?php echo __('Currently disabled', 'updraftplus'); ?>{{/ifeq}}</label>
+						</div>
+						<a href="#" class="updraft_multi_storage_options updraft_delete_instance" data-instance_id="{{instance_id}}" data-method="<?php echo $storage; ?>"><?php echo __('Delete these settings', 'updraftplus'); ?></a>
+						<?php
+					}
+				?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * This method will setup the HTML template for the add instance button
+	 *
+	 * @param  String $storage        - the name of the remote storage method
+	 * @param  Object $storage_object - the remote storage object
+	 * @return String                 - the HTML template
+	 */
+	public function config_print_add_multi_storage($storage, $storage_object = null) {
+		global $updraftplus;
+		?><tr class="<?php echo is_object($storage_object) ? $storage_object->get_css_classes(false) . " " . "$storage" . "_add_instance_container" : "updraftplusmethod $storage";?>">
+			
+			<td colspan="2">
+				<a href="#" class="updraft_add_instance" data-method="<?php echo $storage; ?>"><?php echo sprintf(__('Add another %s account...', 'updraftplus'), $updraftplus->backup_methods[$storage]); ?></a>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * This method will setup the HTML template for the instance label setting
+	 *
+	 * @param  String $storage        - the name of the remote storage method
+	 * @param  Object $storage_object - the remote storage object
+	 * @return String                 - the HTML template
+	 */
+	public function config_print_add_instance_label($storage, $storage_object) {
+		?>
+			<input type="hidden" class="<?php echo is_object($storage_object) ? $storage_object->get_css_classes() : "updraftplusmethod $storage";?>" <?php is_object($storage_object) ? $storage_object->output_settings_field_name_and_id('instance_label') . ' ' . $storage . '_updraft_instance_label' : ''; ?> value="{{instance_label}}" />
+		<?php
 	}
 
 	public function savestorage($rinput, $input) {

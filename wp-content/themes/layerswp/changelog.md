@@ -1,6 +1,220 @@
 # Layers Changelog
 
 =======
+##2.0.7
+### 17 November 2017
+
+* **Enhancement** - Added more detailed class names to the blog single page for easier CSS declaration. *DP*
+* **Fix** - Fixed some default WooCommerce styling, taking their new class names into consideration. *DP*
+
+* **Fix** - Fixed "delete_theme_mod" warning when changing themes. *MP*
+* **Fix** - Fixed our customized color pickers after the recent WP update has changed the HTML structure (with backwards compatibility). *SOB*
+
+=======
+##2.0.6
+### 01 September 2017
+
+* **Enhancement** - Added support for RTL in the customizer. *MP*
+
+=======
+##2.0.5
+### 10 July 2017
+
+* **Enhancement** - Unit Test Styling added. *DP*
+
+=======
+##2.0.4
+### 16 June 2017
+
+* **Fix** - Attachment pages which weren't showing images. *MP*
+* **Fix** - Comments showing up for password protected posts. *MP*
+* **Fix** - Full screen slider JS was using the wrong selector. *MP*
+
+
+=======
+##2.0.3
+### 12 June 2017
+
+* **Fix** - Brought back the remove and close buttons from the widgets which went missing in WP 4.8. *MP*
+
+=======
+##2.0.2
+### 06 June 2017
+
+* **Enhancement** - Adjusted Sidebar in V. Customizer to cope with new responsive settings in WP 4.8. *DP*
+
+=======
+##2.0.1
+### 08 May 2017
+* **Fix** - Fixed margin & padding setting in widgets. *MP*
+
+=======
+##2.0.0
+### 02 May 2017
+
+* **Enhancement** - All widgets now use accorcion interface. *MP*
+* **Enhancement** - Framework preparation for Layers Pro 2. *MP*
+* **Enhancement** - Updated Web Sans font. *MP*
+* **Tweak** - Moved slider Margin & Padding to the layouts tab, inline with the ther widgets. *MP*
+* **Fix** - Fixed warning when enabling tags in post lists. *MP*
+
+
+
+=======
+##1.6.6
+### 04 April 2017
+
+* **Enhancement** - WooCommerce 3.0 compatability. *MP*
+* **Enhancement** - Selecting a new image inside the image controller now clears the old image. *MP*
+* **Enhancement** - Clicking out of the sidebar now closes it. *MP*
+* **Enhancement** - Added confirmation modal when removing a widget. *MP*
+* **Enhancement** - Added the option to disable the Layers Open Graph tags. *MP*
+
+=======
+##1.6.5
+### 05 Dec 2016
+
+* **Enhancement** - Added Poppins Google Font. *MP*
+* **Enhancement** - Removed underlines from icons in preparation for WordPress 4.7. *DP*
+* **Enhancement** - Updated theme to utilize the new Additional CSS block in WordPress 4.7. *DP*
+
+=======
+##1.6.4
+### 18 Nov 2016
+
+* **Fix** - Layers icon font no longer shows a broken layers logo. *DP*
+* **Fix** - Fixed compatability with Endurance Page Cache plugin. *MP*
+* **Fix** - Fixed Static Blog page where sidebar would fall below content. *MP*
+
+=======
+##1.6.3
+### 09 Nov 2016
+
+* **Fix** - Menu fonts now apply to the automatic header menu (page list). *MP*
+* **Fix** - When adding a new post-widget and enabling Masonry in the customizer, it no longer breaks. *MP*
+* **Fix** - Breadcrumbs bug in category view when static blog page has not been set is now fixed. *MP*
+* **Enhancement** - Added a toggle to disable analytics when logged in. *MP*
+* **Enhancement** - New icon fonts added to Layers Interface icon set. *DP*
+* **Enhancement** - Input type "image" no longer spans 100% of the screen. *DP*
+
+=======
+##1.6.2
+### 06 Oct 2016
+
+* **Fix** - Fixed sticky header feature. *MP*
+
+=======
+##1.6.1
+### 04 Oct 2016
+
+* **Fix** - Fixed Header Overlay when adding an anchor to the first slide on a page. *MP*
+* **Fix** - Added ImagesLoaded to the slider resize trigger. *MP*
+* **Fix** - Updated Marketplace queries. *MP*
+* **Fix** - Mobile Sidebar toggle now works in the customizer. *MP*
+* **Enhancement** - Added new icon fonts for typography management. *DP*
+* **Enhancement** - Updated OG meta to accept featured image and excerpt for pages. *MP*
+* **Developer Enhancement** - Added ability to group controls in one Design Bar form area using the `group` option, which accepts any form array args. *MP*
+
+
+=======
+##1.6.0
+### 13 Sep 2016
+
+* **Fix** - Full width map no longer has 10px gutters to the left and right of the map. *DP*
+* **Fix** - Updated the preset layout, page import and duplicate page nonce actions to be more specific as not to be confused by any other nonce actions. *MP*
+* **Enhancement** - Added new Header Sidebar layout option. *MP*
+* **Enhancement** - Updated the Waypoints plugin to version 4.0. *MP*
+* **Enhancement** - Added the default theme color to the onboarding for Child Themes. *MP*
+
+=======
+##1.5.8
+### 05 Sep 2016
+
+* **Fix** - Fixed Duplicate button for widgets which have no accordian titles. *MP*
+* **Enhancement** - Added a `Header Menu` font selector. *MP*
+
+=======
+##1.5.7
+### 01 Sep 2016
+
+* **Fix** - Fixed Google Maps API on the front-end of the site. *MP*
+* **Fix** - Columns widths from span-4 to span-11 no longer collapse when masonry or video content is in there. *DP*
+* **Fix** - Fix repeater titles (Content, Slider, etc) so they dynamically display and dynamically update. *SOB*
+* **Tweak** - Tweaked the column width of shop list pages (was previously span-3, now span-4). *DP*
+* **Enhancement** - Added accordian duplication feature. *SOB*
+* **Enhancement** - Added new Layers Add On listings. *MP*
+
+=======
+##1.5.6
+### 11 Aug 2016
+
+* **Fix** - Fixed thumbnail body + title spacing. *DP*
+* **Fix** - Fixed "logged-in-as" styling (text directly below comment title). *DP*
+* **Fix** - Fixed 'Clear' not working on the Customizer Controls colors. *SOB*
+* **Fix** - Fixed erroneous map URL sitting in `functions.php`. *MP*
+* **Fix** - Fixed Complete Setup in dashboard. Thanks @easterncoder
+* **Fix** - Marketplace link overrides Layers Pages link on Dashboard tabs. Thanks @easterncoder
+* **Fix** - Fixed `</script>` tag bug in the Discover Photos tab. Thanks @tokkonopapa
+* **Fix** - Fixed errant `<a href="">` in the author tags. Thanks @flagsoft
+* **Enhancement** - Improved styling of range sliders in the customizer. *SOB*
+* **Enhancement** - Improved text strings. Thanks @maheshwaghmare
+* **Fix** - Fixed Complete Setup in dashboard. Thanks @easterncoder !
+* **Fix** - Marketplace link overrides Layers Pages link on Dashboard tabs. Thanks @easterncoder !
+* **Fix** - Fixed `</script>` tag bug in the Discover Photos tab. Thanks @tokkonopapa !
+* **Tweak** - Removed the Chrome FOUC fix that would re-apply font-size to the body in the Customizer to prevent FOUC. *SOB*
+
+=======
+##1.5.5
+### 15 July 2016
+
+* **Enhancement** - Added the Google Maps API Key input, reconfigured the position of the script inputs. *MP*
+* **Enhancement** - Added .meta-info-vertical to override inline meta items for the project pages. *DP*
+* **Enhancement** - Added .meta-info-vertical to override inline meta items for the project pages. *DP*
+* **Enhancement** - Added new WooCommerce My Account Page CSS. *DP*
+* **Fix** - Fixed word-wrap issue in `.story` and `.copy` divs. *DP*
+* **Tweak** - Nav Pill CSS has slightly more padding for better text alignment. *DP*
+* **Tweak** - Change the way we enqueue our slider script and css to rather use the WP register & enqueue functions. Allow us to enqueue wherever needed. *SOB*
+* **Tweak** - Change the way we enqueue our masonry script, same as above. *SOB*
+
+=======
+##1.5.4
+### 22 June 2016
+
+* **Enhancement** - Updated Font Awesome to version 4.6.3 *MP*
+* **Enhancement** - Enable WordPress Selective Widget Refresh - widgets update much faster by sending changes via JS, no page refresh required. *SOB*
+* **Enhancement** - Fade-in the Slider only after it has been initialized. *SOB*
+* **Fix** - Fixed sub-menus when header menu is not yet set. *MP*
+* **Fix** - Bring back shift-click to edit Layers widgets in the Customizer. This was removed by changes in the widget container format in a recent WP update. *SOB*
+* **Fix** - off-canvas cart buttons are no longer breaking. *DP*
+* **Fix** - Gallery captions now display correctly in blog posts. *DP*
+* **Fix** - Images in posts are no longer display: block which was forcing them onto a new line. *DP*
+
+
+=======
+##1.5.3
+### 30 May 2016
+
+* **Fix** - WooCommerce grid update during checkout. *DP*
+
+=======
+##1.5.2
+### 30 May 2016
+
+* **Fix** - Fixed sub-category listing pages. *MP*
+* **Fix** - Updated Layers Pro upsell links.*MP*
+* **Fix** - Added conditional statements around `Layers_Widget_Migrator` where needed. *MP*
+* **Tweak** - Added a check to make sure that we never output two main titles on one page - Blank Page template. *SOB*
+
+
+=======
+##1.5.1
+### 26 Apr 2016
+
+* **Fix** - Changed some legacy references from `plugins_url()` to `LAYERS_TEMPLATE_URI`. *SOB*
+* **Fix** - Fixed standard widget layout on Layers pages. *MP*
+* **Tweak** - Changed `get_the_permalink()` to `get_permalink()`. *SOB*
+
+=======
 ##1.5.0
 ### 22 Apr 2016
 

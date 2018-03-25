@@ -42,9 +42,9 @@ class UpdraftPlus_Addons_RemoteStorage_remotesend extends UpdraftPlus_RemoteStor
 		$opts = $this->options;
 		
 		try {
-			$service = $this->bootstrap();
-			if (is_wp_error($service)) throw new Exception($service->get_error_message());
-			if (!is_object($service)) throw new Exception("RPC service error");
+			$storage = $this->bootstrap();
+			if (is_wp_error($storage)) throw new Exception($storage->get_error_message());
+			if (!is_object($storage)) throw new Exception("RPC service error");
 		} catch (Exception $e) {
 			$message = $e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
 			$updraftplus->log("RPC service error: ".$message);
@@ -151,7 +151,7 @@ class UpdraftPlus_Addons_RemoteStorage_remotesend extends UpdraftPlus_RemoteStor
 
 		global $updraftplus;
 
-		$service = $this->storage;
+		$storage = $this->get_storage();
 		
 		$chunk = fread($fp, $upload_size);
 
@@ -264,7 +264,8 @@ class UpdraftPlus_Addons_RemoteStorage_remotesend extends UpdraftPlus_RemoteStor
 	}
 
 	private function send_message($message, $data = null, $timeout = 30) {
-		$response = $this->storage->send_message($message, $data, $timeout);
+		$storage = $this->get_storage();
+		$response = $storage->send_message($message, $data, $timeout);
 		if (is_array($response) && !empty($response['data']) && is_array($response['data']) && !empty($response['data']['php_events']) && !empty($response['data']['previous_data'])) {
 			global $updraftplus;
 			foreach ($response['data']['php_events'] as $logline) {
@@ -296,9 +297,9 @@ class UpdraftPlus_Addons_RemoteStorage_remotesend extends UpdraftPlus_RemoteStor
 
 		do_action('updraftplus_remotesend_udrpc_object_obtained', $ud_rpc, $opts);
 		
-		$this->storage = $ud_rpc;
+		$this->set_storage($ud_rpc);
 		
-		return $this->storage;
+		return $ud_rpc;
 	}
 
 	public function options_exist($opts) {

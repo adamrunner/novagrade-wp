@@ -48,6 +48,7 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 		$orig_file_size = filesize($file);
 
 		$start_offset = 0;
+		$GLOBALS['updraftplus_404_should_be_logged'] = false;
 		if (is_file($url)) {
 			$url_size = filesize($url);
 			if ($url_size == $orig_file_size) {
@@ -60,7 +61,9 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 			$updraftplus->log($this->desc.": $url_size bytes already uploaded; resuming");
 			$start_offset = $url_size;
 		}
-
+		
+		$GLOBALS['updraftplus_404_should_be_logged'] = true;
+		
 		$chunks = floor($orig_file_size / 2097152);
 		// There will be a remnant unless the file size was exactly on a 5MB boundary
 		if ($orig_file_size % 2097152 > 0) $chunks++;
@@ -79,6 +82,23 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 			global $updraftplus_webdav_filepath;
 			$updraftplus_webdav_filepath = $file;
 		}
+		
+		/*
+		 * This is used for increase chunk size for webdav stream wrapper. WebDav stream wrapper chunk size is 8kb by default. This chunk size impacts on speed of upload
+		 * 
+		 */
+		$read_buffer_size = 131072;
+		if (isset($this->upload_stream_chunk_size) && function_exists('stream_set_chunk_size')) {
+			// stream_set_chunk_size() exists in PHP 5.4+
+			// @codingStandardsIgnoreLine
+			$ret_set_chunk_size = stream_set_chunk_size($fh, $this->upload_stream_chunk_size);
+			if (false === $ret_set_chunk_size) {
+				$updraftplus->log($this->desc.': '.sprintf("Upload chunk size: failed to change to %d bytes", $this->upload_stream_chunk_size));
+			} else {
+				$read_buffer_size = min($this->upload_stream_chunk_size, 1048576);
+				$updraftplus->log($this->desc.': '.sprintf("Upload chunk size: successfully changed to %d bytes", $this->upload_stream_chunk_size));
+			}
+		}
 
 		$last_time = time();
 		for ($i = 1; $i <= $chunks; $i++) {
@@ -95,7 +115,7 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 
 				$bytes_left = $chunk_end - $chunk_start;
 				while ($bytes_left > 0) {
-					if ($buf = fread($rh, 131072)) {
+					if ($buf = fread($rh, $read_buffer_size)) {
 						if (fwrite($fh, $buf, strlen($buf))) {
 							$bytes_left = $bytes_left - strlen($buf);
 							if (time()-$last_time > 15) {
@@ -206,16 +226,33 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 	}
 
 	/**
+	 * Get the pre configuration template (directly output)
+	 *
+	 * @return String - the template
+	 */
+	public function get_pre_configuration_template() {
+
+		global $updraftplus_admin;
+
+		$classes = $this->get_css_classes(false);
+		
+		?>
+		<tr class="<?php echo $classes . ' ' . $this->method . '_pre_config_container';?>">
+			<td colspan="2">
+				<h3><?php echo $this->desc; ?></h3>
+			</td>
+		</tr>
+
+		<?php
+	}
+
+	/**
 	 * Get the configuration template
 	 *
 	 * @return String - the template, ready for substitutions to be carried out
 	 */
 	public function get_configuration_template() {
-		$template_str = '<tr class="'.$this->get_css_classes().'">
-			<td></td>
-			<td><em>'.sprintf(__('%s is a great choice, because UpdraftPlus supports chunked uploads - no matter how big your site is, UpdraftPlus can upload it a little at a time, and not get thwarted by timeouts.', 'updraftplus'), $this->desc).'</em></td>
-		</tr>';
-		$template_str .= $this->get_configuration_middlesection_template();
+		$template_str = $this->get_configuration_middlesection_template();
 		$template_str .= $this->get_test_button_html($this->desc);
 		return $template_str;
 	}
@@ -269,13 +306,32 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 				$ret = false;
 				continue;
 			}
+			
+			$read_buffer_size = 262144;
+			
+			/*
+			 * This is used for increase chunk size for webdav stream wrapper. WebDav stream wrapper chunk size is 8kb by default. This chunk size impacts on speed of download
+			 * 
+			 */
+			 
+			// stream_set_chunk_size function exist in >= 5.4.0 Php version
+			if (isset($this->download_stream_chunk_size) && function_exists('stream_set_chunk_size')) {
+				// @codingStandardsIgnoreLine
+				$ret_set_chunk_size = stream_set_chunk_size($rh, $this->download_stream_chunk_size);
+				if (false === $ret_set_chunk_size) {
+					$updraftplus->log($this->desc.': '.sprintf(__("Download chunk size failed to change to %d", 'updraftplus'), $this->download_stream_chunk_size));
+				} else {
+					$read_buffer_size = $this->download_stream_chunk_size;
+					$updraftplus->log($this->desc.': '.sprintf(__("Download chunk size successfully changed to %d", 'updraftplus'), $this->download_stream_chunk_size));
+				}
+			}
 
 			if ($start_offset) {
 				fseek($fh, $start_offset);
 				fseek($rh, $start_offset);
 			}
 
-			while (!feof($rh) && $buf = fread($rh, 262144)) {
+			while (!feof($rh) && $buf = fread($rh, $read_buffer_size)) {
 				if (!fwrite($fh, $buf, strlen($buf))) {
 					$updraftplus->log($this->desc." Error: Local write failed: Failed to download: $file");
 					$updraftplus->log("$file: ".sprintf(__("%s Error", 'updraftplus'), $this->desc).": ".__('Local write failed: Failed to download', 'updraftplus'), 'error');

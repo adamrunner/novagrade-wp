@@ -25,8 +25,13 @@ if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
 if (!class_exists('UpdraftPlus_AddonStorage_viastream')) require_once(UPDRAFTPLUS_DIR.'/methods/stream-base.php');
 
 class UpdraftPlus_Addons_RemoteStorage_webdav extends UpdraftPlus_AddonStorage_viastream {
+	
+	public $upload_stream_chunk_size = 2097152;
 
+	public $download_stream_chunk_size = 5242880;
+	
 	public function __construct() {
+		$this->is_supress_initial_remote_404_log = true;
 		parent::__construct('webdav', 'WebDAV');
 	}
 
@@ -38,7 +43,7 @@ class UpdraftPlus_Addons_RemoteStorage_webdav extends UpdraftPlus_AddonStorage_v
 	 */
 	public function get_supported_features() {
 		// This options format is handled via only accessing options via $this->get_options()
-		return array('multi_options', 'config_templates');
+		return array('multi_options', 'config_templates', 'multi_storage');
 	}
 
 	/**
@@ -59,6 +64,96 @@ class UpdraftPlus_Addons_RemoteStorage_webdav extends UpdraftPlus_AddonStorage_v
 			include_once(UPDRAFTPLUS_DIR.'/includes/PEAR/HTTP/WebDAV/Client.php');
 		}
 		return true;
+	}
+	
+	/**
+	 * Acts as a WordPress options filter
+	 *
+	 * @param  Array $webdav - An array of WebDAV options
+	 * @return Array - the returned array can either be the set of updated WebDAV settings or a WordPress error array
+	 */
+	public function options_filter($webdav) {
+	
+		global $updraftplus;
+	
+		// Get the current options (and possibly update them to the new format)
+		$opts = $updraftplus->update_remote_storage_options_format('webdav');
+
+		if (is_wp_error($opts)) {
+			if ('recursion' !== $opts->get_error_code()) {
+				$msg = "WebDAV (".$opts->get_error_code()."): ".$opts->get_error_message();
+				$updraftplus->log($msg);
+				error_log("UpdraftPlus: $msg");
+			}
+			// The saved options had a problem; so, return the new ones
+			return $webdav;
+		}
+
+		// If the input is not as expected, then return the current options
+		if (!is_array($webdav)) return $opts;
+
+		// Remove instances that no longer exist
+		if (is_array($opts['settings'])) {
+			foreach ($opts['settings'] as $instance_id => $storage_options) {
+				if (!isset($webdav['settings'][$instance_id])) unset($opts['settings'][$instance_id]);
+			}
+		}
+
+		// WebDAV has a special case where the settings could be empty so we should check for this before proceeding
+		if (!empty($webdav['settings'])) {
+			
+			foreach ($webdav['settings'] as $instance_id => $storage_options) {
+				if (isset($storage_options['webdav'])) {
+			
+					$url = null;
+					$slash = "/";
+					$host = "";
+					$colon = "";
+					$port_colon = "";
+					
+					if ((80 == $storage_options['port'] && 'webdav' == $storage_options['webdav']) || (443 == $storage_options['port'] && 'webdavs' == $storage_options['webdav'])) {
+						$storage_options['port'] = '';
+					}
+					
+					if ('/' == substr($storage_options['path'], 0, 1)) {
+						$slash = "";
+					}
+					
+					if (false === strpos($storage_options['host'], "@")) {
+						$host = "@";
+					}
+					
+					if ('' != $storage_options['user'] && '' != $storage_options['pass']) {
+						$colon = ":";
+					}
+					
+					if ('' != $storage_options['host'] && '' != $storage_options['port']) {
+						$port_colon = ":";
+					}
+
+					if (!empty($storage_options['url']) && 'http' == strtolower(substr($storage_options['url'], 0, 4))) {
+						$storage_options['url'] = 'webdav'.substr($storage_options['url'], 4);
+					} elseif ('' != $storage_options['user'] && '' != $storage_options['pass']) {
+						$storage_options['url'] = $storage_options['webdav'].urlencode($storage_options['user']).$colon.urlencode($storage_options['pass']).$host.urlencode($storage_options['host']).$port_colon.$storage_options['port'].$slash.$storage_options['path'];
+					} else {
+						$storage_options['url'] = $storage_options['webdav'].urlencode($storage_options['host']).$port_colon.$storage_options['port'].$slash.$storage_options['path'];
+					}
+
+					$opts['settings'][$instance_id]['url'] = $storage_options['url'];
+
+					// Now we have constructed the URL we should loop over the options and save any extras, but we should ignore the options used to create the URL as they are no longer needed.
+					$skip_keys = array("url", "webdav", "user", "pass", "host", "port", "path");
+
+					foreach ($storage_options as $key => $value) {
+						if (!in_array($key, $skip_keys)) {
+							$opts['settings'][$instance_id][$key] = $storage_options[$key];
+						}
+					}
+				}
+			}
+		}
+		
+		return $opts;
 	}
 	
 	/**
@@ -133,16 +228,16 @@ class UpdraftPlus_Addons_RemoteStorage_webdav extends UpdraftPlus_AddonStorage_v
 	 * @param array $opts
 	 * @return array - Modified handerbar template options
 	 */
-	protected function transform_options_for_template($opts) {
-		$url = isset($opts['url']) ? esc_url($opts['url']) : '';
+	public function transform_options_for_template($opts) {
+		$url = isset($opts['url']) ? $opts['url'] : '';
 		$parse_url = @parse_url($url);
 		if (false === $parse_url) $url = '';
 		$opts['url'] = $url;
 		$url_scheme = @parse_url($url, PHP_URL_SCHEME);
 		if ('webdav' == $url_scheme) {
-			$opt['is_webdav_protocol'] = true;
+			$opts['is_webdav_protocol'] = true;
 		} elseif ('webdavs' == $url_scheme) {
-			$opt['is_webdavs_protocol'] = true;
+			$opts['is_webdavs_protocol'] = true;
 		}
 		$opts['user'] = urldecode(@parse_url($url, PHP_URL_USER));
 		$opts['pass'] = urldecode(@parse_url($url, PHP_URL_PASS));

@@ -248,6 +248,7 @@ class HTTP_Request2_Adapter_Curl extends HTTP_Request2_Adapter
             curl_setopt($ch, CURLOPT_MAXREDIRS, $this->request->getConfig('max_redirects'));
             // limit redirects to http(s), works in 5.2.10+
             if (defined('CURLOPT_REDIR_PROTOCOLS')) {
+                // @codingStandardsIgnoreLine
                 curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
             }
             // works in 5.3.2+, http://bugs.php.net/bug.php?id=49571

@@ -173,15 +173,14 @@ function wsoe_formatted_price( $amount, $order_details ) {
  * Fix weird characters in CSV
  */
 function wsoe_fix_weird_chars() {
-	
-	$settings = wpg_order_export::advanced_option_settings();
-	?>
+
+	$settings = WSOE()->settings['plugin_settings']; ?>
 
 	<tr>
 
 		<th>
 			<?php _e( 'Fix weird charactes in CSV', 'woocommerce-simply-order-export') ?>
-			<img class="help_tip" data-tip="<?php _e('Check this option only if you are getting some weird characters in exported CSV file', 'woocommerce-simply-order-export') ?>" src="<?php echo OE_IMG; ?>help.png" height="16" width="16">
+			<img class="help_tip" data-tip="<?php _e('Check this option only if you are getting some weird characters in exported CSV file', 'woocommerce-simply-order-export') ?>" src="<?php echo WSOE_IMG; ?>help.png" height="16" width="16">
 		</th>
 
 		<td>
@@ -192,3 +191,44 @@ function wsoe_fix_weird_chars() {
 	
 }
 add_action( 'advanced_options_end', 'wsoe_fix_weird_chars', 9 );
+
+/**
+ * Runs the script for update. If any update of the plugin has update script available,
+ * it would seek for the script and if script is available, it will run the script.
+ */
+if( !function_exists('wsoe_core_run_update_scripts') ){
+
+	function wsoe_core_run_update_scripts() {
+
+		// Run this block if current user is woocommerce manager and is in admin/dashboard.
+		if( is_admin() && wsoe_is_shop_manager() ){
+
+			$db_version		=	get_option( 'wsoe_core_version', '1.0.0' ); // Check what was the last version
+			$upgrade_ran	=	$upgrade_ran_new = get_option( 'wsoe_core_upgrade_ran', array() );
+
+			$update_scripts = array('2.1.6'); // Array of version numbers for which update scripts are present.
+
+			if( version_compare( $db_version, WSOE()->version, '<' ) ) {
+
+				foreach( $update_scripts as $script ) {
+
+					// Check if this update script has already been executed, if it is, do not execute it again.
+					if( (version_compare( $script, WSOE()->version, '<=' )) && ( !in_array( $script, $upgrade_ran ) ) ) {
+
+						require_once trailingslashit( WSOE_BASE ).'updater/wsoe-core-'.$script.'.php';
+						array_push( $upgrade_ran_new, $script );
+					}
+				}
+
+				$diff = array_diff( $upgrade_ran_new, $upgrade_ran );
+
+				if( !empty( $diff ) ){
+					update_option( 'wsoe_core_upgrade_ran', $upgrade_ran_new );
+				}
+
+				update_option( 'wsoe_core_version', WSOE()->version );
+			}
+		}
+	}
+	add_action( 'wp_loaded', 'wsoe_core_run_update_scripts' );
+}

@@ -10,7 +10,8 @@ namespace Onedrive;
  * destroying an Object instance will not delete the actual OneDrive object it
  * is referencing to).
  */
-abstract class Object {
+ // Class name changed to Instance from Object because Object reserved keyword in Php 7.2
+abstract class Instance {
 	// The owning Client instance.
 	protected $_client;
 

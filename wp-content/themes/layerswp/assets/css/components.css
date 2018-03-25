@@ -25,7 +25,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 		-webkit-flex-direction: row;
 		flex-direction: row;
 	}
-	.advanced-layout-left header{
+	.advanced-layout-left .header-site{
 		order: 1;
 		width: 20%;
 	}
@@ -33,7 +33,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 		order: 2;
 		width: 80%;
 	}
-	.advanced-layout-right header{
+	.advanced-layout-right .header-site{
 		order: 2;
 		width: 20%;
 	}
@@ -663,6 +663,23 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 			display: block;
 			text-align: left;
 		}
+		/*-- For Bug: No sub menu displayed in widgets --*/
+		.sidebar .widget.widget_nav_menu .sub-menu {
+			background-color: transparent;
+			visibility: visible;
+			opacity: 1;
+			position: relative;
+			top: auto;
+			left: auto;
+			border: none;
+		}
+		.sidebar .widget.widget_nav_menu .sub-menu li a {
+			padding: 0;
+		}
+		.sidebar .widget.widget_nav_menu .sub-menu li a:hover {
+			background-color: transparent;
+			color: rgba(0, 0, 0, 1);
+		}
 
 
 	/*---------------------------*/
@@ -726,6 +743,9 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 	}
 	.row.has-map{
 		padding-top: 0;
+	}
+	.full-width .layers-map{
+		margin: 0 -10px;
 	}
 	.layers-map img{
 		width: auto;

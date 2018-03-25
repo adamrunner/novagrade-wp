@@ -53,9 +53,9 @@ class UpdraftPlus_Addon_Reporting {
 	public function showbackup_date($date, $backup, $jobdata, $key, $simple_format) {
 		if (!is_array($backup) || empty($backup['label'])) return $date;
 		if ($simple_format) {
-			return $date.' - '.htmlspecialchars($backup['label']);
+			return $date.' - <span class="updraft-backup-label">'.htmlspecialchars($backup['label']).'</span>';
 		} else {
-			return $date.htmlspecialchars($backup['label']);
+			return $date.'<span class="updraft-backup-label">'.htmlspecialchars($backup['label']).'</span>';
 		}
 	}
 
@@ -85,14 +85,13 @@ class UpdraftPlus_Addon_Reporting {
 	 * @param Array $options - the current options
 	 * @param Array $request - the incoming request
 	 *
-	 * @return $options - the filtered options
+	 * @return Array - the filtered options
 	 */
 	public function backupnow_options($options, $request) {
 		if (!is_array($options)) return $options;
 		// See: https://trello.com/c/NH83ZCnj/494
 		if (!empty($request['backupnow_label']) && is_string($request['backupnow_label']))
 		$options['label'] = substr($request['backupnow_label'], 0, 40);
-		if (!empty($options['label']) && false !== strpos($options['label'], '\\')) $options['label'] = stripslashes($options['label']);
 		return $options;
 	}
 

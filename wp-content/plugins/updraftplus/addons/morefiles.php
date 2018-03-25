@@ -3,9 +3,9 @@
 /*
 UpdraftPlus Addon: morefiles:Back up more files, including WordPress core
 Description: Creates a backup of WordPress core (including everything in that directory WordPress is in), and any other file/directory you specify too.
-Version: 2.5
+Version: 2.6
 Shop: /shop/more-files/
-Latest Change: 1.13.1
+Latest Change: 1.14.3
 */
 // @codingStandardsIgnoreEnd
 
@@ -46,11 +46,33 @@ class UpdraftPlus_Addons_MoreFiles {
 
 		add_filter('updraftplus_dirlist_more', array($this, 'backup_more_dirlist'));
 		add_filter('updraftplus_dirlist_wpcore', array($this, 'backup_wpcore_dirlist'));
+		add_filter('updraftplus_get_disk_space_used_none', array($this, 'get_disk_space_used_none'), 10, 3);
 		
 		add_filter('updraftplus_include_wpcore_exclude', array($this, 'include_wpcore_exclude'));
 
 	}
 
+	/**
+	 * WP filter updraftplus_get_disk_space_used_none
+	 *
+	 * @param String							- $result - the unfiltered value to return
+	 * @param String							- $entity - the entity type
+	 * @param Array|String $backupable_entities - a path or list of paths
+	 *
+	 * @return String - filtered result
+	 */
+	/**
+	 * Undocumented function
+	 *
+	 * @param string       $result			    The unfiltered value to return
+	 * @param string       $entity				The entity type
+	 * @param array|string $backupable_entities A path or list of paths
+	 * @return string Filtered result
+	 */
+	public function get_disk_space_used_none($result, $entity, $backupable_entities) {
+		return ('more' == $entity && empty($backupable_entities['more'])) ? __('(None configured)', 'updraftplus') : $result;
+	}
+	
 	public function updraftplus_browse_download_link($link) {
 		return '<a href="#" id="updraft_zip_download_item">'._x('Download', '(verb)', 'updraftplus').'</a>';
 	}
@@ -451,6 +473,13 @@ ENDHERE;
 		return $ret;
 	}
 
+	/**
+	 * Called via the WP filter updraftplus_dirlist_more
+	 *
+	 * @param String|Array $whichdirs - a path, or list of paths. Ultimately comes from the option updraft_include_more_path
+	 *
+	 * @return String|Array - filtered value
+	 */
 	public function backup_more_dirlist($whichdirs) {
 		// Need to properly analyse the plugins, themes, uploads, content paths in order to strip them out (they may have various non-default manual values)
 
@@ -494,7 +523,7 @@ ENDHERE;
 
 		}
 
-		return (!$orig_was_array) ? array_shift($dirlist) : $dirlist;
+		return $orig_was_array ? $dirlist : array_shift($dirlist);
 
 	}
 

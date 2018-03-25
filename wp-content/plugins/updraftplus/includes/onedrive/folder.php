@@ -5,7 +5,7 @@ namespace Onedrive;
  * A Folder instance is an Object instance referencing to a OneDrive folder. It
  * may contain other OneDrive objects but may not have content.
  */
-class Folder extends Object {
+class Folder extends Instance {
 	/**
 	 * Determines whether the OneDrive object referenced by this Object instance
 	 * is a folder.

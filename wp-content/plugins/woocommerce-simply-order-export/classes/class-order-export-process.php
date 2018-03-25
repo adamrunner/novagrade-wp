@@ -53,7 +53,7 @@ if( !class_exists('order_export_process') ) {
 
 					$new_order[$_setting] = $wpg_order_columns[$_setting];
 				}
-				
+
 				$wpg_order_columns = $new_order;
 			}
 
@@ -84,74 +84,92 @@ if( !class_exists('order_export_process') ) {
 			 */
 			self::$delimiter = apply_filters( 'wpg_delimiter', $delimiter );
 
-			/* Check which order statuses to export. */
-			$order_statuses	=	( !empty( $_POST['order_status'] ) && is_array( $_POST['order_status'] ) ) ? $_POST['order_status'] : array_keys( wc_get_order_statuses() );
+			$iterator	=	0;
+			$chunk_size	=	apply_filters( 'wsoe_chunk_size', 20 );
 
-			$args = array( 'post_type'=>'shop_order', 'posts_per_page'=>-1, 'post_status'=> apply_filters( 'wpg_order_statuses', $order_statuses ) );
-			$args['date_query'] = array( array( 'after'=>  $_POST['start_date'], 'before'=> $_POST['end_date'], 'inclusive' => true ) );
+			@set_time_limit(0);
+			do{
 
-			$args = apply_filters( 'wsoe_query_args', $args );
+				/* Check which order statuses to export. */
+				$order_statuses	=	( !empty( $_POST['order_status'] ) && is_array( $_POST['order_status'] ) ) ? $_POST['order_status'] : array_keys( wc_get_order_statuses() );
 
-			$orders = new WP_Query( $args );
+				$args = array(
+							'post_type'=>'shop_order',
+							'posts_per_page'=> $chunk_size,
+							'post_status'=> apply_filters( 'wpg_order_statuses', $order_statuses ),
+							'offset' => ($chunk_size*$iterator)
+						);
 
-			if( $orders->have_posts() ) {
+				$args['date_query'] = array(
+										array(
+											'after'=>  $_POST['start_date'],
+											'before'=> $_POST['end_date'],
+											'inclusive' => true )
+									);
 
-				/**
-				 * This will be file pointer
-				 */
-				$csv_file = self::create_csv_file();
+				$args = apply_filters( 'wsoe_query_args', $args );
 
-				if( empty($csv_file) ) {
-					return new WP_Error( 'not_writable', __( 'Unable to create csv file, upload folder not writable', 'woocommerce-simply-order-export' ) );
-				}
+				$orders = new WP_Query( $args );
 
-				fputcsv( $csv_file, $headings, self::$delimiter );
-
-				/**
-				 * Loop over each order
-				 */
-				while( $orders->have_posts() ) {
-
-					$csv_values = array();
-
-					$orders->the_post();
-
-					$order_details = new WC_Order( get_the_ID() );
+				if( $orders->have_posts() ) {
 
 					/**
-					 * Check if we need to export product name.
-					 * If yes, then create new row for each product.
+					 * Do these operations for only first iteration.
 					 */
-					if( array_key_exists( 'wc_settings_tab_product_name', $fields ) ) {
+					if( !$iterator ){
+
+						/**
+						 * This will be file pointer
+						 */
+						$csv_file = self::create_csv_file();
+
+						if( empty($csv_file) ) {
+							return new WP_Error( 'not_writable', __( 'Unable to create csv file, upload folder not writable', 'woocommerce-simply-order-export' ) );
+						}
+
+						fputcsv( $csv_file, $headings, self::$delimiter );
+					
+					}
+
+					/**
+					 * Loop over each order
+					 */
+					while( $orders->have_posts() ) {
+
+						$csv_values = array();
+
+						$orders->the_post();
+
+						$order_details = new WC_Order( get_the_ID() );
 
 						$items = $order_details->get_items();
 
-						foreach( $items as $item_id=>$item ) {
-
+						foreach( $items as $item_id => $item ) {
 							$csv_values = array();
 							self::add_fields_diff_row( $fields, $csv_values, $order_details, $item_id, $item );
 							fputcsv( $csv_file, $csv_values, self::$delimiter );
 						}
 
-					}else{
-						/**
-						 * Create a single row for order.
-						 */
-						self::add_fields_diff_row( $fields, $csv_values, $order_details );
-						fputcsv( $csv_file, $csv_values, self::$delimiter );
 					}
+					wp_reset_postdata();
 
+				}elseif( empty($iterator) ){ // If there are no orders at first place, send error.
+
+					return new WP_Error( 'no_orders', __( 'No orders for specified duration.', 'woocommerce-simply-order-export' ) );
 				}
-				wp_reset_postdata();
+				
+				++$iterator;
 
-			}else {
-
-				return new WP_Error( 'no_orders', __( 'No orders for specified duration.', 'woocommerce-simply-order-export' ) );
-			}
+			}while( ( $iterator < $orders->max_num_pages ) );
 		}
 
 		/**
 		 * 
+		 * @param type $fields Fields to retrieve.
+		 * @param type $csv_values CSV Pointer.
+		 * @param type $order_details Order object.
+		 * @param type $item_id Line item ID.
+		 * @param type $current_item Current iterated line item.
 		 */
 		static function add_fields_diff_row( $fields, &$csv_values, $order_details, $item_id = null, $current_item = null ) {
 
@@ -166,7 +184,7 @@ if( !class_exists('order_export_process') ) {
 					 * Check if we need order ID.
 					 */
 					case 'wc_settings_tab_order_id':
-						array_push( $csv_values, $order_details->get_order_number() );
+						array_push( $csv_values, $order_details->get_id() );
 						do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
 					break;
 
@@ -182,7 +200,7 @@ if( !class_exists('order_export_process') ) {
 					 * Check if we need product name.
 					 */
 					case 'wc_settings_tab_product_name':
-						array_push( $csv_values, $current_item['name'] );
+						array_push( $csv_values, $current_item->get_product()->get_name() );
 						do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
 					break;
 
@@ -193,33 +211,22 @@ if( !class_exists('order_export_process') ) {
 					 * If product name is not selected, this column will be filled with just dashes. ;)
 					 */
 					case 'wc_settings_tab_product_quantity':
-						if( array_key_exists( 'wc_settings_tab_product_name', $fields ) ) {
-							array_push( $csv_values, $current_item['qty'] );
-							do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
-						}else{
-							array_push( $csv_values, '-' ); // pad the quantity column with dash if there is no product name
-							do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
-						}
+						array_push( $csv_values, $current_item->get_quantity() );
+						do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
 					break;
 					
 					/**
 					 * Check if we need product variations
 					 */
 					case 'wc_settings_tab_product_variation':
-						if( array_key_exists( 'wc_settings_tab_product_name', $fields ) ) {
-							array_push( $csv_values, self::get_product_variation( $item_id, $order_details ) );
-							do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
-						}else{
-							array_push( $csv_values, '-' );
-							do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
-						}
+						array_push( $csv_values, self::get_product_variation( $item_id, $order_details, $current_item ) );
+						do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $current_item->get_product()->get_id(), $current_item ) );
 					break;
 
 					/**
 					 * Check if we need order amount.
 					 */
 					case 'wc_settings_tab_amount':
-						//$amount = wc_price( $order_details->get_total(), array( 'currency'=> $order_details->get_order_currency() ) );
 						array_push( $csv_values, wsoe_formatted_price( $order_details->get_total(), $order_details ) );
 						do_action_ref_array( 'wsoe_after_value_'.$key, array( &$csv_values, $order_details, $item_id, $current_item ) );
 					break;
@@ -266,23 +273,25 @@ if( !class_exists('order_export_process') ) {
 			}
 
 		}
-		
+
 		/**
 		 * Returns customer related meta.
 		 * Basically it is just get_post_meta() function wrapper.
 		 */
 		static function customer_meta( $order_id , $meta = '' ) {
-			
+
 			if( empty( $order_id ) || empty( $meta ) )
 				return '';
-			
+
 			return get_post_meta( $order_id, $meta, true );
 		}
 
-		static function get_product_variation ( $product_id, $order_details ) {
+		static function get_product_variation ( $line_item_id, $order_details, $current_item ) {
 
-			$metadata = $order_details->has_meta( $product_id );
-			$_product = new WC_Product( $product_id );
+			//$order_item = new WC_Order_Item( $line_item_id );
+			//$metadata =  $order_item->get_meta_data();
+
+			$metadata = $current_item->get_meta_data();
 
 			$exclude_meta = apply_filters( 'woocommerce_hidden_order_itemmeta', array(
 				'_qty',
@@ -299,27 +308,29 @@ if( !class_exists('order_export_process') ) {
 
 			foreach( $metadata as $k => $meta ) {
 
-				if( in_array( $meta['meta_key'], $exclude_meta ) ){
+				if( in_array( $meta->key, $exclude_meta ) ){
 					continue;
 				}
 
 				// Skip serialised meta
-				if ( is_serialized( $meta['meta_value'] ) ) {
+				if ( is_serialized( $meta->value ) ) {
 					continue;
 				}
 
 				// Get attribute data
-				if ( taxonomy_exists( wc_sanitize_taxonomy_name( $meta['meta_key'] ) ) ) {
+				if ( taxonomy_exists( wc_sanitize_taxonomy_name( $meta->key ) ) ) {
 
-					$term               = get_term_by( 'slug', $meta['meta_value'], wc_sanitize_taxonomy_name( $meta['meta_key'] ) );
-					$meta['meta_key']   = wc_attribute_label( wc_sanitize_taxonomy_name( $meta['meta_key'] ) );
-					$meta['meta_value'] = isset( $term->name ) ? $term->name : $meta['meta_value'];
+					$term               = get_term_by( 'slug', $meta->value, wc_sanitize_taxonomy_name( $meta->key ) );
+					$meta->key			= wc_attribute_label( wc_sanitize_taxonomy_name( $meta->key ) );
+					$meta->value		= isset( $term->name ) ? $term->name : $meta->value;
 
 				}else {
-					$meta['meta_key']   = apply_filters( 'woocommerce_attribute_label', wc_attribute_label( $meta['meta_key'], $_product ), $meta['meta_key'] );
+
+					$_product	=	$current_item->get_product();
+					$meta->key	=	apply_filters( 'woocommerce_attribute_label', wc_attribute_label( $meta->key, $_product ), $meta->key );
 				}
 
-				array_push( $variation_details, wp_kses_post( urldecode( $meta['meta_key'] ) ) .': '.wp_kses_post( urldecode( $meta['meta_value'] ) ) );
+				array_push( $variation_details, wp_kses_post( urldecode( $meta->key ) ) .': '.wp_kses_post( urldecode( $meta->value ) ) );
 			}
 
 			return $variation_details = implode( ' | ', $variation_details );

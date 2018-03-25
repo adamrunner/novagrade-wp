@@ -4,13 +4,13 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitd36691831f1472965d1a5bf443c34199
+class ComposerStaticInitaf7b110dce609ec68f2b69a0a7c366ef
 {
     public static $files = array (
         'ce89ac35a6c330c55f4710717db9ff78' => __DIR__ . '/..' . '/kriswallsmith/assetic/src/functions.php',
-        '89ff252b349d4d088742a09c25f5dd74' => __DIR__ . '/..' . '/yahnis-elsts/plugin-update-checker/plugin-update-checker.php',
         'decc78cc4436b1292c6c0d151b19445c' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
         '3919eeb97e98d4648304477f8ef734ba' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/Crypt/Random.php',
+        '89ff252b349d4d088742a09c25f5dd74' => __DIR__ . '/..' . '/yahnis-elsts/plugin-update-checker/plugin-update-checker.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -68,13 +68,6 @@ class ComposerStaticInitd36691831f1472965d1a5bf443c34199
             'Math' => 
             array (
                 0 => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib',
-            ),
-        ),
-        'H' => 
-        array (
-            'Handlebars' => 
-            array (
-                0 => __DIR__ . '/..' . '/xamin/handlebars.php/src',
             ),
         ),
         'G' => 
@@ -153,10 +146,10 @@ class ComposerStaticInitd36691831f1472965d1a5bf443c34199
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitd36691831f1472965d1a5bf443c34199::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitd36691831f1472965d1a5bf443c34199::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInitd36691831f1472965d1a5bf443c34199::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInitd36691831f1472965d1a5bf443c34199::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitaf7b110dce609ec68f2b69a0a7c366ef::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitaf7b110dce609ec68f2b69a0a7c366ef::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitaf7b110dce609ec68f2b69a0a7c366ef::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInitaf7b110dce609ec68f2b69a0a7c366ef::$classMap;
 
         }, null, ClassLoader::class);
     }

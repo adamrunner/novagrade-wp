@@ -143,13 +143,16 @@ class VideoPress_Player {
 	 * @return string HTML string or empty string if error
 	 */
 	public function asXML() {
-		if ( empty( $this->video ) || is_wp_error( $this->video ) )
+		if ( empty( $this->video ) || is_wp_error( $this->video ) ) {
 			return '';
+		}
 
-		if ( isset( $this->options['freedom'] ) && $this->options['freedom'] === true )
-			$content = $this->html5_static();
-		else
+		if ( isset( $this->options['force_flash'] ) && true === $this->options['force_flash'] ) {
 			$content = $this->flash_embed();
+
+		} else {
+			$content = $this->html5_static();
+		}
 
 		return $this->html_wrapper( $content );
 	}
@@ -162,20 +165,29 @@ class VideoPress_Player {
 	public function asHTML() {
 		if ( empty( $this->video ) ) {
 			$content = '';
+
 		} elseif ( is_wp_error( $this->video ) ) {
 			$content = $this->error_message( $this->video );
-		} elseif ( isset( $this->options['force_flash'] ) && $this->options['force_flash'] === true ) {
+
+		} elseif ( isset( $this->options['force_flash'] ) && true === $this->options['force_flash'] ) {
 			$content = $this->flash_object();
-		} elseif ( isset( $this->video->restricted_embed ) && $this->video->restricted_embed === true ) {
-			if( $this->options['forcestatic'] )
+
+		} elseif ( isset( $this->video->restricted_embed ) && true === $this->video->restricted_embed ) {
+
+			if ( $this->options['forcestatic'] ) {
 				$content = $this->flash_object();
-			else
+
+			} else {
 				$content = $this->html5_dynamic();
-		} elseif ( isset( $this->options['freedom'] ) && $this->options['freedom'] === true ) {
+			}
+
+		} elseif ( isset( $this->options['freedom'] ) && true === $this->options['freedom'] ) {
 			$content = $this->html5_static();
+
 		} else {
 			$content = $this->html5_dynamic();
 		}
+
 		return $this->html_wrapper( $content );
 	}
 
@@ -314,10 +326,15 @@ class VideoPress_Player {
 				$html .= '<source src="' . esc_url( $mp4 ) . '" type="video/mp4; codecs=&quot;' . esc_attr( $this->video->videos->mp4->codecs ) . '&quot;" />';
 			unset( $mp4 );
 		}
-		$ogg = $this->video->videos->ogv->url;
-		if ( ! empty( $ogg ) )
-			$html .= '<source src="' . esc_url( $ogg ) . '" type="video/ogg; codecs=&quot;' . esc_attr( $this->video->videos->ogv->codecs ) . '&quot;" />';
-		unset( $ogg );
+
+		if ( isset( $this->video->videos->ogv ) ) {
+			$ogg = $this->video->videos->ogv->url;
+			if ( ! empty( $ogg ) ) {
+				$html .= '<source src="' . esc_url( $ogg ) . '" type="video/ogg; codecs=&quot;' . esc_attr( $this->video->videos->ogv->codecs ) . '&quot;" />';
+			}
+
+			unset( $ogg );
+		}
 
 		$html .= '<div><img alt="';
 		if ( isset( $this->video->title ) )
@@ -604,7 +621,6 @@ class VideoPress_Player {
 			}
 
 			$js_url = 'https://s0.wp.com/wp-content/plugins/video/assets/js/next/videopress-iframe.js';
-			$js_url = add_query_arg( 'jetpack_version', JETPACK__VERSION, $js_url );
 
 			return "<iframe width='" . esc_attr( $videopress_options['width'] )
 				. "' height='" . esc_attr( $videopress_options['height'] )
@@ -615,7 +631,6 @@ class VideoPress_Player {
 		} else {
 			$videopress_options = json_encode( $videopress_options );
 			$js_url = 'https://s0.wp.com/wp-content/plugins/video/assets/js/next/videopress.js';
-			$js_url = add_query_arg( 'jetpack_version', JETPACK__VERSION, $js_url );
 
 			return "<div id='{$video_container_id}'></div>
 				<script src='{$js_url}'></script>

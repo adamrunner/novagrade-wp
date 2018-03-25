@@ -227,6 +227,10 @@ class UpdraftPlus_Backblaze_CurlClient {
 			),
 		));
 
+		if (empty($response['contentLength'])) {
+			throw new Exception('B2: uploadLargeFinish error: contentLength returned was empty ('.serialize($response).')');
+		}
+		
 		return new UpdraftPlus_Backblaze_File(
 			$response['fileId'],
 			$response['fileName'],
@@ -265,6 +269,7 @@ class UpdraftPlus_Backblaze_CurlClient {
 			$buckets[] = new UpdraftPlus_Backblaze_Bucket($bucket['bucketId'], $bucket['bucketName'], $bucket['bucketType']);
 		}
 
+		
 		return $buckets;
 	}
 
@@ -517,6 +522,42 @@ class UpdraftPlus_Backblaze_CurlClient {
 
 		return (is_array($delete_result) && !empty($delete_result['fileId'])) ? true : false;
 	}
+	
+	/**
+	 * Create a private bucket with the given name.
+	 *
+	 * @param string $bucket_name - valid bucket name
+	 * @throws Exception
+	 *
+	 * @return boolean - If bucket created successfully, it returns true otherwise false.
+	 */
+    public function createPrivateBucket($bucket_name) {
+		try {
+			$response = $this->request('POST', $this->apiUrl.'/b2_create_bucket',
+				array(
+					'headers' => array(
+						'Authorization' => $this->authToken,
+					),
+					'json' => array(
+						'accountId' => $this->accountId,
+						'bucketName' => $bucket_name,
+						'bucketType' => 'allPrivate'
+					)
+				)
+			);
+		} catch (Exception $e) {
+			if (400 == $e->getCode()) {
+				throw new Exception("Bucket can't be created because Bucket name is already in use.", $e->getCode());
+			} else {
+				throw $e;	
+			}
+			return false;
+		}
+		if (isset($response['bucketId']) && isset($response['bucketName']) && isset($response['bucketType'])) {
+			return true;
+		}
+		return false;
+    }	
 
 }
 

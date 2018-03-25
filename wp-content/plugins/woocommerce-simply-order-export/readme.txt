@@ -1,10 +1,10 @@
 === WooCommerce Simply Order Export ===
-Contributors: ankitgadertcampcom
+Contributors: ankitgadertcampcom, wpgurudev
 Donate link: http://sharethingz.com
 Tags: woocommerce, order, export, csv, duration, woocommerce-order, woocommerce-order-export
-Requires at least: 4.0
-Tested up to: 4.4.2
-Stable tag: 2.0.7
+Requires at least: 4.5.0
+Tested up to: 4.8.0
+Stable tag: 2.1.9
 License: GPLv2 or later (of-course)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,6 +19,7 @@ You can add more fields to export and extend the functionality by using hooks. I
 
 * Easy to install and setup
 * Very simplified and clean UI.
+* Exports each product in order in separate line.
 * Easily customizable
 * Exports csv file containing information of WooCommerce orders
 * Exports orders between certain duration, you can select start and end date.
@@ -90,6 +91,45 @@ Please use wpg_order_columns and wpg_before_csv_write hooks for performing this 
 You can also opt for woocommerce simply order export add-on, it is available [here](http://sharethingz.com/woocommerce-simply-order-export-add-on/?utm_source=readme&utm_medium=plugin&utm_campaign=wsoe). It adds all the fields related to orders and allows users to reorder the fields using drag and drop interface.
 
 == Changelog ==
+
+= 2.1.9 =
+* Fix: Fatal error, cannot convert object to array.
+
+= 2.1.8 =
+* Fix: Fixed warning for has_meta function while fetching variation details.
+* Fix: Fixed license renewal warning.
+
+= 2.1.7 =
+* Compatibility: WooCommerce 3.0 compatibility checks and fixes.
+
+= 2.1.6 =
+* Modification: Changed main class structure to adopt factory method.
+* Modification: Changed settings API for plugin, now can be requested directly by calling instantiated object.
+* Feature: License checker and renewal reminder class for premium plugins.
+
+= 2.1.5 =
+* Fix: Fatal error - Can’t use function return value in write context.
+
+= 2.1.4 =
+* Feature: Ability to import and export settings of the plugin.
+
+= 2.1.3 =
+* Bug fix: Fixed duplicate record entries in export.
+
+= 2.1.2 =
+* Bug fix: Iterator value in do while loop.
+
+= 2.1.1 =
+* Bug fix: Duplicate records are added for last iteration.
+
+= 2.1.0 =
+* Fix: Memory leak issue, fetching data in chunks instead of all data at once.
+* Hook: Addition of wsoe_chunk_size hook for data fetching chunk size. Default is 20 records per query.
+* UI: Added spinner beside export button, so that user will get to know operation is in progress.
+
+= 2.0.8 =
+* Minor fix: Removed product name check for adding fields in csv to solve 500 internal errors.
+* Miscellaneous: Code cleanup. Removed unnecessary blocks of code.
 
 = 2.0.7 =
 * Minor fix: php support for older than 5.4.0 added for html_entity_decode function

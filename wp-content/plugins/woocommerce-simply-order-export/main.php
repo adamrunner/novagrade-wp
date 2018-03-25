@@ -1,8 +1,9 @@
 <?php
 /**
  * Plugin Name: WooCommerce Simply Order Export
+ * Plugin URI: https://wordpress.org/plugins/woocommerce-simply-order-export/
  * Description: Downloads order details in csv format
- * Version: 2.0.7
+ * Version: 2.1.9
  * Author: Ankit Gade
  * Author URI: http://sharethingz.com
  * License: GPL2
@@ -12,31 +13,52 @@ if( !defined('ABSPATH') ){
 	exit;
 }
 
+/**
+ * To include plugins related functions.
+ */
+if( !function_exists( 'get_plugin_data' ) ){
+	require_once ABSPATH. 'wp-admin/includes/plugin.php';
+}
 
 /**
  * Check if WooCommerce is already activated.
  */
-if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
-
-	define('WSOE_BASENAME', plugin_basename(__FILE__));
-
-	define('WSOE_BASE', plugin_dir_path(__FILE__));
+if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) && ( -1 !== version_compare( get_plugin_data( WP_PLUGIN_DIR.'/woocommerce/woocommerce.php' )['Version'], '3.0.0' ) ) ) {
 
 	class WooCommerce_simply_order_export {
 
 		/**
 		 * @var string
 		 */
-		public $version = '2.0.7';
+		public $version = '2.1.9';
+		
+		/**
+		 * Plugin Settings
+		 */
+		public $settings;
 
+		/**
+		 * Instance of the class.
+		 */
+		static $instance = null;
+
+		/**
+		 * Returns the current instance of the class
+		 */
+		static function instance() {
+
+			if( is_null(self::$instance) ){
+				self::$instance = new self();
+			}
+
+			return self::$instance;
+		}
+		
 		/**
 		 * Constructor
 		 */
 		function __construct() {
 
-			/**
-			 * Fires this function when plugin gets activated.
-			 */
 			register_activation_hook( __FILE__, array( __CLASS__, 'install' ) );
 			$this->define_constants();
 			$this->includes();
@@ -51,6 +73,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			$this->load_plugin_textdomain();
 			$this->set_variables();
 			$this->instantiate();
+			$this->settings = $this->wsoe_settings();
 
 			/**
 			 * Call notice function, only if this is the first time plugin has been installed.
@@ -84,10 +107,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		 */
 		function define_constants() {
 
-			define( 'OE_URL', plugins_url('', __FILE__) ); /* plugin url */
-			define( 'OE_CSS', OE_URL. "/assets/css/" ); /* Define all necessary variables first */
-			define( 'OE_JS',  OE_URL. "/assets/js/" );
-			define( 'OE_IMG',  OE_URL. "/assets/img/" );
+			define('WSOE_BASENAME', plugin_basename(__FILE__));
+			define('WSOE_BASE', plugin_dir_path(__FILE__));
+			define( 'WSOE_URL', plugins_url('', __FILE__) ); /* plugin url */
+			define( 'WSOE_CSS', WSOE_URL. "/assets/css/" ); /* Define all necessary variables first */
+			define( 'WSOE_JS',  WSOE_URL. "/assets/js/" );
+			define( 'WSOE_IMG',  WSOE_URL. "/assets/img/" );
 		}
 
 		/**
@@ -122,7 +147,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		/**
 		 * Runs when plugin is activated.
 		 */
-		function install() {
+		static function install() {
 
 			ob_start();
 
@@ -149,7 +174,73 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			$this->wpg_order_export = new wpg_order_export();
 		}
 
+		/**
+		 * Settings for the plugin.
+		 */
+		public function wsoe_settings() {
+
+			$default_settings = array( 'wsoe_export_filename'=>'', 'wsoe_order_statuses'=> array(), 'wsoe_delimiter'=>',', 'wsoe_fix_chars'=>0  );
+			$extensions = array( 'add-on'=>false, 'scheduler'=>false );
+
+			/**
+			 * Fill up the settings.
+			 */
+			$plugin_settings = get_option( 'wsoe_advanced_settings_core', array() );
+			$plugin_settings = wp_parse_args( $plugin_settings, $default_settings );
+
+			/**
+			 * Check if add-on plugin is installed
+			 */
+			if( class_exists('wsoe_addon') ){
+				$extensions['add-on'] = true;
+			}
+
+			/**
+			 * Check if scheduler plugin is installed
+			 */
+			if( class_exists('wsoe_schedular') ){
+				$extensions['scheduler'] = true;
+			}
+
+			return apply_filters( 'wsoe_settings', array( 'plugin_settings'=> $plugin_settings, 'extensions'=>$extensions ) );
+		}
+		
+		/**
+		 * Flushes the setting and fills up with the new values.
+		 */
+		public function flush_settings() {
+			$this->settings = $this->wsoe_settings();
+		}
+
 	}
 
-	new WooCommerce_simply_order_export();
+	/**
+	 * Instantiate the class
+	 * @return Object
+	 */
+	function WSOE() {
+		return WooCommerce_simply_order_export::instance();
+	}
+
+	WSOE();
+
+}else{
+	
+	/**
+	 * Display notice to install base plugin in order to make this add-on plugin functional.
+	 * @since 2.9
+	 */
+	function wsoe_install_older_version() {?>
+
+		<div class="notice notice-warning">
+			<p><?php
+				_e( sprintf( '<strong>WooCommerce Simply Order Export:</strong> This plugin is compatible with WooCommerce 3.0.0 and higher, you are using '
+						. 'WooCommerce %s, please update WooCommerce to latest version (recommended) OR '
+						. 'downgrade this plugin to version 2.1.6 (not recommended)', WC()->version), 
+							'woocommerce-simply-order-export-add-on' ); ?>
+			</p>
+		</div><?php
+
+	}
+	add_action( 'admin_notices', 'wsoe_install_older_version' );
 }

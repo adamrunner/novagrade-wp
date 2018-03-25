@@ -25,26 +25,11 @@ if( !class_exists( 'wpg_order_export' ) ){
 			add_action( 'admin_enqueue_scripts', array($this, 'scripts') );
 			add_action( 'woocommerce_settings_wc_settings_tab_orderexport_section_end_after', array($this, 'section_end'), 999 );
 
-			add_action('wp_ajax_wpg_order_export', array($this, 'wsoe_order_export'));
+			add_action( 'wp_ajax_wpg_order_export', array($this, 'wsoe_order_export') );
 			add_action( 'admin_init' , array( $this, 'wsoe_download' ) );
 			add_filter( 'plugin_action_links_'.WSOE_BASENAME, array($this, 'wsoe_action_links') );
 			add_action( 'woocommerce_settings_saved', array( $this, 'settings_saved' ) );
-		}
-
-		/**
-		 * Runs when plugin is activated.
-		 */
-		function install() {
-
-			global $wpg_order_columns;
-
-			foreach( $wpg_order_columns as $key=>$val ){
-
-				$option = get_option( $key, null );
-				if( empty( $option ) ) {
-					update_option($key, 'yes');
-				}
-			}
+			add_action( 'woocommerce_settings_saved', array($this, 'lazy_settings_saved'), 50 ); // Lazy action to be performed once settings are saved
 		}
 
 		public function scripts( $pagehook ) {
@@ -53,10 +38,10 @@ if( !class_exists( 'wpg_order_export' ) ){
 				wp_enqueue_script('jquery-ui-datepicker');
 				wp_enqueue_style('jquery-ui-datepicker');
 				wp_enqueue_script('jquery-ui-sortable');
-				wp_enqueue_script( 'order-export', OE_JS. 'orderexport.js', array('jquery','jquery-ui-datepicker'), false, true );
+				wp_enqueue_script( 'order-export', WSOE_JS. 'orderexport.js', array('jquery','jquery-ui-datepicker'), false, true );
 			}
 			
-			wp_enqueue_style('wpg-style', OE_CSS.'style.css');
+			wp_enqueue_style('wpg-style', WSOE_CSS.'style.css');
 		}
 
 		/**
@@ -257,7 +242,7 @@ if( !class_exists( 'wpg_order_export' ) ){
 		 */
 		function advanced_options() {
 
-			$settings = self::advanced_option_settings(); ?>
+			$settings = WSOE()->settings['plugin_settings']; ?>
 
 			<tr valign="top" class="single_select_page">
 				<td style="padding-left: 0;" colspan="2">
@@ -272,7 +257,7 @@ if( !class_exists( 'wpg_order_export' ) ){
 								<tr>
 									<th>
 										<?php _e( 'Order Export Filename', 'woocommerce-simply-order-export' ) ?>
-										<img class="help_tip" data-tip="<?php _e('This will be the downloaded csv filename', 'woocommerce-simply-order-export') ?>" src="<?php echo OE_IMG; ?>help.png" height="16" width="16">
+										<img class="help_tip" data-tip="<?php _e('This will be the downloaded csv filename', 'woocommerce-simply-order-export') ?>" src="<?php echo WSOE_IMG; ?>help.png" height="16" width="16">
 									</th>
 									<td><input type="text" name="woo_soe_csv_name" value="<?php echo $settings['wsoe_export_filename'] ?>" /><?php _e('.csv', 'woocommerce-simply-order-export') ?></td>
 								</tr>
@@ -280,7 +265,7 @@ if( !class_exists( 'wpg_order_export' ) ){
 								<tr>
 									<th>
 										<?php _e('Order Statuses', 'woocommerce-simply-order-export') ?>
-										<img class="help_tip" data-tip="<?php _e('Orders with only selected status will be exported, if none selected then all order status will be exported', 'woocommerce-simply-order-export') ?>" src="<?php echo OE_IMG; ?>help.png" height="16" width="16">
+										<img class="help_tip" data-tip="<?php _e('Orders with only selected status will be exported, if none selected then all order status will be exported', 'woocommerce-simply-order-export') ?>" src="<?php echo WSOE_IMG; ?>help.png" height="16" width="16">
 									</th>
 									<td><?php
 
@@ -303,7 +288,7 @@ if( !class_exists( 'wpg_order_export' ) ){
 
 									<th>
 										<?php _e( 'Delimiter', 'woocommerce-simply-order-export') ?>
-										<img class="help_tip" data-tip="<?php _e('Delimiter for exported file.', 'woocommerce-simply-order-export') ?>" src="<?php echo OE_IMG; ?>help.png" height="16" width="16">
+										<img class="help_tip" data-tip="<?php _e('Delimiter for exported file.', 'woocommerce-simply-order-export') ?>" src="<?php echo WSOE_IMG; ?>help.png" height="16" width="16">
 									</th>
 
 									<td>
@@ -412,11 +397,10 @@ if( !class_exists( 'wpg_order_export' ) ){
 				$download_filename = $_GET['downloadname'];
 				$filename   = trailingslashit( wsoe_upload_dir() ).$_GET['filename'].'.csv';
 				$charset = get_option('blog_charset');
-				$settings = self::advanced_option_settings();
+				$settings = WSOE()->settings['plugin_settings'];
 
 				$file = fopen( $filename, 'r' );
 				$contents = fread($file, filesize($filename));
-				fclose($file);
 
 				header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 				header('Content-Description: File Transfer');
@@ -425,8 +409,6 @@ if( !class_exists( 'wpg_order_export' ) ){
 				header("Content-Disposition: attachment; filename=$download_filename.csv");
 				header("Expires: 0");
 				header("Pragma: public");
-
-				$fh = @fopen( 'php://output', 'w' );
 
 				if( !empty($settings['wsoe_fix_chars']) ){
 
@@ -441,13 +423,13 @@ if( !class_exists( 'wpg_order_export' ) ){
 					$contents = chr(255) . chr(254).$contents; // Add byte order mark
 				}
 
-				fwrite( $fh, $contents );
-				fclose($fh);
+				fwrite( $file, $contents );
+				readfile($filename);
 				exit();
 			
 			}
         }
-		
+
 		/**
 		 * This function will be used to save the advanced settings options
 		 * 
@@ -456,7 +438,7 @@ if( !class_exists( 'wpg_order_export' ) ){
 		function settings_saved() {
 
 			if( !empty($_REQUEST['page']) && !empty($_REQUEST['tab']) && $_REQUEST['tab'] === 'order_export' ) {
-
+				
 				$advanced_settings = array( 'wsoe_export_filename'=>'', 'wsoe_order_statuses'=> array(), 'wsoe_delimiter'=>'', 'wsoe_fix_chars'=>0 );
 				
 				/**
@@ -488,16 +470,11 @@ if( !class_exists( 'wpg_order_export' ) ){
 		}
 
 		/**
-		 * Retrieves advanced option settings for plugin.
+		 * This function would get called much late once settings are saved.
+		 * This can be used for the purpose, like flushing settings etc.
 		 */
-		static function advanced_option_settings() {
-
-			$default_settings = $advanced_settings = array( 'wsoe_export_filename'=>'', 'wsoe_order_statuses'=> array(), 'wsoe_delimiter'=>',', 'wsoe_fix_chars'=>0  );
-			$settings = get_option( 'wsoe_advanced_settings_core', array() );
-
-			$settings = wp_parse_args( $settings, $default_settings );
-
-			return $settings;
+		function lazy_settings_saved() {
+			WSOE()->flush_settings();
 		}
 
 	}

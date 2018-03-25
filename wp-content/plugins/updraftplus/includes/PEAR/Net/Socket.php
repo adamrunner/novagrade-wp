@@ -209,7 +209,9 @@ class Net_Socket extends PEAR
         }
 
         if (!$fp) {
+            // @codingStandardsIgnoreLine
             if ($errno == 0 && !strlen($errstr) && isset($php_errormsg)) {
+                // @codingStandardsIgnoreLine
                 $errstr = $php_errormsg;
             }
             @ini_set('track_errors', $old_track_errors);

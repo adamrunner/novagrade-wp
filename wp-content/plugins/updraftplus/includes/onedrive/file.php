@@ -5,7 +5,7 @@ namespace Onedrive;
  * A File instance is an Object instance referencing a OneDrive file. It may
  * have content but may not contain other OneDrive objects.
  */
-class File extends Object {
+class File extends Instance {
 	/**
 	 * Constructor.
 	 *

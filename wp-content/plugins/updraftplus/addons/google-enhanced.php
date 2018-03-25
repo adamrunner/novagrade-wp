@@ -24,7 +24,17 @@ class UpdraftPlus_Addon_Google_Enhanced {
 		return $orig;
 	}
 
-	public function googledrive_parent_id($parent_id, $opts, $service, $module) {
+	/**
+	 * WordPress filter updraftplus_googledrive_parent_id
+	 *
+	 * @param String|Boolean $parent_id - parent ID value prior to filtering
+	 * @param Array			 $opts		- service options
+	 * @param Object		 $storage	- service object
+	 * @param Object		 $module	- UpdraftPlus_BackupModule_googledrive object
+	 *
+	 * @return String|Boolean - filtered value
+	 */
+	public function googledrive_parent_id($parent_id, $opts, $storage, $module) {
 
 		if (isset($opts['folder'])) {
 			$folder = $opts['folder'];

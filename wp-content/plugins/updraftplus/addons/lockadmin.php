@@ -3,9 +3,9 @@
 /*
 UpdraftPlus Addon: lockadmin:Password-protect the UpdraftPlus Settings Screen
 Description: Provides the ability to lock the UpdraftPlus settings with a password
-Version: 1.2
+Version: 1.3
 Shop: /shop/lockadmin/
-Latest Change: 1.12.20
+Latest Change: 1.14.3
 */
 // @codingStandardsIgnoreEnd
 
@@ -21,6 +21,9 @@ class UpdraftPlus_Addon_LockAdmin {
 
 	private $default_support_url = 'https://updraftplus.com/faqs/locked-updraftplus-settings-page-forgotten-password-unlock/';
 
+	/**
+	 * Constructor
+	 */
 	public function __construct() {
 		add_filter('updraftplus_settings_page_render', array($this, 'settings_page_render'));
 		add_action('updraftplus_settings_page_render_abort', array($this, 'settings_page_render_abort'));
@@ -74,12 +77,20 @@ class UpdraftPlus_Addon_LockAdmin {
 		if (!isset($this->opts['support_url'])) $this->opts['support_url'] = '';
 	}
 
+	/**
+	 * Runs upon the WP action admin_init, but only if there's appropriate data in $_POST
+	 */
 	public function admin_init() {
+	
 		if ((empty($_POST['updraft_unlockadmin_session_length']) && empty($_POST['updraft_unlockadmin_password'])) || empty($_POST['nonce'])) return;
+		
 		if (!wp_verify_nonce($_POST['nonce'], 'updraftplus-unlockadmin-nonce')) return;
+		
 		$user = wp_get_current_user();
 		if (!is_a($user, 'WP_User')) return;
+		
 		$this->get_opts();
+		
 		if (!empty($_POST['updraft_unlockadmin_session_length']) && isset($_POST['updraft_unlockadmin_oldpassword']) && $_POST['updraft_unlockadmin_oldpassword'] == $this->opts['password']) {
 			$this->old_password = $this->opts['password'];
 			$this->opts['password'] = $_POST['updraft_unlockadmin_password'];
@@ -89,6 +100,7 @@ class UpdraftPlus_Addon_LockAdmin {
 			$this->password_length = strlen($this->opts['password']);
 			add_action('all_admin_notices', array($this, 'show_admin_warning_passwordset'));
 		}
+		
 		// Note: this code also fires when the user sets a new password (because we don't want to immediately lock them)
 		$password = $this->opts['password'];
 		if ($password === (string) $_POST['updraft_unlockadmin_password']) {
@@ -132,13 +144,16 @@ class UpdraftPlus_Addon_LockAdmin {
 		return false;
 	}
 
+	/**
+	 * Runs upon the WP action updraftplus_debugtools_dashboard
+	 */
 	public function debugtools_dashboard() {
 		global $updraftplus_admin;
 		$this->get_opts();
 		?>
 		<div class="advanced_tools lock_admin">
 			<h3>
-				<?php echo __('Lock access to the UpdraftPlus settings page', 'updraftplus'); ?>
+				<?php _e('Lock access to the UpdraftPlus settings page', 'updraftplus'); ?>
 			</h3>
 			<p>
 				<a href="https://updraftplus.com/lock-updraftplus-settings/">
@@ -220,7 +235,7 @@ class UpdraftPlus_Addon_LockAdmin {
 				<span style="font-size:85%;"><em>
 					<?php
 						$this->get_opts();
-						$url = (empty($this->opts['support_url'])) ? $this->default_support_url : $this->opts['support_url'];
+						$url = empty($this->opts['support_url']) ? $this->default_support_url : $this->opts['support_url'];
 						if (preg_match('/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i', $url)) $url = 'mailto:'.$url;
 						if (!empty($url)) {
 							echo '<a href="'.esc_attr($url).'">';

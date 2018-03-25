@@ -98,10 +98,7 @@ class WP_Http {
 	 * Please note: The only URI that are supported in the HTTP Transport implementation
 	 * are the HTTP and HTTPS protocols.
 	 *
-	 * @access public
 	 * @since 2.7.0
-	 *
-	 * @global string $wp_version
 	 *
 	 * @param string       $url  The request URL.
 	 * @param string|array $args {
@@ -116,7 +113,7 @@ class WP_Http {
 	 *     @type string       $httpversion         Version of the HTTP protocol to use. Accepts '1.0' and '1.1'.
 	 *                                             Default '1.0'.
 	 *     @type string       $user-agent          User-agent value sent.
-	 *                                             Default WordPress/' . $wp_version . '; ' . get_bloginfo( 'url' ).
+	 *                                             Default 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ).
 	 *     @type bool         $reject_unsafe_urls  Whether to pass URLs through wp_http_validate_url().
 	 *                                             Default false.
 	 *     @type bool         $blocking            Whether the calling code requires the result of the request.
@@ -148,8 +145,6 @@ class WP_Http {
 	 *                        A WP_Error instance upon error.
 	 */
 	public function request( $url, $args = array() ) {
-		global $wp_version;
-
 		$defaults = array(
 			'method' => 'GET',
 			/**
@@ -185,7 +180,7 @@ class WP_Http {
 			 *
 			 * @param string $user_agent WordPress user agent string.
 			 */
-			'user-agent' => apply_filters( 'http_headers_useragent', 'WordPress/' . $wp_version . '; ' . get_bloginfo( 'url' ) ),
+			'user-agent' => apply_filters( 'http_headers_useragent', 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ) ),
 			/**
 			 * Filters whether to pass URLs through wp_http_validate_url() in an HTTP request.
 			 *
@@ -304,7 +299,7 @@ class WP_Http {
 			'timeout' => $r['timeout'],
 			'useragent' => $r['user-agent'],
 			'blocking' => $r['blocking'],
-			'hooks' => new Requests_Hooks(),
+			'hooks' => new WP_HTTP_Requests_Hooks( $url, $r ),
 		);
 
 		// Ensure redirects follow browser behaviour.
@@ -395,7 +390,7 @@ class WP_Http {
 		 * @param array|WP_Error $response HTTP response or WP_Error object.
 		 * @param string         $context  Context under which the hook is fired.
 		 * @param string         $class    HTTP transport used.
-		 * @param array          $args     HTTP request arguments.
+		 * @param array          $r        HTTP request arguments.
 		 * @param string         $url      The request URL.
 		 */
 		do_action( 'http_api_debug', $response, 'response', 'Requests', $r, $url );
@@ -432,7 +427,6 @@ class WP_Http {
 	 * Normalizes cookies for using in Requests.
 	 *
 	 * @since 4.6.0
-	 * @access public
 	 * @static
 	 *
 	 * @param array $cookies List of cookies to send with the request.
@@ -460,11 +454,11 @@ class WP_Http {
 	 * specification for compatibility purposes.
 	 *
 	 * @since 4.6.0
-	 * @access public
 	 * @static
 	 *
 	 * @param string            $location URL to redirect to.
 	 * @param array             $headers  Headers for the redirect.
+	 * @param string|array      $data     Body to send with the request.
 	 * @param array             $options  Redirect request options.
 	 * @param Requests_Response $original Response object.
 	 */
@@ -477,6 +471,8 @@ class WP_Http {
 
 	/**
 	 * Validate redirected URLs.
+	 *
+	 * @since 4.7.5
 	 *
 	 * @throws Requests_Exception On unsuccessful URL validation
 	 * @param string $location URL to redirect to.
@@ -491,7 +487,6 @@ class WP_Http {
 	 * Tests which transports are capable of supporting the request.
 	 *
 	 * @since 3.2.0
-	 * @access public
 	 *
 	 * @param array $args Request arguments
 	 * @param string $url URL to Request
@@ -541,7 +536,6 @@ class WP_Http {
 	 * @since 3.2.0
 	 *
 	 * @static
-	 * @access private
 	 *
 	 * @param string $url URL to Request
 	 * @param array $args Request arguments
@@ -583,7 +577,6 @@ class WP_Http {
 	 *
 	 * Used for sending data that is expected to be in the body.
 	 *
-	 * @access public
 	 * @since 2.7.0
 	 *
 	 * @param string       $url  The request URL.
@@ -601,7 +594,6 @@ class WP_Http {
 	 *
 	 * Used for sending data that is expected to be in the body.
 	 *
-	 * @access public
 	 * @since 2.7.0
 	 *
 	 * @param string $url The request URL.
@@ -619,7 +611,6 @@ class WP_Http {
 	 *
 	 * Used for sending data that is expected to be in the body.
 	 *
-	 * @access public
 	 * @since 2.7.0
 	 *
 	 * @param string $url The request URL.
@@ -635,7 +626,6 @@ class WP_Http {
 	/**
 	 * Parses the responses and splits the parts into headers and body.
 	 *
-	 * @access public
 	 * @static
 	 * @since 2.7.0
 	 *
@@ -654,7 +644,6 @@ class WP_Http {
 	 * If an array is given then it is assumed to be raw header data with numeric keys with the
 	 * headers as the values. No headers must be passed that were already processed.
 	 *
-	 * @access public
 	 * @static
 	 * @since 2.7.0
 	 *
@@ -732,8 +721,7 @@ class WP_Http {
 	 * which are each parsed into strings and added to the Cookie: header (within the arguments array).
 	 * Edits the array by reference.
 	 *
-	 * @access public
-	 * @version 2.8.0
+	 * @since 2.8.0
 	 * @static
 	 *
 	 * @param array $r Full array of args passed into ::request()
@@ -763,7 +751,6 @@ class WP_Http {
 	 *
 	 * @link https://tools.ietf.org/html/rfc2616#section-19.4.6 Process for chunked decoding.
 	 *
-	 * @access public
 	 * @since 2.7.0
 	 * @static
 	 *
@@ -872,7 +859,6 @@ class WP_Http {
 	/**
 	 * Used as a wrapper for PHP's parse_url() function that handles edgecases in < PHP 5.4.7.
 	 *
-	 * @access protected
 	 * @deprecated 4.4.0 Use wp_parse_url()
 	 * @see wp_parse_url()
 	 *
@@ -893,7 +879,6 @@ class WP_Http {
 	 * @since 3.4.0
 	 *
 	 * @static
-	 * @access public
 	 *
 	 * @param string $maybe_relative_path The URL which might be relative
 	 * @param string $url                 The URL which $maybe_relative_path is relative to
@@ -964,7 +949,6 @@ class WP_Http {
 	 * Handles HTTP Redirects and follows them if appropriate.
 	 *
 	 * @since 3.7.0
-	 *
 	 * @static
 	 *
 	 * @param string $url The URL which was requested.

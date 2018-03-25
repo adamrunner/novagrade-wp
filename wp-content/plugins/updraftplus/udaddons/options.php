@@ -336,16 +336,18 @@ ENDHERE;
 			$notgrantedlogin = esc_js(__('Claim not granted - your account login details were wrong', 'updraftplus'));
 			$ukresponse = esc_js(__('An unknown response was received. Response was:', 'updraftplus'));
 			echo <<<ENDHERE
-		<div id="udm_pleasewait" class="updated" style="border: 1px solid; padding: 10px; margin-top: 10px; margin-bottom: 10px; clear: both; float: left; display:none;"><strong>$pleasewait</strong></div>
 		<script type="text/javascript">
 			function udm_claim(key) {
+				if (jQuery('#addon-'+key).children('.addon-activation-notice').length) {
+					return false;
+				}
 				var data = {
 					action: 'udaddons_claimaddon',
 					nonce: '$nonce',
 					key: key
 				};
 				
-				jQuery('#udm_pleasewait').fadeIn();
+				jQuery('#addon-'+key).prepend('<div class="addon-activation-notice updated" style="border: 1px solid; padding: 10px; margin-top: 10px; margin-bottom: 10px; position: absolute; z-index:99; "><strong>$pleasewait</strong></div>');
 				
 				jQuery.post(ajaxurl, data, function(resp) {
 				
@@ -373,8 +375,6 @@ ENDHERE;
 					} else {
 						alert("$ukresponse "+response);
 					}
-					
-					jQuery('#udm_pleasewait').fadeOut();
 				});
 			}
 		</script>
@@ -500,9 +500,9 @@ ENDHERE;
 				global $updraftplus_addons2;
 				$sid = $updraftplus_addons2->siteid();
 				if (isset($unclaimed['status']) && 'reclaimable' == $unclaimed['status']) {
-					$blurb ='<p><strong>'.__('Available to claim on this site', 'updraftplus').' - <a href="#" onclick="udm_claim(\''.$key.'\');">'.__('activate it on this site', 'updraftplus').'</a></strong></p>';
+					$blurb ='<p><strong>'.__('Available to claim on this site', 'updraftplus').' - <a href="#" onclick="return udm_claim(\''.$key.'\');">'.__('activate it on this site', 'updraftplus').'</a></strong></p>';
 				} else {
-					$blurb ='<p><strong>'.__('You have an inactive purchase', 'updraftplus').' - <a href="#" onclick="udm_claim(\''.$key.'\');">'.__('activate it on this site', 'updraftplus').'</a></strong></p>';
+					$blurb ='<p><strong>'.__('You have an inactive purchase', 'updraftplus').' - <a href="#" onclick="return udm_claim(\''.$key.'\');">'.__('activate it on this site', 'updraftplus').'</a></strong></p>';
 				}
 					$preblurb ="";
 			} else {
@@ -511,7 +511,7 @@ ENDHERE;
 			}
 		}
 		return <<<ENDHERE
-			<div style="border: 1px solid; border-radius: 4px; padding: 0px 12px 0px; min-height: 110px; width: 680px; margin-bottom: 16px; background-color:#fff;">
+			<div id="addon-$key" style="border: 1px solid; border-radius: 4px; padding: 0px 12px 0px; min-height: 110px; width: 680px; margin-bottom: 16px; background-color:#fff;">
 			$preblurb
 			<div style="width: 580px;"><h2 style="">$name</h2>
 			$description<br>
@@ -539,7 +539,7 @@ ENDHERE;
 
 		$name = "_wpnonce";
 		$action = esc_attr($option_group."-options");
-		$nonce_field = '<input type="hidden" id="' . $name . '" name="' . $name . '" value="' . wp_create_nonce($action) . '" />';
+		$nonce_field = '<input type="hidden" name="' . $name . '" value="' . wp_create_nonce($action) . '" />';
 	
 		echo $nonce_field;
 

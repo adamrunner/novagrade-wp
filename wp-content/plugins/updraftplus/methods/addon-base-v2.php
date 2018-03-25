@@ -29,8 +29,6 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 
 	protected $description;
 
-	protected $storage;
-
 	protected $options;
 
 	private $chunked;
@@ -80,7 +78,7 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 		$storage = $this->bootstrap();
 		if (is_wp_error($storage)) return $updraftplus->log_wp_error($storage, false, true);
 
-		$this->storage = $storage;
+		$this->set_storage($storage);
 
 		$updraft_dir = trailingslashit($updraftplus->backups_dir_location());
 
@@ -116,8 +114,8 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 			$this->options = $this->get_options();
 			if (!$this->options_exist($this->options)) return new WP_Error('no_settings', sprintf(__('No %s settings were found', 'updraftplus'), $this->description));
 
-			$this->storage = $this->bootstrap();
-			if (is_wp_error($this->storage)) return $this->storage;
+			$storage = $this->bootstrap();
+			if (is_wp_error($storage)) return $storage;
 
 			return $this->do_listfiles($match);
 			
@@ -141,7 +139,9 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 			return false;
 		}
 
-		if (empty($this->storage)) {
+		$storage = $this->get_storage();
+
+		if (empty($storage)) {
 
 			$this->options = $this->get_options();
 			if (!$this->options_exist($this->options)) {
@@ -150,8 +150,8 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 				return false;
 			}
 
-			$this->storage = $this->bootstrap();
-			if (is_wp_error($this->storage)) return $this->storage;
+			$storage = $this->bootstrap();
+			if (is_wp_error($storage)) return $storage;
 
 		}
 
@@ -197,8 +197,8 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 		}
 
 		try {
-			$this->storage = $this->bootstrap();
-			if (is_wp_error($this->storage)) return $updraftplus->log_wp_error($this->storage, false, true);
+			$storage = $this->bootstrap();
+			if (is_wp_error($storage)) return $updraftplus->log_wp_error($storage, false, true);
 		} catch (Exception $e) {
 			$ret = false;
 			$updraftplus->log('ERROR: '.$this->method.": $files[0]: Failed to download file: ".$e->getMessage().' (code: '.$e->getCode().', line: '.$e->getLine().', file: '.$e->getFile().')');
@@ -229,28 +229,6 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 		return $ret;
 	}
 
-	public function config_print() {
-
-		$this->options = $this->get_options();
-		$method = $this->method;
-
-		$classes = $this->get_css_classes();
-
-		if ($this->chunked) {
-		?>
-			<tr class="<?php echo $classes; ?>">
-				<td></td>
-				<td><p><em><?php printf(__('%s is a great choice, because UpdraftPlus supports chunked uploads - no matter how big your site is, UpdraftPlus can upload it a little at a time, and not get thwarted by timeouts.', 'updraftplus'), $this->description);?></em></p></td>
-			</tr>
-		<?php
-		}
-			if (method_exists($this, 'do_config_print')) $this->do_config_print($this->options);
-
-			if (!$this->test_button || (method_exists($this, 'should_print_test_button') && !$this->should_print_test_button())) return;
-
-			echo $this->get_test_button_html($this->description);
-	}
-
 	/**
 	 * Get the configuration template
 	 *
@@ -259,12 +237,7 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 	public function get_configuration_template() {
 		$classes = $this->get_css_classes();
 		$template_str = '';
-		if ($this->chunked) {
-			$template_str .= '<tr class="'.$classes.'">
-									<td></td>
-									<td><p><em>'.sprintf(__('%s is a great choice, because UpdraftPlus supports chunked uploads - no matter how big your site is, UpdraftPlus can upload it a little at a time, and not get thwarted by timeouts.', 'updraftplus'), $this->description).'</em></p></td>
-								</tr>';
-		}
+
 		if (method_exists($this, 'do_get_configuration_template')) {
 			$template_str .= $this->do_get_configuration_template();
 		}
@@ -279,7 +252,7 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 	 * @param array $opts
 	 * @return array - Modified handerbar template options
 	 */
-	protected function transform_options_for_template($opts) {
+	public function transform_options_for_template($opts) {
 		if (method_exists($this, 'do_transform_options_for_template')) {
 			$opts = $this->do_transform_options_for_template($opts);
 		}
@@ -300,9 +273,10 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 
 	public function bootstrap($opts = false, $connect = true) {
 		if (false === $opts) $opts = $this->options;
+		$storage = $this->get_storage();
 		// Be careful of checking empty($opts) here - some storage methods may have no options until the OAuth token has been obtained
 		if ($connect && !$this->options_exist($opts)) return new WP_Error('no_settings', sprintf(__('No %s settings were found', 'updraftplus'), $this->description));
-		if (!empty($this->storage) && !is_wp_error($this->storage)) return $this->storage;
+		if (!empty($storage) && !is_wp_error($storage)) return $storage;
 		return $this->do_bootstrap($opts, $connect);
 	}
 
@@ -319,11 +293,11 @@ abstract class UpdraftPlus_RemoteStorage_Addons_Base_v2 extends UpdraftPlus_Back
 			}
 		}
 
-		$this->storage = $this->bootstrap($posted_settings);
+		$storage = $this->bootstrap($posted_settings);
 		
-		if (is_wp_error($this->storage)) {
+		if (is_wp_error($storage)) {
 			echo __("Failed", 'updraftplus').": ";
-			foreach ($this->storage->get_error_messages() as $key => $msg) {
+			foreach ($storage->get_error_messages() as $key => $msg) {
 				echo "$msg\n";
 			}
 			return;

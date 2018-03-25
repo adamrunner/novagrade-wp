@@ -338,6 +338,7 @@ class UpdraftPlusAddons2 {
 	}
 
 	public function update_option($option, $val) {
+		delete_site_option($option);
 		return update_site_option($option, $val);
 	}
 
@@ -465,9 +466,9 @@ class UpdraftPlusAddons2 {
 			// If the results included update information, then store that
 			if (!empty($result->data) && !empty($result->data->plugin_info)) {
 			
-				if (class_exists('Puc_v4p2_Plugin_Update') && !empty($this->plug_updatechecker)) {
+				if (class_exists('Puc_v4p3_Plugin_Update') && !empty($this->plug_updatechecker)) {
 
-					$plugin_update = Puc_v4p2_Plugin_Update::fromObject($result->data->plugin_info);
+					$plugin_update = Puc_v4p3_Plugin_Update::fromObject($result->data->plugin_info);
 
 					$update_checker = $this->plug_updatechecker;
 					

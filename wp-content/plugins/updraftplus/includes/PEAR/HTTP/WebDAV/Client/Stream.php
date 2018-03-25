@@ -209,8 +209,13 @@ class HTTP_WebDAV_Client_Stream
 //                 break; // write
 //             }
 //             $this->eof = true;
-        default: 
-            trigger_error("file not found: ".$req->getResponseCode());
+		// N.B. Some 404s drop also through to here
+        default:
+			// Log only if the condition was not expected
+			global $updraftplus_404_should_be_logged;
+			if ((isset($updraftplus_404_should_be_logged) && $updraftplus_404_should_be_logged) || !isset($updraftplus_404_should_be_logged)) {
+            	trigger_error("file not found: ".$req->getResponseCode());
+			}
             return false;
         }
         

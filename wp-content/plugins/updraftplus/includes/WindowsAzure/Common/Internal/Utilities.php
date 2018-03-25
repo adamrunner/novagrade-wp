@@ -577,6 +577,8 @@ class Utilities
         $list = array();
 
         foreach ($parsed as $value) {
+            // We don't use this SDK on PHP 5.2
+            // @codingStandardsIgnoreLine
             $list[] = $class::create($value);
         }
 
@@ -654,10 +656,15 @@ class Utilities
      * @param string $key                  AES Encryption key
      * @param string $initializationVector Initialization vector
      * 
+     * We ignore it for standards purposes because the function is apparently nowhere called
+     * @codingStandardsIgnoreStart
+     *
      * @return string Encrypted data
      */
     public static function ctrCrypt($data, $key, $initializationVector) 
     {
+        error_log("WindowsAzure\Common\Internal\Utilities::ctrCrypt called - code path thought to be impossible; linting needs re-enabling");
+
         Validate::isString($data, 'data');
         Validate::isString($key, 'key');
         Validate::isString($initializationVector, 'initializationVector');
@@ -700,6 +707,8 @@ class Utilities
     
     /**
      * Convert base 256 number to decimal number. 
+     * 
+     * @codingStandardsIgnoreEnd
      * 
      * @param string $number Base 256 number
      * 

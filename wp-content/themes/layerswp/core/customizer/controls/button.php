@@ -1,7 +1,8 @@
-<?php  /**
+<?php
+/**
  * Button
  *
- * This file is used to register and display the custom Layers Button
+ * This file is used to register and display the custom Layers Button.
  *
  * @package Layers
  * @since Layers 1.0.0
@@ -20,6 +21,8 @@ if( !class_exists( 'Layers_Customize_Button_Control' ) ) {
 			$values = false; ?>
 
 			<div id="layers-customize-control-<?php echo esc_attr( $this->id ); ?>" class="l_option-customize-control l_option-customize-control-<?php echo esc_attr( str_replace( 'layers-', '', $this->type ) ); ?> <?php echo esc_attr( $this->class ); ?>" <?php echo $this->get_linked_data(); ?> >
+				
+				<?php do_action( 'layers-control-inside', $this ); ?>
 
 				<?php if ( '' != $this->heading_divider ) { ?>
 					<?php $this->render_heading_divider( $this->heading_divider ); ?>
@@ -50,6 +53,18 @@ if( !class_exists( 'Layers_Customize_Button_Control' ) ) {
 						)
 					); ?>
 				</div>
+				
+				<?php echo $form_elements->input(
+					array(
+						'type' => 'hidden',
+						'label' => ( isset( $this->label ) ? $this->label : '' ),
+						'name' => '',
+						'id' =>  $this->id,
+						'value' => stripslashes( $this->value() ),
+						'data' => $this->get_customize_data(),
+						'placeholder' => $this->placeholder,
+					)
+				); ?>
 
 			</div>
 			<?php

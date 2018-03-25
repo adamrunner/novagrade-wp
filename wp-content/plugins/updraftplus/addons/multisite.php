@@ -30,6 +30,15 @@ if (is_multisite()) {
 			return 'sitemeta';
 		}
 
+		/**
+		 * Extracts the last logged message from updraftplus last process
+		 *
+		 * @return Mixed - Value set for the option or the default message
+		 */
+		public static function get_updraft_lastmessage() {
+			return UpdraftPlus_Options::get_updraft_option('updraft_lastmessage', __('(Nothing has been logged yet)', 'updraftplus'));
+		}
+
 		public static function get_updraft_option($option, $default = false) {
 			$tmp = get_site_option('updraftplus_options');
 			$ret = isset($tmp[$option]) ? $tmp[$option] : $default;
@@ -65,8 +74,12 @@ if (is_multisite()) {
 			if (is_super_admin()) add_submenu_page('settings.php', 'UpdraftPlus', __('UpdraftPlus Backups', 'updraftplus'), 'manage_options', 'updraftplus', array('UpdraftPlus_Options', 'options_printpage'));
 		}
 
-		public static function setdefaults() {
+		/**
+		 * Called upon plugin activation
+		 */
+		public static function set_defaults() {
 			$tmp = get_site_option('updraftplus_options');
+			
 			if (!is_array($tmp)) {
 				$arr = array(
 					'updraft_encryptionphrase' => '',
@@ -78,20 +91,6 @@ if (is_multisite()) {
 					'dismissed_season_notices_until' => 0, // Seasonal notices on the UD dashboard page
 					'updraftplus_dismissedexpiry' => 0, // Notice from the updates connector about support/updates expiry
 
-					'updraft_s3' => array(),
-					'updraft_ftp' => array(),
-					'updraft_s3generic' => array(),
-					'updraft_dreamobjects' => array(),
-					'updraft_cloudfiles' => array(),
-					'updraft_openstack' => array(),
-					'updraft_googledrive' => array(),
-					'updraft_dropbox' => array(),
-					'updraft_onedrive' => array(),
-					'updraft_azure' => array(),
-					'updraft_sftp' => array(),
-					'updraft_backblaze' => array(),
-					'updraft_webdav' => array(),
-
 					'updraft_log_syslog' => 0,
 					'updraft_ssl_nossl' => 0,
 					'updraft_ssl_useservercerts' => 0,
@@ -99,7 +98,6 @@ if (is_multisite()) {
 					'updraft_split_every' => 400,
 
 					'updraft_dir' => '',
-					'updraft_email' => '',
 					'updraft_report_warningsonly' => array(),
 					'updraft_report_wholebackup' => array(),
 
@@ -137,6 +135,16 @@ if (is_multisite()) {
 					'updraft_startday_files' => date('w', time()+600),
 					'updraft_startday_db' => date('w', time()+600)
 				);
+				
+				global $updraftplus;
+				if (is_a($updraftplus, 'UpdraftPlus')) {
+					$backup_methods = array_keys($updraftplus->backup_methods);
+					
+					foreach ($backup_methods as $service) {
+						$arr['updraft_'.$service] = array();
+					}
+				}
+				
 				update_site_option('updraftplus_options', $arr);
 			}
 		}
@@ -199,6 +207,8 @@ if (is_multisite()) {
 
 			$options = get_site_option('updraftplus_options');
 
+			$backup_methods = array_keys($updraftplus->backup_methods);
+			
 			foreach ($new_options as $key => $value) {
 				if ('updraft_include_others_exclude' == $key || 'updraft_include_uploads_exclude' == $key || 'updraft_include_wpcore_exclude' == $key) {
 					$options[$key] = $updraftplus->strip_dirslash($value);
@@ -207,16 +217,6 @@ if (is_multisite()) {
 				} elseif ('updraft_delete_local' == $key || 'updraft_debug_mode' == $key || (preg_match('/^updraft_include_/', $key))) {
 					// Booleans/numeric
 					$options[$key] = absint($value);
-				} elseif ('updraft_googledrive' == $key && is_array($value)) {
-					$options[$key] = $updraftplus->googledrive_checkchange($value);
-				} elseif ('updraft_dropbox' == $key && is_array($value)) {
-					$options[$key] = $updraftplus->dropbox_checkchange($value);
-				} elseif ('updraft_backblaze' == $key && is_array($value)) {
-					$options[$key] = $updraftplus->backblaze_sanitise($value);
-				} elseif ('updraft_ftp' == $key && is_array($value)) {
-					$options[$key] = $updraftplus->ftp_sanitise($value);
-				} elseif ('updraft_s3' == $key && is_array($value)) {
-					$options[$key] = $updraftplus->s3_sanitise($value);
 				} elseif ('updraft_split_every' == $key) {
 					$options[$key] = $updraftplus_admin->optionfilter_split_every($value);
 				} elseif ('updraft_retain' == $key || 'updraft_retain_db' == $key) {
@@ -232,10 +232,6 @@ if (is_multisite()) {
 						}
 					}
 					$options[$key] = $updraftplus->just_one($value);
-				} elseif ('updraft_webdav' == $key) {
-					$options[$key] = $updraftplus->construct_webdav_url($value);
-				} elseif ('updraft_email' == $key) {
-					$options[$key] = $updraftplus->just_one_email($value);
 				} elseif ('updraft_starttime_files' == $key || 'updraft_starttime_db' == $key) {
 					if (preg_match("/^([0-2]?[0-9]):([0-5][0-9])$/", $value, $matches)) {
 						$options[$key] = sprintf("%02d:%s", $matches[1], $matches[2]);
@@ -250,6 +246,8 @@ if (is_multisite()) {
 					$options[$key] = $value;
 				} elseif ('updraft_dir' == $key) {
 					$options[$key] = $updraftplus_admin->prune_updraft_dir_prefix($value);
+				} elseif ('updraft_updraftvault' !== $key && preg_match('/^updraft_(.*)$/', $key, $matches) && in_array($matches[1], $backup_methods)) {
+					$options[$key] = call_user_func(array($updraftplus, 'storage_options_filter'), $value, $key);
 				} elseif (preg_match("/^updraft_/", $key)) {
 					$options[$key] = $value;
 				}
@@ -274,7 +272,7 @@ if (is_multisite()) {
 		}
 	}
 
-	register_activation_hook('updraftplus', array('UpdraftPlus_Options', 'setdefaults'));
+	register_activation_hook('updraftplus', array('UpdraftPlus_Options', 'set_defaults'));
 
 	add_action('network_admin_menu', array('UpdraftPlus_Options', 'add_admin_pages'));
 	add_action('admin_init', array('UpdraftPlus_Options', 'admin_init'), 15);
@@ -595,14 +593,14 @@ if (is_multisite()) {
 			// return array();
 
 			$defaults = array(
-					'network_id' => $wpdb->siteid,
-					'public'     => null,
-					'archived'   => null,
-					'mature'     => null,
-					'spam'       => null,
-					'deleted'    => null,
-					'limit'      => 100,
-					'offset'     => 0,
+				'network_id' => $wpdb->siteid,
+				'public'     => null,
+				'archived'   => null,
+				'mature'     => null,
+				'spam'       => null,
+				'deleted'    => null,
+				'limit'      => 100,
+				'offset'     => 0,
 			);
 
 			$args = wp_parse_args($args, $defaults);

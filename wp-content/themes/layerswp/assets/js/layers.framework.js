@@ -12,17 +12,20 @@
  * 4 - FitVids
  * 5 - Layers Custom Easing
  * 6 - Swiper Height Matching Functions
+ * 7 - Container padding on first widgets for header fixed - helper function.
  *
  * Author: Obox Themes
  * Author URI: http://www.oboxthemes.com/
  * License: GNU General Public License v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
+
 jQuery(function($) {
 
 	/**
 	* 1 - Container padding on first widgets for header fixed
 	*/
+
 	$(window).on('load', function() {
 		layers_apply_overlay_header_styles();
 	});
@@ -30,7 +33,9 @@ jQuery(function($) {
 	/**
 	* 2 - Offsite sidebar Toggles
 	*/
+
 	$(document).on( 'click' , '[data-toggle^="#"]'  , function(e){
+
 		e.preventDefault();
 
 		// "Hi Mom"
@@ -42,8 +47,42 @@ jQuery(function($) {
 		// Toggle .open class
 		$( $target ).toggleClass( $that.data( 'toggle-class' ) );
 
+		return false;
+
 	});
 
+    // Remove toggle on click of area which is not affected by toggle
+    $(document).on( 'click' , function(e) {
+
+        $('[data-toggle^="#"]').each(function() {
+            var $that = $(this);
+
+            // Get the target with hash
+            var $target =  $that.data( 'toggle' );
+
+            // Get the target id without hash
+            var $targetId = $target.replace(/^#/,'');
+
+            // Get the toggle class
+            var toggleClass = $that.data( 'toggle-class' );
+
+            if (
+                // If click is not made on the element itself
+            e.target.id != $targetId &&
+            // And if click is not inside the element
+            !$( e.target ).parents($target).size() &&
+            // And the target element has the toggled class
+            $( $target ).hasClass(toggleClass)
+            ) {
+                // Try to close it
+                $( $target ).toggleClass(toggleClass);
+
+                // Even if a single element is closed then prevent the default
+                // click that was executed
+                e.preventDefault && e.preventDefault();
+            }
+        });
+    });
 	/**
 	* 3 - Sticky Header
 	*/
@@ -108,8 +147,7 @@ jQuery(function($) {
 		if ((t/=d/2) < 1) return c/2*t*t + b;
 		return -c/2 * ((--t)*(t-2) - 1) + b;
 	}});
-
-}(jQuery));
+});
 
 /**
 * 6 - Swiper Height Matching Functions
@@ -134,8 +172,9 @@ function layers_swiper_resize( s ){
 }
 
 /**
- * 8 - Container padding on first widgets for header fixed - helper function.
+ * 7 - Container padding on first widgets for header fixed - helper function.
  */
+
 var $first_element;
 function layers_apply_overlay_header_styles() {
 
@@ -151,22 +190,23 @@ function layers_apply_overlay_header_styles() {
 		// Get first element.
 		if( ! $first_element ) $first_element = $content_wrapper.children().eq(0);
 
+		if( 'A' == $first_element.prop("tagName") ) $first_element = $content_wrapper.children( '.widget' ).eq(0);
+
 		if( $first_element.hasClass( 'slide' ) && !$first_element.hasClass( '.full-screen' ) ) {
 
-			/*
 			// Reset previous incase this is being re-aplied due to window resize.
-			$first_element.find('.swiper-slide > .content' ).css('padding-top', '' );
+			// $first_element.find('.swiper-slide > .content' ).css('padding-top', '' );
 
-			$first_element_height = $first_element.outerHeight();
+			// $first_element_height = $first_element.outerHeight();
 
-			var padding_top = $first_element.find('.swiper-slide > .content' ).eq(0).css('padding-top').replace('px', '');
-			padding_top = ( '' != padding_top ) ? parseInt( padding_top ) : 0 ;
+			// var padding_top = $first_element.find('.swiper-slide > .content' ).eq(0).css('padding-top').replace('px', '');
+			// padding_top = ( '' != padding_top ) ? parseInt( padding_top ) : 0 ;
 
 			// First element is Slider Widget.
 			// $first_element.css( 'height', ( $header_height + $first_element_height ) );
 			// $first_element.find('.swiper-slide' ).css( 'height', ( $header_height + $first_element_height ) );
-			$first_element.css( 'height', ( $first_element_height - $header_height ) );
-			*/
+			// $first_element.css( 'height', ( $first_element_height - $header_height ) );
+
 
 			jQuery('body').addClass( 'header-overlay-no-push' );
 		}

@@ -1,9 +1,9 @@
 === WooCommerce Google Analytics Integration ===
-Contributors: woothemes, claudiosanches
+Contributors: woocommerce, claudiosanches, bor0, royho, laurendavissmith001
 Tags: woocommerce, google analytics
 Requires at least: 3.8
-Tested up to: 4.3
-Stable tag: 1.4.0
+Tested up to: 4.9
+Stable tag: 1.4.4
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -50,6 +50,10 @@ Until you've updated to WooCommerce 2.1, this plugin puts itself in some sort of
 
 You can leave this plugin activated and it will seamlessly take over the integration that once was in the WooCommerce plugin, once you update to the next version.
 
+= My settings are not saving! =
+
+Do you have SUHOSIN installed/active on your server? If so, the default index length is 64 and some settings on this plugin requires longer lengths. Try setting your SUHOSIN configuration's "max_array_index_length" to "100" and test again.
+
 = My national data privacy laws require that I offer an opt-out for users, how can I do this? =
 
 Include the following html code snippet within the page where you want to have the opt-out, e.g. the your Imprint our Data Privacy page:
@@ -64,42 +68,18 @@ Exact wording depends on the national data privacy laws and should be adjusted.
 
 == Changelog ==
 
-= 1.4.0 - 20-11-2015
-* Feature - Support for enhanced eCommerce (tracking full store process from view to order)
-* Tweak - Setting up the plugin is now clearer with some helpful links and clearer language
-* Tweak - New filter on the ga global variable
-* Refactor - JavaScript generation functions have been moved to their own class
+= 1.4.4 - 20/03/2018 =
+* Fix   - WC30 compatibility error when using deprecated get_product_from_item method.
+* Fix   - Check object before using methods to prevent errors.
+* Fix   - Variations not reporting category in cart tracking.
+* Add   - Filter woocommerce_ga_disable_tracking added to disable tracking.
+* Tweak - Rebuilt languages pot file.
 
-= 1.3.0 - 12/11/2014 =
+= 1.4.3 - 15/06/2017 =
+* Fix - WC 3.x notice by using proper variation data.
+* Add - Option to track 404 (Not found) errors.
 
-* Feature  - Added the transaction currency in the tracking code
-* Feature  - Add data privacy option that are mandatory in some countries
-* Tweak    - Moved the tracking code to the head of the page
-* Tweak    - Remove the "SKU" prefix to the sku for addItem
-* Refactor - Integration class reformulated
 
-= 1.2.2 - 15/10/2014 =
-
-* Feature - Adding option to anonymize IP addresses
-* Feature - Adding gaOptOut function to be called from any page for OptOut
-
-= 1.2.1 - 17/09/2014 =
-
-* Tweak   - Adding utmnooverride to return url for Google Adwords
-
-= 1.2.0 - 28/07/2014 =
-
-* Feature - Adding display advertising parameter to Universal Analytics
-* Fix     - Using get_total_shipping() instead of get_shipping
-* Fix     - Using wc_enqueue_js() instead of $woocommerce->add_inline_js(
-* Tweak   - Updating plugin FAQ
-* Tweak   - Adding parenthesis for clarity
-
-= 1.1 - 29/05/2014 =
-
-* Added option to enable Display Advertising
-* Added compatibility support for WooCommerce 2.1 beta releases
-
-= 1.0 - 22/11/2013 =
-
-* Initial release
+== Upgrade Notice ==
+= 1.4.0 =
+Adds support for enhanced eCommerce (tracking full store process from view to order)

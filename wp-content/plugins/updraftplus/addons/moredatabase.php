@@ -302,8 +302,8 @@ class UpdraftPlus_Addon_MoreDatabase {
 
 		$ret = '';
 
-		if (!function_exists('mcrypt_encrypt')) {
-			$ret .= '<p><strong>'.sprintf(__('Your web-server does not have the %s module installed.', 'updraftplus'), 'PHP/mcrypt').' '.__('Without it, encryption will be a lot slower.', 'updraftplus').'</strong></p>';
+		if (!function_exists('mcrypt_encrypt') && !extension_loaded('openssl')) {
+			$ret .= '<p><strong>'.sprintf(__('Your web-server does not have the %s module installed.', 'updraftplus'), 'PHP/mcrypt / PHP/OpenSSL').' '.__('Without it, encryption will be a lot slower.', 'updraftplus').'</strong></p>';
 		}
 
 		$ret .= '<input type="'.apply_filters('updraftplus_admin_secret_field_type', 'text').'" name="updraft_encryptionphrase" id="updraft_encryptionphrase" value="'.esc_attr($updraft_encryptionphrase).'">';
@@ -386,19 +386,25 @@ class UpdraftPlus_Addon_MoreDatabase {
 	/**
 	 * This is the encryption process when encrypting a file
 	 *
-	 * @param  string $fullpath THis is the full path to the DB file that needs ecrypting
-	 * @param  string $key      This is the key (salting) to be used when encrypting
-	 * @return string           Return the full path of the encrypted file
+	 * @param String $fullpath This is the full path to the DB file that needs ecrypting
+	 * @param String $key      This is the key (salting) to be used when encrypting
+	 *
+	 * @return String|Boolean - Return the full path of the encrypted file
 	 */
 	private function encrypt($fullpath, $key) {
 		global $updraftplus;
 
 		if (!function_exists('mcrypt_encrypt') && !extension_loaded('openssl')) {
-			$updraftplus->log(sprintf(__('Your web-server does not have the %s module installed.', 'updraftplus'), 'PHP/mcrypt / PHP/OpenSSL').' '.__('Without it, encryption will be a lot slower.', 'updraftplus'), 'warning', 'nomcrypt');
+			$updraftplus->log(sprintf(__('Your web-server does not have the %s module installed.', 'updraftplus'), 'PHP/mcrypt / PHP/OpenSSL').' '.__('Without it, encryption will be a lot slower.', 'updraftplus'), 'warning', 'nocrypt');
 		}
 
 		// include Rijndael library from phpseclib
-		$updraftplus->ensure_phpseclib('Crypt_Rijndael', 'Crypt/Rijndael');
+		$ensure_phpseclib = $updraftplus->ensure_phpseclib('Crypt_Rijndael', 'Crypt/Rijndael');
+		
+		if (is_wp_error($ensure_phpseclib)) {
+			$this->log("Failed to load phpseclib classes (".$ensure_phpseclib->get_error_code()."): ".$ensure_phpseclib->get_error_message());
+			return false;
+		}
 
 		// open file to read
 		if (false === ($file_handle = fopen($fullpath, 'rb'))) {

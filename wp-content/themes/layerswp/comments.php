@@ -6,8 +6,12 @@
  * @since Layers 1.0.0
  */
 
+if ( post_password_required() ) {
+	return;
+}
+
 do_action('layers_before_comments'); ?>
-<div id="comments" class="push-top-large">
+<div id="comments" <?php echo layers_wrapper_class( 'comment_container', 'push-top-large' ); ?>>
 	<?php if ( have_comments() ) { ?>
 		<div class="section-title small">
 			<h3 class="heading comment-title">

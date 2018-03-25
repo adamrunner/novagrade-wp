@@ -32,13 +32,13 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		global $updraftplus;
 
 		$opts = $this->options;
-		$service = $this->storage;
+		$storage = $this->get_storage();
 
-		if (is_wp_error($service)) throw new Exception($service->get_error_message());
-		if (!is_object($service)) throw new Exception("Azure service error");
+		if (is_wp_error($storage)) throw new Exception($storage->get_error_message());
+		if (!is_object($storage)) throw new Exception("Azure service error");
 		
 		$filesize = filesize($from);
-		$directory = !empty($opts['directory']) ? trailingslashit($opts['directory']) : "";
+		$directory = empty($opts['directory']) ? '' : trailingslashit($opts['directory']);
 		
 		$account_name = $opts['account_name']; // Used here only for logging
 		
@@ -70,7 +70,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		if (false != ($handle = fopen($from, 'rb'))) {
 			if ($filesize <= $this->chunk_size) {
 				$updraftplus->log("Azure: will upload file in one operation (azure://$account_name/$container_name/$directory$file)");
-				$service->createBlockBlob($opts['container'], $directory.$file, $handle);
+				$storage->createBlockBlob($opts['container'], $directory.$file, $handle);
 				fclose($handle);
 			} else {
 				// Set up chunked upload
@@ -111,6 +111,55 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 	}
 
 	/**
+	 * Acts as a WordPress options filter
+	 *
+	 * @param  Array $azure an array of Azure options
+	 * @return Array - the returned array can either be the set of updated Azure settings or a WordPress error array
+	 */
+	public function options_filter($azure) {
+	
+		global $updraftplus;
+	
+		// Get the current options (and possibly update them to the new format)
+		$opts = $updraftplus->update_remote_storage_options_format('azure');
+		
+		if (is_wp_error($opts)) {
+			if ('recursion' !== $opts->get_error_code()) {
+				$msg = "Azure (".$opts->get_error_code()."): ".$opts->get_error_message();
+				$updraftplus->log($msg);
+				error_log("UpdraftPlus: $msg");
+			}
+			// The saved options had a problem; so, return the new ones
+			return $azure;
+		}
+
+		if (!is_array($azure)) return $opts;
+
+		if (is_array($opts['settings'])) {
+			// Remove instances that no longer exist
+			foreach ($opts['settings'] as $instance_id => $storage_options) {
+				if (!isset($azure['settings'][$instance_id])) unset($opts['settings'][$instance_id]);
+			}
+		}
+		
+		if (empty($azure['settings'])) return $opts;
+		
+		foreach ($azure['settings'] as $instance_id => $storage_options) {
+			foreach ($storage_options as $key => $value) {
+				if ('folder' == $key) $value = trim(str_replace('\\', '/', $value), '/');
+				// Only lower-case containers are permitted - enforce this
+				if ('container' == $key) $value = strtolower($value);
+				$opts['settings'][$instance_id][$key] = ('key' == $key || 'account_name' == $key) ? trim($value) : $value;
+				// Convert one likely misunderstanding of the format to enter the account name in
+				if ('account_name' == $key && preg_match('#^https?://(.*)\.blob\.core\.windows#i', $opts['settings'][$instance_id]['account_name'], $matches)) {
+					$opts['settings'][$instance_id]['account_name'] = $matches[1];
+				}
+			}
+		}
+		return $opts;
+	}
+	
+	/**
 	 * Chunked Upload
 	 *
 	 * @param  string $file         FIle to be chunked
@@ -127,6 +176,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 
 		$opts = $this->options;
 		$directory = !empty($opts['directory']) ? trailingslashit($opts['directory']) : "";
+		$storage = $this->get_storage();
 
 		// Already done?
 		$block_ids_key = 'block_ids_'.md5($directory.$file);
@@ -140,7 +190,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		
 		try {
 			$data = fread($fp, $upload_size);
-			$this->storage->createBlobBlock($opts['container'], $directory.$file, base64_encode($block_id), $data);
+			$storage->createBlobBlock($opts['container'], $directory.$file, base64_encode($block_id), $data);
 		} catch (Exception $e) {
 			$updraftplus->log($this->description." upload: exception (".get_class($e)."): ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
 			return false;
@@ -170,7 +220,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		// Commit the blocks to create the blob
 
 		$opts = $this->get_options();
-
+		$storage = $this->get_storage();
 		$directory = !empty($opts['directory']) ? trailingslashit($opts['directory']) : "";
 		$hash_key = md5($directory.$file);
 
@@ -186,7 +236,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		}
 
 		try {
-			$this->storage->commitBlobBlocks($opts['container'], $directory.$file, $blocks);
+			$storage->commitBlobBlocks($opts['container'], $directory.$file, $blocks);
 		} catch (Exception $e) {
 			$message = $e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
 			$updraftplus->log("Azure service error: ".$message);
@@ -202,7 +252,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		global $updraftplus;
 
 		$opts = $this->options;
-		$storage = $this->storage;
+		$storage = $this->get_storage();
 
 		if (is_wp_error($storage)) throw new Exception($storage->get_error_message());
 		if (!is_object($storage)) throw new Exception("Azure service error");
@@ -226,6 +276,8 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 
 	public function chunked_download($file, $headers, $container_name) {
 
+		$storage = $this->get_storage();
+
 		if (is_array($headers) && !empty($headers['Range']) && preg_match('/bytes=(\d+)-(\d+)$/', $headers['Range'], $matches)) {
 			$options = new WindowsAzure\Blob\Models\GetBlobOptions;
 			$options->setRangeStart($matches[1]);
@@ -234,7 +286,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 			$options = null;
 		}
 
-		$blob = $this->storage->getBlob($container_name, $this->azure_path, $options);
+		$blob = $storage->getBlob($container_name, $this->azure_path, $options);
 
 		$headers = $blob->getProperties();
 
@@ -246,12 +298,12 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 	public function do_delete($file) {
 		global $updraftplus;
 		$opts = $this->options;
-		$service = $this->storage;
+		$storage = $this->get_storage();
 		
 		$directory = !empty($opts['directory']) ? trailingslashit($opts['directory']) : "";
 		$azure_path = $directory.$file;
 		
-		if (is_object($service) && !is_wp_error($service)) {
+		if (is_object($storage) && !is_wp_error($storage)) {
 			// list blobs
 			$blobs = $this->listfiles($file);
 			
@@ -260,7 +312,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 				if (basename($blob['name']) == $file) {
 					try {
 						// if match, delete file
-						$this->storage->deleteBlob($opts['container'], $azure_path);
+						$storage->deleteBlob($opts['container'], $azure_path);
 						return true;
 					} catch (WindowsAzure\Common\ServiceException $e) {
 						$updraftplus->log("Azure: File delete failed: Service Exception");
@@ -274,8 +326,8 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 			return false;
 		}
 
-		if (is_wp_error($service)) {
-			$updraftplus->log("Azure: service was not available (".$service->get_error_message().")");
+		if (is_wp_error($storage)) {
+			$updraftplus->log("Azure: service was not available (".$storage->get_error_message().")");
 			return false;
 		}
 
@@ -296,18 +348,18 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		$directory = !empty($opts['directory']) ? trailingslashit($opts['directory']) : "";
 		
 		try {
-			$service = $this->bootstrap();
-			if (!is_object($service)) throw new Exception('Azure service error');
+			$storage = $this->bootstrap();
+			if (!is_object($storage)) throw new Exception('Azure service error');
 		} catch (Exception $e) {
-			$service = $e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
-			return $service;
+			$storage = $e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
+			return $storage;
 		}
 		
 		try {
 			$list_options = new WindowsAzure\Blob\Models\ListBlobsOptions;
 			$list_options->setPrefix($directory.$match);
-			
-			$blob_list = $this->storage->listBlobs($opts['container'], $list_options);
+			$storage = $this->get_storage();
+			$blob_list = $storage->listBlobs($opts['container'], $list_options);
 		} catch (WindowsAzure\Common\ServiceException $e) {
 			return new WP_Error('list_files_failed', 'List Files ServiceException');
 		}
@@ -341,6 +393,9 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 	protected function do_credentials_test($testfile, $posted_settings = array()) {
 
 		global $updraftplus;
+
+		$storage = $this->get_storage();
+		
 		$container_name = $posted_settings['container'];
 
 		$directory = !empty($opts['directory']) ? trailingslashit($opts['directory']) : "";
@@ -360,7 +415,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 			return false;
 		}
 		try {
-			$this->storage->createBlockBlob($container_name, $directory.$testfile, "UpdraftPlus temporary test file - you can remove this.");
+			$storage->createBlockBlob($container_name, $directory.$testfile, "UpdraftPlus temporary test file - you can remove this.");
 		} catch (Exception $e) {
 			echo 'Azure: '.__('Upload failed', 'updraftplus').': '.$e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
 			return false;
@@ -381,9 +436,9 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 	protected function do_credentials_test_deletefile($testfile, $posted_settings) {
 		$container_name = $posted_settings['container'];
 		$directory = !empty($opts['directory']) ? trailingslashit($opts['directory']) : "";
-		
+		$storage = $this->get_storage();
 		try {
-			$deleted_file = $this->storage->deleteBlob($container_name, $directory.$testfile);
+			$deleted_file = $storage->deleteBlob($container_name, $directory.$testfile);
 		} catch (Exception $e) {
 			echo __('Delete failed:', 'updraftplus').' '.$e->getMessage().' ('.$e->getCode().', '.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
 		}
@@ -397,7 +452,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 	 */
 	public function get_supported_features() {
 		// This options format is handled via only accessing options via $this->get_options()
-		return array('multi_options', 'config_templates');
+		return array('multi_options', 'config_templates', 'multi_storage');
 	}
 
 	/**
@@ -440,17 +495,19 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		// Non-standard element that our extended builder uses
 		if ('https' == $protocol) $connection_string .=';SSLCAPath='.$ssl_ca_path;
 
-		if (!isset($this->storage)) {
+		$storage = $this->get_storage();
+
+		if (empty($storage)) {
 			try {
 				$blob_rest_proxy = WindowsAzure\Common\UpdraftPlus_ServicesBuilder::getInstance()->createBlobService($connection_string);
-				$this->storage = $blob_rest_proxy;
-				
+				$storage = $blob_rest_proxy;
+				$this->set_storage($storage);
 				return $blob_rest_proxy;
 			} catch (Exception $e) {
 				return new WP_Error('blob_service_failed', 'Error when attempting to setup Azure access: '.$e->getMessage().' ('.$e->getCode().', '.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')');
 			}
 		} else {
-			return $this->storage;
+			return $storage;
 		}
 	}
 	
@@ -460,8 +517,9 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 	 * @return array
 	 */
 	protected function list_containers() {
+		$storage = $this->get_storage();
 		try {
-			$containers = $this->storage->listContainers();
+			$containers = $storage->listContainers();
 			$container_list = $containers->getContainers();
 			return $container_list;
 		} catch (Exception $e) {
@@ -480,8 +538,9 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 
 		global $updraftplus;
 
+		$storage = $this->get_storage();
 		try {
-			$container_properties = $this->storage->getContainerProperties($container_name);
+			$container_properties = $storage->getContainerProperties($container_name);
 			return $container_properties;
 		} catch (WindowsAzure\Common\ServiceException $e) {
 			if ($create_on_404 && 404 == $e->getCode()) {
@@ -497,7 +556,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 			$create_container_options = new WindowsAzure\Blob\Models\CreateContainerOptions();
 			$create_container_options->setPublicAccess(WindowsAzure\Blob\Models\PublicAccessType::NONE);
 			// This does not return anything - it will throw an exception if there's a problem
-			$this->storage->createContainer($container_name, $create_container_options);
+			$storage->createContainer($container_name, $create_container_options);
 			return $this->create_container($container_name, false);
 		} catch (WindowsAzure\Common\ServiceException $e) {
 			return new WP_Error('container_creation_failed', __('Could not create the container', 'updraftplus'));
@@ -511,6 +570,38 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		if (is_array($opts) && !empty($opts['account_name']) && !empty($opts['key'])) return true;
 		return false;
 	}
+
+	/**
+	 * Get the pre configuration template
+	 *
+	 * @return String - the template
+	 */
+	public function get_pre_configuration_template() {
+
+		global $updraftplus_admin;
+
+		$classes = $this->get_css_classes(false);
+		
+		?>
+		<tr class="<?php echo $classes . ' ' . 'azure_pre_config_container';?>">
+			<td colspan="2">
+				<?php
+					/*$site_host = parse_url(network_site_url(), PHP_URL_HOST);
+					/*if ('127.0.0.1' == $site_host || '::1' == $site_host || 'localhost' == $site_host) {
+						// Of course, there are other things that are effectively 127.0.0.1. This is just to help.
+						$callback_text = '<p><strong>'.htmlspecialchars(sprintf(__('Microsoft Azure is not compatible with sites hosted on a localhost or 127.0.0.1 URL - their developer console forbids these (current URL is: %s).','updraftplus'), site_url())).'</strong></p>';
+					} else {
+						$callback_text = '<p>'.htmlspecialchars(__('You must add the following as the authorised redirect URI in your Azure console (under "API Settings") when asked','updraftplus')).': <kbd>'.UpdraftPlus_Options::admin_page_url().'</kbd></p>';
+					}*/
+				?>
+				<img width="434" src="<?php echo UPDRAFTPLUS_URL;?>/images/azure.png">
+				<p><a href="https://account.live.com/developers/applications/create"><?php echo esc_html__('Create Azure credentials in your Azure developer console.', 'updraftplus');?></a></p>
+				<p><a href="https://updraftplus.com/faqs/microsoft-azure-setup-guide/"><?php echo esc_html__('For longer help, including screenshots, follow this link.', 'updraftplus');?></a></p>
+			</td>
+		</tr>
+
+		<?php
+	}
 	
 	/**
 	 * Get the partial configuration template
@@ -521,18 +612,6 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		global $updraftplus_admin;
 		$classes = $this->get_css_classes();
 		$template_str = '';
-		/*$site_host = parse_url(network_site_url(), PHP_URL_HOST);
-		/*if ('127.0.0.1' == $site_host || '::1' == $site_host || 'localhost' == $site_host) {
-			// Of course, there are other things that are effectively 127.0.0.1. This is just to help.
-			$callback_text = '<p><strong>'.htmlspecialchars(sprintf(__('Microsoft Azure is not compatible with sites hosted on a localhost or 127.0.0.1 URL - their developer console forbids these (current URL is: %s).','updraftplus'), site_url())).'</strong></p>';
-		} else {
-			$callback_text = '<p>'.htmlspecialchars(__('You must add the following as the authorised redirect URI in your Azure console (under "API Settings") when asked','updraftplus')).': <kbd>'.UpdraftPlus_Options::admin_page_url().'</kbd></p>';
-		}*/
-		$template_str .= $updraftplus_admin->get_storagemethod_row_multi_configuration_template(
-			$classes,
-			'',
-			'<img width="434" src="'.UPDRAFTPLUS_URL.'/images/azure.png"><p><a href="https://account.live.com/developers/applications/create">'.esc_html__('Create Azure credentials in your Azure developer console.', 'updraftplus').'</a></p><p><a href="https://updraftplus.com/faqs/microsoft-azure-setup-guide/">'.esc_html__('For longer help, including screenshots, follow this link.', 'updraftplus').'</a></p>'
-		);
 		$template_str .= '
 			<tr class="'.$classes.'">
 				<th>'.sprintf(esc_html__('%s Account Name', 'updraftplus'), esc_html__('Azure', 'updraftplus')).':</th>

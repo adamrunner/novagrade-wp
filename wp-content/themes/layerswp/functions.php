@@ -10,7 +10,8 @@
 /**
  * The current version of the theme. Use a random number for SCRIPT_DEBUG mode
  */
-define( 'LAYERS_VERSION', '1.5.7' );
+
+define( 'LAYERS_VERSION', '2.0.7' );
 define( 'LAYERS_TEMPLATE_URI' , get_template_directory_uri() );
 define( 'LAYERS_TEMPLATE_DIR' , get_template_directory() );
 define( 'LAYERS_THEME_TITLE' , 'Layers' );
@@ -200,6 +201,13 @@ if( ! function_exists( 'layers_setup' ) ) {
 		 */
 		add_theme_support( 'customize-selective-refresh-widgets' );
 
+		/**
+		 * Add theme support for WooCommerce Gallery
+		 */
+		add_theme_support( 'wc-product-gallery-zoom' );
+		add_theme_support( 'wc-product-gallery-lightbox' );
+		add_theme_support( 'wc-product-gallery-slider' );
+
 	} // function layers_setup
 } // if !function layers_setup
 add_action( 'after_setup_theme' , 'layers_setup', 100 );
@@ -242,7 +250,7 @@ function layers_resore_site(){
 		$layers_wgt_backup = get_theme_mod( 'sidebars_widgets' );
 		if( isset( $layers_wgt_backup[ 'data' ] ) ) {
 			update_option( 'sidebars_widgets', $layers_wgt_backup );
-			delete_theme_mod( 'sidebars_widgets' );
+			remove_theme_mod( 'sidebars_widgets' );
 		}
 	}
 
@@ -354,8 +362,7 @@ if( ! function_exists( 'layers_scripts' ) ) {
 			array(
 				'jquery',
 			),
-			LAYERS_VERSION,
-			true
+			LAYERS_VERSION
 		); // Framework
 
 		wp_localize_script( LAYERS_THEME_SLUG . '-framework', 'layers_script_settings', array(
@@ -388,13 +395,26 @@ if( ! function_exists( 'layers_scripts' ) ) {
 			array() ,
 			LAYERS_VERSION
 		);
+		wp_style_add_data( 
+			LAYERS_THEME_SLUG . '-framework' ,
+			'rtl', 
+			'replace' 
+		); // Framework RTL
+
+		// Commenting for now as we need to do add animation only to layers-pro
+//        wp_enqueue_style(
+//            LAYERS_THEME_SLUG . '-animate',
+//            get_template_directory_uri() . '/assets/css/animate.css',
+//            array(),
+//            LAYERS_VERSION
+//        ); // Animations
 
 		wp_enqueue_style(
 			LAYERS_THEME_SLUG . '-components',
 			get_template_directory_uri() . '/assets/css/components.css',
 			array(),
 			LAYERS_VERSION
-		); // Compontents
+		); // Components
 
 		wp_enqueue_style(
 			LAYERS_THEME_SLUG . '-responsive',
@@ -402,6 +422,11 @@ if( ! function_exists( 'layers_scripts' ) ) {
 			array(),
 			LAYERS_VERSION
 		); // Responsive
+		wp_style_add_data( 
+			LAYERS_THEME_SLUG . '-responsive',
+			'rtl', 
+			'replace' 
+		); // Responsive RTL
 
 		wp_enqueue_style(
 			LAYERS_THEME_SLUG . '-icon-fonts',
@@ -417,14 +442,12 @@ if( ! function_exists( 'layers_scripts' ) ) {
 				array(),
 				LAYERS_VERSION
 			); // Woocommerce
+			wp_style_add_data( 
+				LAYERS_THEME_SLUG . '-woocommerce',
+				'rtl', 
+				'replace' 
+			); // Woocommerce RTL
 		}
-
-		wp_enqueue_style(
-			LAYERS_THEME_SLUG . '-style' ,
-			get_stylesheet_uri(),
-			array() ,
-			LAYERS_VERSION
-		);
 
 		if( is_admin_bar_showing() ) {
 			wp_enqueue_style(
@@ -473,6 +496,22 @@ if( ! function_exists( 'layers_scripts' ) ) {
 add_action( 'wp_enqueue_scripts' , 'layers_scripts' );
 
 /**
+*  Enqueue Layers stylesheet last
+*/
+if( ! function_exists( 'layers_stylesheet' ) ) {
+	function layers_stylesheet(){
+		wp_enqueue_style(
+			LAYERS_THEME_SLUG . '-style' ,
+			get_stylesheet_uri(),
+			array() ,
+			LAYERS_VERSION
+		);
+
+		do_action( 'layers_enqueue_stylesheet' );
+	}
+}
+add_action( 'wp_enqueue_scripts' , 'layers_stylesheet', 100 );
+/**
 *  Enqueue admin end styles and scripts
 */
 if( ! function_exists( 'layers_admin_scripts' ) ) {
@@ -500,20 +539,20 @@ if( ! function_exists( 'layers_admin_scripts' ) ) {
 		 * LayersSlct2 (also enqueued by Storekit and WooCommerce).
 		 */
 		wp_enqueue_style(
-			'layersSlct2',
-			get_template_directory_uri() . '/core/assets/plugins/select2/layersSlct2.css',
+			LAYERS_THEME_SLUG . 'select-2',
+			get_template_directory_uri() . '/core/assets/plugins/select2/select-2.css',
 			array(),
 			LAYERS_VERSION
 		);
 		wp_enqueue_style(
-			'layersSlct2-skins',
-			get_template_directory_uri() . '/core/assets/plugins/select2/layersSlct2-skins.css',
+			LAYERS_THEME_SLUG . 'select-2-skins',
+			get_template_directory_uri() . '/core/assets/plugins/select2/select-2-skins.css',
 			array(),
 			LAYERS_VERSION
 		);
 		wp_enqueue_script(
-			'layersSlct2',
-			get_template_directory_uri() . '/core/assets/plugins/select2/layersSlct2.js',
+			LAYERS_THEME_SLUG . 'select-2',
+			get_template_directory_uri() . '/core/assets/plugins/select2/select-2.js',
 			array( 'jquery' ),
 			LAYERS_VERSION
 		);
@@ -550,6 +589,11 @@ if( ! function_exists( 'layers_admin_scripts' ) ) {
 				array(),
 				LAYERS_VERSION
 			);
+			wp_style_add_data( 
+				LAYERS_THEME_SLUG . '-customizer',
+				'rtl', 
+				'replace' 
+			);
 		}
 		else {
 
@@ -562,6 +606,12 @@ if( ! function_exists( 'layers_admin_scripts' ) ) {
 				array(),
 				LAYERS_VERSION
 			);
+			wp_style_add_data( 
+				LAYERS_THEME_SLUG . '-admin',
+				'rtl', 
+				'replace' 
+			);
+
 		}
 
 
@@ -702,3 +752,12 @@ if( !function_exists( 'layers_excerpt_class' ) ) {
 } // layers_excerpt_class
 add_filter( "the_excerpt", "layers_excerpt_class" );
 add_filter( "get_the_excerpt", "layers_excerpt_class" );
+
+function layers_pro_update_notice(){
+	if( defined( 'LAYERS_PRO_VER' ) && version_compare( LAYERS_PRO_VER, '2.0.0', '<' ) ){ ?>
+		<div class="updated is-dismissible notice">
+			<p><?php echo sprintf( 'To make the most of Layers 2, it is recommended that you also update <strong>Layers Pro</strong> to version 2. <a href="%s" target="_blank">Click here</a> to read how you can update. All your settings will be retained.', 'http://docs.layerswp.com/doc/how-to-update-layers-exensions/' ); ?></p>
+		</div>
+	<?php }
+}
+add_action( 'admin_notices', 'layers_pro_update_notice' );

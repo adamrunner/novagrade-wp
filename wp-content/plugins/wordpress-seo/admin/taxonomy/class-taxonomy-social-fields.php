@@ -7,15 +7,17 @@
  * This class parses all the values for the social tab in the Yoast SEO settings metabox
  */
 class WPSEO_Taxonomy_Social_Fields extends WPSEO_Taxonomy_Fields {
+	/** @var array List of social networks */
+	protected $networks;
 
 	/**
 	 * Setting the class properties
 	 *
 	 * @param stdClass|WP_Term $term    The current taxonomy.
-	 * @param array            $options The options.
 	 */
-	public function __construct( $term, array $options = null ) {
-		parent::__construct( $term, $options );
+	public function __construct( $term ) {
+		parent::__construct( $term );
+
 		$this->networks = $this->get_social_networks();
 	}
 
@@ -25,7 +27,7 @@ class WPSEO_Taxonomy_Social_Fields extends WPSEO_Taxonomy_Fields {
 	 * @return bool
 	 */
 	public function show_social() {
-		return ( $this->options['opengraph'] === true || $this->options['twitter'] === true );
+		return ( WPSEO_Options::get( 'opengraph', false ) || WPSEO_Options::get( 'twitter', false ) );
 	}
 
 	/**
@@ -60,7 +62,7 @@ class WPSEO_Taxonomy_Social_Fields extends WPSEO_Taxonomy_Fields {
 				/* translators: %1$s expands to the social network name */
 				sprintf( esc_html__( 'If you want to use an image for sharing on %1$s, you can upload / choose an image or add the image URL here.', 'wordpress-seo' ), $settings['label'] ) . '<br />' .
 				/* translators: %1$s expands to the social network name, %2$s expands to the image size */
-				sprintf( __( 'The recommended image size for %1$s is %2$spx.', 'wordpress-seo' ), $settings['label'], $settings['size'] ),
+				sprintf( __( 'The recommended image size for %1$s is %2$s pixels.', 'wordpress-seo' ), $settings['label'], $settings['size'] ),
 				'upload'
 			),
 		);
@@ -90,19 +92,24 @@ class WPSEO_Taxonomy_Social_Fields extends WPSEO_Taxonomy_Fields {
 	private function get_social_networks() {
 		$social_networks = array(
 			// Source: https://developers.facebook.com/docs/sharing/best-practices#images.
-			'opengraph'  => $this->social_network( 'opengraph', __( 'Facebook', 'wordpress-seo' ), '1200 × 630' ),
-			'twitter'    => $this->social_network( 'twitter', __( 'Twitter', 'wordpress-seo' ), '1024 × 512' ),
+			'opengraph' => $this->social_network( 'opengraph', __( 'Facebook', 'wordpress-seo' ), sprintf(
+				/* translators: %1$s expands to the image recommended width, %2$s to its height. */
+				__( '%1$s by %2$s', 'wordpress-seo' ), '1200', '630'
+			) ),
+			'twitter'   => $this->social_network( 'twitter', __( 'Twitter', 'wordpress-seo' ), sprintf(
+				/* translators: %1$s expands to the image recommended width, %2$s to its height. */
+				__( '%1$s by %2$s', 'wordpress-seo' ), '1024', '512'
+			) ),
 		);
-		$social_networks = $this->filter_social_networks( $social_networks );
 
-		return $social_networks;
+		return $this->filter_social_networks( $social_networks );
 	}
 
 	/**
 	 * Returns array with the config fields for the social network
 	 *
 	 * @param string $network    The name of the social network.
-	 * @param string $label		 The label for the social network.
+	 * @param string $label      The label for the social network.
 	 * @param string $image_size The image dimensions.
 	 *
 	 * @return array
@@ -124,7 +131,7 @@ class WPSEO_Taxonomy_Social_Fields extends WPSEO_Taxonomy_Fields {
 	 */
 	private function filter_social_networks( array $social_networks ) {
 		foreach ( $social_networks as $social_network => $settings ) {
-			if ( empty( $this->options[ $social_network ] ) ) {
+			if ( WPSEO_Options::get( $social_network, false ) === false ) {
 				unset( $social_networks[ $social_network ] );
 			}
 		}

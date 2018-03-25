@@ -51,9 +51,15 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 	public function updraftplus_settings_page_init() {
 		add_action('admin_footer', array($this, 'admin_footer'));
 	}
-
+	
+	/**
+	 * Replace addon anchor link to create new API user
+	 *
+	 * @param string $msg cloudfiles-enhanced:Rackspace Cloud Files addon anchor link
+	 * @return string anchor link html for creating new API user
+	 */
 	public function apikeysettings($msg) {
-		$msg = '<a href="#" id="updraft_cloudfiles_newapiuser">'.__('Create a new API user with access to only this container (rather than your whole account)', 'updraftplus').'</a>';
+		$msg = '<a href="#" id="updraft_cloudfiles_newapiuser_{{instance_id}}" class="updraft_cloudfiles_newapiuser" data-instance_id="{{instance_id}}">'.__('Create a new API user with access to only this container (rather than your whole account)', 'updraftplus').'</a>';
 		return $msg;
 	}
 	
@@ -86,14 +92,16 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 		$auth_url = ('uk' == $use_settings['location']) ? Rackspace::UK_IDENTITY_ENDPOINT : Rackspace::US_IDENTITY_ENDPOINT;
 		
 		try {
-			$service = $method->get_service(array(
-				'user' => $use_settings['adminuser'],
-				'apikey' => $use_settings['adminapikey'],
-				'authurl' => $auth_url,
-				'region' => $use_settings['region']
+			$storage = $method->get_openstack_service(
+				array(
+					'user' => $use_settings['adminuser'],
+					'apikey' => $use_settings['adminapikey'],
+					'authurl' => $auth_url,
+					'region' => $use_settings['region']
 				),
 				$useservercerts,
-			$disableverify);
+				$disableverify
+			);
 		} catch (AuthenticationError $e) {
 			$updraftplus->log('Cloud Files authentication failed ('.$e->getMessage().')');
 			$updraftplus->log(__('Cloud Files authentication failed', 'updraftplus').' ('.$e->getMessage().')', 'error');
@@ -105,9 +113,9 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 		// Create the container (if necessary)
 		// Get the container
 		try {
-			$container_object = $service->getContainer($use_settings['container']);
+			$container_object = $storage->getContainer($use_settings['container']);
 		} catch (Guzzle\Http\Exception\ClientErrorResponseException $e) {
-			$container_object = $service->createContainer($use_settings['container']);
+			$container_object = $storage->createContainer($use_settings['container']);
 		} catch (Exception $e) {
 			return array('e' => 1, 'm' => __('Cloud Files authentication failed', 'updraftplus').' ('.get_class($e).', '.$e->getMessage().')');
 		}
@@ -282,6 +290,7 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 					<input type="hidden" name="nonce" value="<?php echo wp_create_nonce('updraftplus-credentialtest-nonce');?>">
 					<input type="hidden" name="action" value="updraft_ajax">
 					<input type="hidden" name="subaction" value="cloudfiles_newuser">
+					<input type="hidden" id="updraft_cfnewapiuser_instance_id" name="updraft_cfnewapiuser_instance_id" value="" />
 				</fieldset>
 			</div>
 		</div>
@@ -307,8 +316,9 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 				}
 			}
 		
-			jQuery('#updraft_cloudfiles_newapiuser').click(function(e) {
+			$('#updraft-navtab-settings-content').on('click', '.updraft_cloudfiles_newapiuser', function(e) {
 				e.preventDefault();
+				jQuery('#updraft_cfnewapiuser_instance_id').val(jQuery(this).data('instance_id'));
 				jQuery('#updraft-cfnewapiuser-modal').dialog('open');
 				set_allowable_regions();
 			});
@@ -348,12 +358,13 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 						jQuery('#updraft-cfnewapiuser-results').html('<p style="color:red;">'+resp.m+'</p>');
 					} else if (resp.e == 0) {
 						jQuery('#updraft-cfnewapiuser-results').html('<p style="color:green;">'+resp.m+'</p>');
-						jQuery('#updraft_cloudfiles_user').val(resp.u);
-						jQuery('#updraft_cloudfiles_apikey').val(resp.k);
-						jQuery('#updraft_cloudfiles_authurl').val(resp.a);
-						jQuery('#updraft_cloudfiles_region').val(resp.r);
-						jQuery('#updraft_cloudfiles_path').val(resp.c);
-						jQuery('#updraft_cloudfiles_newapiuser').after('<br><strong>'+updraftlion.newuserpass+'</strong> '+resp.p);
+						var instance_id = jQuery('#updraft_cfnewapiuser_instance_id').val();
+						jQuery('#updraft_cloudfiles_user_'+instance_id).val(resp.u);
+						jQuery('#updraft_cloudfiles_apikey_'+instance_id).val(resp.k);
+						jQuery('#updraft_cloudfiles_authurl_'+instance_id).val(resp.a);
+						jQuery('#updraft_cloudfiles_region_'+instance_id).val(resp.r);
+						jQuery('#updraft_cloudfiles_path_'+instance_id).val(resp.c);
+						jQuery('#updraft_cloudfiles_newapiuser_'+instance_id).after('<p><strong>'+updraftlion.newuserpass+'</strong> '+resp.p+'<p>');
 						jQuery('#updraft-cfnewapiuser-modal').dialog('close');
 					}
 				}, { json_parse: false });

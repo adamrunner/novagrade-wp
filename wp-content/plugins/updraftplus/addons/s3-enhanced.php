@@ -3,10 +3,10 @@
 /*
 UpdraftPlus Addon: s3-enhanced:Amazon S3, enhanced
 Description: Adds enhanced capabilities for Amazon S3 users
-Version: 1.6
+Version: 1.7
 Shop: /shop/s3-enhanced/
 RequiresPHP: 5.3.3
-Latest Change: 1.12.6
+Latest Change: 1.14.2
 */
 // @codingStandardsIgnoreEnd
 
@@ -29,9 +29,18 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		add_filter('updraft_s3_newuser_go', array($this, 'newuser_go'), 10, 2);
 	}
 
-	public function storageclass($class, $s3, $opts) {
+	/**
+	 * WordPress filter updraft_s3_storageclass
+	 *
+	 * @param String $class	  - suggested storage class
+	 * @param Object $storage - storage object
+	 * @param Array	 $opts	  - options
+	 *
+	 * @return String - filtered value
+	 */
+	public function storageclass($class, $storage, $opts) {
 	
-		if (((is_a($s3, 'UpdraftPlus_S3') || is_a($s3, 'UpdraftPlus_S3_Compat')) && is_array($opts) && !empty($opts['rrs']))) {
+		if (((is_a($storage, 'UpdraftPlus_S3') || is_a($storage, 'UpdraftPlus_S3_Compat')) && is_array($opts) && !empty($opts['rrs']))) {
 			if ('STANDARD_IA' == $opts['rrs'] || 'STANDARD' == $opts['rrs']) {
 				$class = $opts['rrs'];
 			}
@@ -54,14 +63,14 @@ class UpdraftPlus_Addon_S3_Enhanced {
 			<th>'.__('Storage class', 'updraftplus').':<br><a href="https://aws.amazon.com/s3/storage-classes/"><em>'.__('(Read more)', 'updraftplus').'</em></a></th>
 			<td>
 				<select '.$backup_module_object->output_settings_field_name_and_id('rrs', true).' data-updraft_settings_test="rrs">
-					<option value="STANDARD" {{#if is_STANDARD_rrs}}selected="selected">'.__('Standard', 'updraftplus').'</option>
-					<option value="STANDARD_IA" {{#if is_STANDARD_IA_rrs}}selected="selected"{{/if}}>'.__('Standard (infrequent access)', 'updraftplus').'</option>
+					<option value="STANDARD" {{#ifeq "STANDARD" rrs}}selected="selected"{{/ifeq}}>'.__('Standard', 'updraftplus').'</option>
+					<option value="STANDARD_IA" {{#ifeq "STANDARD_IA" rrs}}selected="selected"{{/ifeq}}>'.__('Standard (infrequent access)', 'updraftplus').'</option>
 				</select>
 			</td>
 		</tr>
 		<tr class="'.$classes.'">
 			<th>'.__('Server-side encryption', 'updraftplus').':<br><a href="https://aws.amazon.com/blogs/aws/new-amazon-s3-server-side-encryption/"><em>'.__('(Read more)', 'updraftplus').'</em></a></th>
-			<td><input data-updraft_settings_test="server_side_encryption" title="'.__("Check this box to use Amazon's server-side encryption", 'updraftplus').'" type="checkbox" '.$backup_module_object->output_settings_field_name_and_id('server_side_encryption', true).' value="1" {{#if server_side_encryption}}checked="checked"{{/if}}/></td>
+			<td><input data-updraft_settings_test="server_side_encryption" title="'.__("Check this box to use Amazon's server-side encryption", 'updraftplus').'" type="checkbox" '.$backup_module_object->output_settings_field_name_and_id('server_side_encryption', true).' value="1" {{#ifeq "1" server_side_encryption}}checked="checked"{{/ifeq}}/></td>
 		</tr>';
 	}
 	
@@ -74,7 +83,7 @@ class UpdraftPlus_Addon_S3_Enhanced {
 	public function transform_options_s3_options($opts) {
 		$rrs = empty($opts['rrs']) ? 'STANDARD' : $opts['rrs'];
 		if (!empty($rrs) && 'STANDARD_IA' != $rrs) $rrs = 'STANDARD';
-		$opts['is_'.$rrs.'_rrs'] = true;
+		$opts['rrs'] = $rrs;
 		return $opts;
 	}
 	
@@ -87,30 +96,46 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		return $msg;
 	}
 
+	/**
+	 * Called upon the WP action updraft_s3_newuser. Dies.
+	 */
 	public function newuser() {
-		echo json_encode($this->newuser_go(array(), $_POST));
+		echo json_encode($this->newuser_go(array(), stripslashes_deep($_POST)));
 		die;
 	}
 	
+	/**
+	 * Create a new user
+	 *
+	 * @param Array $initial_value	 - present because this method is used as a WP filter
+	 * @param Array $settings_values - various keys indicating the access and desired bucket details
+	 *
+	 * @return Array - results (with keys dependent upon the outcome)
+	 */
 	public function newuser_go($initial_value = array(), $settings_values) {
 
 		if (empty($settings_values['adminaccesskey'])) {
 			return array('e' => 1, 'm' => __('You need to enter an admin access key', 'updraftplus'));
 		}
+		
 		if (empty($settings_values['adminsecret'])) {
 			return array('e' => 1, 'm' => __('You need to enter an admin secret key', 'updraftplus'));
 		}
+		
 		if (empty($settings_values['newuser'])) {
 			return array('e' => 1, 'm' => __('You need to enter a new IAM username', 'updraftplus'));
 		}
+		
 		if (empty($settings_values['bucket'])) {
 			return array('e' => 1, 'm' => __('You need to enter a bucket', 'updraftplus'));
 		}
+		
 		if (empty($settings_values['region'])) $settings_values['region'] = 'us-east-1';
+		
 		if (empty($settings_values['rrs'])) $settings_values['rrs'] = false;
 
-		$allow_download = (!empty($settings_values['allowdownload'])) ? true : false;
-		$allow_delete = (!empty($settings_values['allowdelete'])) ? true : false;
+		$allow_download = empty($settings_values['allowdownload']) ? false : true;
+		$allow_delete = empty($settings_values['allowdelete']) ? false : true;
 
 		global $updraftplus;
 
@@ -122,13 +147,13 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		$disableverify = !empty($settings_values['disableverify']);
 		$nossl = !empty($settings_values['nossl']);
 		
-		$adminaccesskey = stripslashes($settings_values['adminaccesskey']);
-		$adminsecret = stripslashes($settings_values['adminsecret']);
+		$adminaccesskey = $settings_values['adminaccesskey'];
+		$adminsecret = $settings_values['adminsecret'];
 		$region = $settings_values['region'];
 		
 		try {
-			$service = $method->getS3($adminaccesskey, $adminsecret, $useservercerts, $disableverify, $nossl);
-			if (!is_a($service, 'UpdraftPlus_S3_Compat')) {
+			$storage = $method->getS3($adminaccesskey, $adminsecret, $useservercerts, $disableverify, $nossl);
+			if (!is_a($storage, 'UpdraftPlus_S3_Compat')) {
 				$msg = __('Cannot create new AWS user, since the old AWS toolkit is being used.', 'updraftplus');
 				$updraftplus->log('Cannot create new AWS user, since the old AWS toolkit is being used.');
 				$updraftplus->log($msg, 'error');
@@ -142,9 +167,8 @@ class UpdraftPlus_Addon_S3_Enhanced {
 			return array('e' => 1, 'm' => __('Error:', 'updraftplus').' '.$e->getMessage());
 		}
 		
-		// Create the bucket if necessary
 		// Get the bucket
-		$path = stripslashes($settings_values['bucket']);
+		$path = $settings_values['bucket'];
 		
 		if (preg_match("#^/*([^/]+)/(.*)$#", $path, $bmatches)) {
 			$bucket = $bmatches[1];
@@ -154,15 +178,15 @@ class UpdraftPlus_Addon_S3_Enhanced {
 			$path = "";
 		}
 		
-		$location = @$service->getBucketLocation($bucket);
+		$location = @$storage->getBucketLocation($bucket);
 		if ($location) {
 			$bucket_exists = true;
 			$bucket_verb = __('Region', 'updraftplus').": $location: ";
 		}
 		
 		if (!isset($bucket_exists)) {
-			$service->useDNSBucketName(true);
-			$gb = @$service->getBucket($bucket, null, null, 1);
+			$storage->useDNSBucketName(true);
+			$gb = @$storage->getBucket($bucket, null, null, 1);
 			if (false !== $gb) {
 				$bucket_exists = true;
 				$location = '';
@@ -171,14 +195,14 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		}
 		
 		if (!isset($bucket_exists)) {
-			$service->setExceptions(true);
+			$storage->setExceptions(true);
 			try {
-				$try_to_create_bucket = @$service->putBucket($bucket, 'private', $region);
+				$try_to_create_bucket = @$storage->putBucket($bucket, 'private', $region);
 			} catch (Exception $e) {
 				$try_to_create_bucket = false;
 				$s3_error = $e->getMessage();
 			}
-			$service->setExceptions(false);
+			$storage->setExceptions(false);
 			if ($try_to_create_bucket) {
 				$bucket_verb = '';
 				$gb = $try_to_create_bucket;
@@ -201,8 +225,8 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		// Try create a new Iam user
 		try {
 			$response = $iam->createUser(array(
-				'Path'=>'/updraftplus/',
-				'UserName'=>$settings_values['newuser']
+				'Path' => '/updraftplus/',
+				'UserName' => $settings_values['newuser']
 			));
 		} catch (Guzzle\Http\Exception\ClientErrorResponseException $e) {
 			$response = $e->getResponse();
@@ -273,7 +297,7 @@ class UpdraftPlus_Addon_S3_Enhanced {
 		$pol_doc .= '
         "s3:PutObject",
         "s3:PutObjectAcl",
-        "s3:PutObjectAclVersion"
+        "s3:PutObjectVersionAcl"
       ],
       "Resource": "arn:aws:s3:::'.$bucket.'/*",
       "Condition": {}

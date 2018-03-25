@@ -306,11 +306,13 @@ class UpdraftPlus_Addons_RemoteStorage_sftp extends UpdraftPlus_RemoteStorage_Ad
 		$timeout = (defined('UPDRAFTPLUS_SFTP_TIMEOUT') && is_numeric(UPDRAFTPLUS_SFTP_TIMEOUT)) ? UPDRAFTPLUS_SFTP_TIMEOUT : 15;
 
 		if ($scp) {
-			$updraftplus->ensure_phpseclib('Net_SSH2', 'Net/SSH2');
+			$ensure_phpseclib = $updraftplus->ensure_phpseclib('Net_SSH2', 'Net/SSH2');
 			$updraftplus->ensure_phpseclib('Net_SCP', 'Net/SCP');
 		} else {
-			$updraftplus->ensure_phpseclib('Net_SFTP', 'Net/SFTP');
+			$ensure_phpseclib = $updraftplus->ensure_phpseclib('Net_SFTP', 'Net/SFTP');
 		}
+		
+		if (is_wp_error($ensure_phpseclib)) return $ensure_phpseclib;
 		
 		// N.B. The same NET_SFTP_* constants exist; but as this point, we're only testing login, so will stick with SSH2
 		if ($debug) {
@@ -369,7 +371,7 @@ class UpdraftPlus_Addons_RemoteStorage_sftp extends UpdraftPlus_RemoteStorage_Ad
 
 	public function get_supported_features() {
 		// This options format is handled via only accessing options via $this->get_options()
-		return array('multi_options', 'config_templates');
+		return array('multi_options', 'config_templates', 'multi_storage');
 	}
 
 	public function get_default_options() {
@@ -385,6 +387,28 @@ class UpdraftPlus_Addons_RemoteStorage_sftp extends UpdraftPlus_RemoteStorage_Ad
 	}
 
 	/**
+	 * Get the pre configuration template
+	 *
+	 * @return String - the template
+	 */
+	public function get_pre_configuration_template() {
+
+		global $updraftplus_admin;
+
+		$classes = $this->get_css_classes(false);
+		
+		?>
+		<tr class="<?php echo $classes . ' ' . 'sftp_pre_config_container';?>">
+			<td colspan="2">
+				<h3><?php echo 'SFTP / SCP'; ?></h3>
+				<p><em><?php _e('Resuming partial uploads is supported for SFTP, but not for SCP. Thus, if using SCP then you will need to ensure that your webserver allows PHP processes to run long enough to upload your largest backup file.', 'updraftplus');?></em></p>
+			</td>
+		</tr>
+
+		<?php
+	}
+
+	/**
 	 * Get the configuration template
 	 *
 	 * @return String - the template, ready for substitutions to be carried out
@@ -393,12 +417,6 @@ class UpdraftPlus_Addons_RemoteStorage_sftp extends UpdraftPlus_RemoteStorage_Ad
 		$classes = $this->get_css_classes();
 		ob_start();
 		?>
-			<tr class="<?php echo $classes; ?>">
-				<th>SFTP/SCP:</th>
-				<td>
-					<p><em><?php _e('Resuming partial uploads is supported for SFTP, but not for SCP. Thus, if using SCP then you will need to ensure that your webserver allows PHP processes to run long enough to upload your largest backup file.', 'updraftplus');?></em></p>
-				</td>
-			</tr>
 
 			<tr class="<?php echo $classes; ?>">
 				<th><?php _e('Host', 'updraftplus');?>:</th>
@@ -456,7 +474,7 @@ class UpdraftPlus_Addons_RemoteStorage_sftp extends UpdraftPlus_RemoteStorage_Ad
 			<tr class="<?php echo $classes; ?>">
 				<th>SCP:</th>
 				<td>
-					<input type="checkbox" data-updraft_settings_test="scp" <?php $this->output_settings_field_name_and_id('scp');?> value="1" {{#if scp}} checked="checked"{{/if}}> <label for="updraft_sftp_scp"><?php _e('Use SCP instead of SFTP', 'updraftplus');?></label>
+					<input type="checkbox" data-updraft_settings_test="scp" <?php $this->output_settings_field_name_and_id('scp'); ?> value="1" {{#ifeq '1' scp}} checked="checked"{{/ifeq}}> <label for="<?php echo $this->get_css_id('scp');?>"><?php _e('Use SCP instead of SFTP', 'updraftplus');?></label>
 				</td>
 			</tr>
 		<?php
@@ -471,7 +489,7 @@ class UpdraftPlus_Addons_RemoteStorage_sftp extends UpdraftPlus_RemoteStorage_Ad
 	 * @param array $opts
 	 * @return array - Modified handerbar template options
 	 */
-	protected function transform_options_for_template($opts) {
+	public function transform_options_for_template($opts) {
 		$opts['port'] = isset($opts['port']) ? $opts['port'] : 22;
 		return $opts;
 	}
@@ -509,9 +527,9 @@ class UpdraftPlus_Addons_RemoteStorage_sftp extends UpdraftPlus_RemoteStorage_Ad
 		$scp = empty($posted_settings['scp']) ? 0 : 1;
 
 		$host = $posted_settings['host'];
-		$user = stripslashes($posted_settings['user']);
-		$pass = empty($posted_settings['pass']) ? '' : stripslashes($posted_settings['pass']);
-		$key = empty($posted_settings['key']) ? '' : stripslashes($posted_settings['key']);
+		$user = $posted_settings['user'];
+		$pass = empty($posted_settings['pass']) ? '' : $posted_settings['pass'];
+		$key = empty($posted_settings['key']) ? '' : $posted_settings['key'];
 		$debug_mode = empty($posted_settings['debug_mode']) ? false : true;
 
 		$sftp = $this->connect($host, $port, $fingerprint, $user, $pass, $key, $scp, $debug_mode);
@@ -796,6 +814,7 @@ class UpdraftPlus_ftp_wrapper {
 			// Reset the curl object (because otherwise we get errors that make no sense)
 			$this->connect();
 			if (version_compare(phpversion(), '5.3.0', '>=')) {
+				// @codingStandardsIgnoreLine
 				curl_setopt($this->curl_handle, CURLOPT_PROGRESSFUNCTION, array($this, 'curl_progress_function'));
 				curl_setopt($this->curl_handle, CURLOPT_NOPROGRESS, false);
 			}
