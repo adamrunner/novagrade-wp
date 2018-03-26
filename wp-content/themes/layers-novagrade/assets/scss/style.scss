@@ -60,7 +60,11 @@
 
 
 */
+$fa-font-path: "assets/fonts";
+$white: #fff;
 $darkBg: rgba(0,0,0,0.45);
+$textPrimary: #222;
+$grayLight: lighten(#ddd, 10%);
 $brandPrimary: #456bb0;
 $price: darken($brandPrimary, 20%);
 
@@ -71,9 +75,11 @@ $price: darken($brandPrimary, 20%);
 @import "content";
 @import "woocommerce";
 @import "custom_gallery";
+@import "tablet-compatibility";
+@import "font-awesome/font-awesome";
 
 @media only screen and (min-width: 769px){
-  .site-logo-link .site-logo {
+  .custom-logo-link img {
     max-height:120px;
   }
 }

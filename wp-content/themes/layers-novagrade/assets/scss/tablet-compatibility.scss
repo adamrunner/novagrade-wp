@@ -1,0 +1,17 @@
+.tablet-compatibility {
+  color: $textPrimary;
+  tr:nth-of-type(2n){
+    background-color: $grayLight;
+  }
+  th {
+    color: $white;
+  	background: $brandPrimary;
+    font-size: 1.4rem;
+  }
+  .green {
+    color: green;
+  }
+  .red {
+    color: red;
+  }
+}
