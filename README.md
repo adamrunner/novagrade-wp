@@ -7,11 +7,11 @@
 1. You shouldn't need to do anything on OS X but it will need your `sudo` password to modify `/etc/exports`
 1. Run `vagrant up`
 1. Run `vagrant ssh` to login to the virtual server
-1. Install PHP FPM and Nginx: `sudo apt-get install -y libapr1 libaprutil1 libdbd-mysql-perl libdbi-perl libnet-daemon-perl libplrpc-perl libpq5 mysql-client-5.5 mysql-common mysql-server mysql-server-5.5 php5-common php5-mysql htop`
-1. Change the php-fpm pool configuration: edit the file `/etc/php5/fpm/pool.d/www.conf`
-1. Change line 34 to `listen = /var/run/php5-fpm.sock`
+1. Install PHP FPM and Nginx: `sudo apt-get install -y vim libapr1 libaprutil1 libdbd-mysql-perl libdbi-perl libnet-daemon-perl libplrpc-perl libpq5 build-essential mysql-server nginx php7.0-fpm php7.0-mbstring php7.0-xml php7.0-soap php7.0-ssl php7.0-mysql php7.0-curl php7.0-gd htop`
+1. Change the php-fpm pool configuration: edit the file `/etc/php/7.0/fpm/pool.d/www.conf`
+1. Change line 34 to `listen = /run/php/php7.0-fpm.sock`
 1. Change line 47 to `listen.mode = 0666`
-1. Pull down the Nginx configuration file: `sudo wget -O /etc/nginx/sites-available/default https://gist.githubusercontent.com/adamrunner/94b495a993c20a5e264bd1c4df81c396/raw/05b0162d89fcf6f9b91a7d8708f37d3ebc0dd484/default.conf`
+1. Pull down the Nginx configuration file: `sudo wget -O /etc/nginx/sites-available/novagrade.conf https://gist.githubusercontent.com/adamrunner/94b495a993c20a5e264bd1c4df81c396/raw/05b0162d89fcf6f9b91a7d8708f37d3ebc0dd484/default.conf`
 1. Create the database `sudo mysql -e "create database novagrade_development; create user 'novagrade'@'localhost' identified by password('password'); flush privileges; grant all on *.* to 'novagrade'@'localhost';"`
 1. Download the database `wget -O ~/novagrade_development.sql https://www.dropbox.com/s/1bcefdclk77gein/novagrade_development.sql?dl=0#`
 1. Import the database `mysql -u novagrade -ppassword novagrade_development < novagrade_development.sql`

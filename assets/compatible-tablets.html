@@ -6,22 +6,21 @@
 <link rel="stylesheet" id="main-stylesheet-css" href="https://novagrade.com/wp-content/themes/novagrade/css/foundation.css" type="text/css" media="all">
 
 <style>
-body {
-    color: #222222;
+.tablet-compatibility {
+  color: #222222;
 	font-family: "Helvetica Neue",Helvetica,Roboto,Arial,sans-serif
 }
-
-th {
-  color:#ffffff !important;
+.tablet-compatibility tr:nth-of-type(2n) {
+  background-color: #eee;
+}
+.tablet-compatibility th {
+  color:#ffffff;
 	background: #456bb0;
 }
-td {
-  text-align: center;
-}
-.green {
+.tablet-compatibility .green {
   color: green;
 }
-.red {
+.tablet-compatibility .red {
   color: red;
 }
 </style>
@@ -33,20 +32,22 @@ td {
 <body>
 
 <div align="center">
-  <table border="1" cellpadding="4" cellspacing="0">
-    <tr>
-      <th>Fit Tested Tablet</th>
-      <th>Rear Camera (megapixels)</th>
-      <th>Screen Size (inches)</th>
-      <th>Works with the Novagrade Tablet Adapter</th>
-      <th>Notes</th>
-    </tr>
-
+  <table border="1" cellpadding="4" cellspacing="0" class="tablet-compatibility">
+    <thead>
+      <tr>
+        <th width="20%">Fit Tested Tablet</th>
+        <th>Rear Camera (megapixels)</th>
+        <th>Screen Size (inches)</th>
+        <th>Works with the Novagrade Tablet Adapter</th>
+        <th width="33%">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
       <tr>
         <td>Acer Iconia Tab 10</td>
         <td>5</td>
         <td>10.1"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -54,7 +55,7 @@ td {
         <td>Acer Iconia Tab 8 </td>
         <td>5</td>
         <td>8"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -62,7 +63,7 @@ td {
         <td>Acer Iconia One 8 </td>
         <td>5</td>
         <td>8"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -70,7 +71,7 @@ td {
         <td>Amazon Fire 7"</td>
         <td>2</td>
         <td>7"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -78,7 +79,7 @@ td {
         <td>Digiland 10.1"</td>
         <td>2</td>
         <td>8"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -86,7 +87,7 @@ td {
         <td>Digiland 7" Quad-Core</td>
         <td>2</td>
         <td>7"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -94,7 +95,7 @@ td {
         <td>Insignia Flex 8</td>
         <td>2</td>
         <td>8"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -102,7 +103,7 @@ td {
         <td>Insignia Flex 10.1"</td>
         <td>5</td>
         <td>10.1"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -110,7 +111,7 @@ td {
         <td>iPad Air</td>
         <td>5</td>
         <td>9.7"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -118,7 +119,7 @@ td {
         <td>iPad Air 2</td>
         <td>8</td>
         <td>9.7"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>Anti-Glare display best in class</td>
       </tr>
 
@@ -126,7 +127,7 @@ td {
         <td>iPad mini 2</td>
         <td>5</td>
         <td>7.9"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -134,7 +135,7 @@ td {
         <td>iPad mini 2</td>
         <td>5</td>
         <td>7.9"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>Great combination of size and image quality</td>
       </tr>
 
@@ -142,7 +143,7 @@ td {
         <td>iPad Pro 12.9-inch </td>
         <td>8</td>
         <td>12.9"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -150,7 +151,7 @@ td {
         <td>iPad Pro 10.5-inch </td>
         <td>12</td>
         <td>10.5"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -158,7 +159,7 @@ td {
         <td>iPad Pro 9.7-inch </td>
         <td>12</td>
         <td>9.7"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -166,7 +167,7 @@ td {
         <td>LeapFrog Epic</td>
         <td>2</td>
         <td>7"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -174,7 +175,7 @@ td {
         <td>Lenovo Tab 2 A8</td>
         <td>5</td>
         <td>8"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -182,7 +183,7 @@ td {
         <td>Lenovo Tablet 10.1</td>
         <td>8</td>
         <td>10.1"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -190,7 +191,7 @@ td {
         <td>NuVision 7.85"</td>
         <td>3</td>
         <td>7.85"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -198,7 +199,7 @@ td {
         <td>RCA 10 Viking II</td>
         <td>2</td>
         <td>10.1"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -206,7 +207,7 @@ td {
         <td>Samsung Galaxy Tab A 7</td>
         <td>5</td>
         <td>7"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -214,7 +215,7 @@ td {
         <td>Samsung Galaxy Tab E Lite 7</td>
         <td>2</td>
         <td>7"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -222,7 +223,7 @@ td {
         <td>Samsung Galaxy Tab A 8"</td>
         <td>5</td>
         <td>8"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -230,7 +231,7 @@ td {
         <td>Samsung Galaxy Tab S2 8.0</td>
         <td>8</td>
         <td>8"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -238,7 +239,7 @@ td {
         <td>Samsung Galaxy Tab E 9.6</td>
         <td>5</td>
         <td>9.6"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -246,7 +247,7 @@ td {
         <td>Samsung Galaxy Tab A 9.7</td>
         <td>5</td>
         <td>9.7"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -254,7 +255,7 @@ td {
         <td>Samsung Galaxy Tab S2 9.7</td>
         <td>8</td>
         <td>9.7"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -262,7 +263,7 @@ td {
         <td>Samsung Galaxy Tab A 10.1</td>
         <td>8</td>
         <td>10.1"</td>
-        <td class="red">x</td>
+        <td class="red"><i class="fa fa-times"></i></td>
         <td>&nbsp;</td>
       </tr>
 
@@ -270,10 +271,19 @@ td {
         <td>Trio 10.1"</td>
         <td>2</td>
         <td>10.1"</td>
-        <td class="green">✔</td>
+        <td class="green"><i class="fa fa-check"></i></td>
         <td>&nbsp;</td>
       </tr>
-
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>Fit Tested Tablet</th>
+        <th>Rear Camera (megapixels)</th>
+        <th>Screen Size (inches)</th>
+        <th>Works with the Novagrade Tablet Adapter</th>
+        <th>Notes</th>
+      </tr>
+    </tfoot>
   </table>
 </div>
 </body>
