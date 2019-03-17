@@ -10,6 +10,10 @@ class Ignition_Updater_Screen {
 	 * @return  void
 	 */
 	public static function get_header ( $token = 'ignition-updater', $screen_icon = 'tools' ) {
+		global $ignition_updater_token;
+		
+		$token = $ignition_updater_token;
+		
 		do_action( 'ignition_updater_screen_before', $token, $screen_icon );
 		$html = '<div class="wrap ignition-updater-wrap">' . "\n";
 		$html .= get_screen_icon( $screen_icon );
@@ -27,6 +31,10 @@ class Ignition_Updater_Screen {
 	 * @return  void
 	 */
 	public static function get_footer ( $token = 'ignition-updater', $screen_icon = 'tools' ) {
+		global $ignition_updater_token;
+		
+		$token = $ignition_updater_token;
+		
 		do_action( 'ignition_updater_screen_footer_after_content', $token, $screen_icon );
 		$html = '</div><!--/.wrap ignition-updater-wrap-->' . "\n";
 		echo $html;
@@ -69,7 +77,8 @@ class Ignition_Updater_Screen {
 	 */
 	public static function get_current_screen () {
 		$screen = 'subscriptions'; // Default.
-		if ( isset( $_GET['screen'] ) && '' != $_GET['screen'] ) $screen = esc_attr( $_GET['screen'] );
+		if ( isset( $_GET['screen'] ) && '' != $_GET['screen'] ) 
+			$screen = esc_attr( $_GET['screen'] );
 		return $screen;
 	} // End get_current_screen()
 

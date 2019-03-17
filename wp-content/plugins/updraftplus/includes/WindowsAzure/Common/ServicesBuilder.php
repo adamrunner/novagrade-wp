@@ -221,13 +221,15 @@ class ServicesBuilder
      * Builds a blob object.
      *
      * @param string $connectionString The configuration connection string.
+	 * @param  string $endpoint Azure BLOB storage endpoint
      *
      * @return WindowsAzure\Blob\Internal\IBlob
      */
-    public function createBlobService($connectionString)
+    public function createBlobService($connectionString, $endpoint)
     {
         $settings = StorageServiceSettings::createFromConnectionString(
-            $connectionString
+            $connectionString,
+			$endpoint
         );
 
         $httpClient = $this->httpClient();

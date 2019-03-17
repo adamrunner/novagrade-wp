@@ -2,10 +2,10 @@
 // @codingStandardsIgnoreStart
 /*
 UpdraftPlus Addon: moredatabase:Multiple database backup options
-Description: Provides the ability to encrypt database backups, and to back up external databases
-Version: 1.5
+Description: Provides the ability to encrypt database backups, and to backup external databases
+Version: 1.6
 Shop: /shop/moredatabase/
-Latest Change: 1.12.35
+Latest Change: 1.14.9
 */
 // @codingStandardsIgnoreEnd
 
@@ -17,6 +17,9 @@ class UpdraftPlus_Addon_MoreDatabase {
 
 	private $database_tables;
 
+	/**
+	 * Class constructor
+	 */
 	public function __construct() {
 		add_filter('updraft_backup_databases', array($this, 'backup_databases'));
 		add_filter('updraft_database_encryption_config', array($this, 'database_encryption_config'));
@@ -32,6 +35,7 @@ class UpdraftPlus_Addon_MoreDatabase {
 		add_filter('updraft_backupnow_database_showmoreoptions', array($this, 'backupnow_database_showmoreoptions'), 10, 2);
 		add_filter('updraft_backupnow_options', array($this, 'backupnow_options'), 10, 2);
 		add_filter('updraftplus_backup_table', array($this, 'updraftplus_backup_table'), 10, 5);
+		add_filter('updraftplus_job_option_cache', array($this, 'encryption_option_cache'), 10, 1);
 	}
 
 	public function get_settings_meta($meta) {
@@ -47,13 +51,16 @@ class UpdraftPlus_Addon_MoreDatabase {
 		return $meta;
 	}
 	
+	/**
+	 * Output the restoration option fields
+	 */
 	public function restore_form_db() {
 
 		echo '<div class="updraft_restore_crypteddb" style="display:none;">'.__('Database decryption phrase', 'updraftplus').': ';
 
 		$updraft_encryptionphrase = UpdraftPlus_Options::get_updraft_option('updraft_encryptionphrase');
 
-		echo '<input type="'.apply_filters('updraftplus_admin_secret_field_type', 'text').'" name="updraft_encryptionphrase" id="updraft_encryptionphrase" value="'.esc_attr($updraft_encryptionphrase).'"></div><br>';
+		echo '<input type="'.apply_filters('updraftplus_admin_secret_field_type', 'text').'" name="updraft_encryptionphrase" value="'.esc_attr($updraft_encryptionphrase).'"></div><br>';
 	}
 
 	public function get_table_prefix($prefix) {
@@ -65,17 +72,17 @@ class UpdraftPlus_Addon_MoreDatabase {
 		return $prefix;
 	}
 
-	public function extradb_testconnection() {
-		echo json_encode($this->extradb_testconnection_go(array(), $_POST));
+	public function extradb_testconnection($data) {
+		echo json_encode($this->extradb_testconnection_go(array(), $data));
 		die;
 	}
 
 	/**
 	 * This is also used as a WP filter
 	 *
-	 * @param  string $results_initial_value_ignored
-	 * @param  string $posted_data
-	 * @return array
+	 * @param String $results_initial_value_ignored
+	 * @param String $posted_data
+	 * @return Array
 	 */
 	public function extradb_testconnection_go($results_initial_value_ignored, $posted_data) {
 	
@@ -167,7 +174,7 @@ class UpdraftPlus_Addon_MoreDatabase {
 	
 			$ret .= '<div id="updraft_backupextradbs"></div>';
 			
-			$ret .= '<div id="updraft_backupextradbs_another_container"><a href="#" id="updraft_backupextradb_another">'.__('Add an external database to backup...', 'updraftplus').'</a></div>';
+			$ret .= '<div id="updraft_backupextradbs_another_container"><a href="'.UpdraftPlus::get_current_clean_url().'" id="updraft_backupextradb_another" class="updraft_icon_link"><span class="dashicons dashicons-plus"></span>'.__('Add an external database to backup...', 'updraftplus').'</a></div>';
 
 		add_action('admin_footer', array($this, 'admin_footer'));
 		return $ret;
@@ -180,20 +187,13 @@ class UpdraftPlus_Addon_MoreDatabase {
 			#updraft_backupextradbs_another_container {
 				clear:both; float:left;
 			}
-		
-			#updraft_encryptionphrase {
-				width: 232px;
-			}
-			
+					
 			#updraft_backupextradbs {
 				clear:both;
 				float:left;
 			}
 		
 			.updraft_backupextradbs_row {
-				border: 1px dotted;
-				margin: 4px;
-				padding: 4px;
 				float: left;
 				clear: both;
 			}
@@ -210,26 +210,21 @@ class UpdraftPlus_Addon_MoreDatabase {
 				padding-top:1px;
 			}
 			.updraft_backupextradbs_row .updraft_backupextradbs_row_textinput {
-				float: left; width: 100px; clear:none; margin-right: 6px;
+				float: left; width: calc(50% - 97px); clear:none; margin-right: 6px;
 			}
 			
 			.updraft_backupextradbs_row .updraft_backupextradbs_row_test {
-				width: 180px; padding: 6px 0; text-align:right;
+				margin-left: 90px; width: 150px; padding: 6px 0; text-align:left;
 			}
 			
 			.updraft_backupextradbs_row .updraft_backupextradbs_row_host {
 				clear:left;
 			}
-			
-			.updraft_backupextradbs_row_delete {
-				float: right;
-				cursor: pointer;
-				font-size: 100%;
-				padding: 1px 3px;
-				margin: 0 6px;
-			}
-			.updraft_backupextradbs_row_delete:hover {
-				cursor: pointer;
+
+			@media (max-width: 782px) {
+				.updraft_backupextradbs_row .updraft_backupextradbs_row_test {
+					margin-left: 0; width: 100%;
+				}
 			}
 		</style>
 		<script>
@@ -237,8 +232,8 @@ class UpdraftPlus_Addon_MoreDatabase {
 				var updraft_extra_dbs = 0;
 				function updraft_extradbs_add(host, user, name, pass, prefix) {
 					updraft_extra_dbs++;
-					$('<div class="updraft_backupextradbs_row updraft-hidden" style="display:none;" id="updraft_backupextradbs_row_'+updraft_extra_dbs+'">'+
-						'<button type="button" title="<?php echo esc_attr(__('Remove', 'updraftplus'));?>" class="updraft_backupextradbs_row_delete">X</button>'+
+					$('<div class="updraft_small_box updraft_backupextradbs_row updraft-hidden" style="display:none;" id="updraft_backupextradbs_row_'+updraft_extra_dbs+'">'+
+						'<button type="button" title="<?php echo esc_attr(__('Remove', 'updraftplus'));?>" class="updraft_box_delete_button updraft_backupextradbs_row_delete"><span class="dashicons dashicons-no"></span></button>'+
 						'<h3><?php echo esc_js(__('Backup external database', 'updraftplus'));?></h3>'+
 						'<div class="updraft_backupextradbs_testresultarea"></div>'+
 						'<div class="updraft_backupextradbs_row_label updraft_backupextradbs_row_host"><?php echo esc_js(__('Host', 'updraftplus'));?>:</div><input class="updraft_backupextradbs_row_textinput extradb_host" type="text" name="updraft_extradbs['+updraft_extra_dbs+'][host]" value="'+host+'">'+
@@ -246,7 +241,7 @@ class UpdraftPlus_Addon_MoreDatabase {
 						'<div class="updraft_backupextradbs_row_label"><?php echo esc_js(__('Password', 'updraftplus'));?>:</div><input class="updraft_backupextradbs_row_textinput extradb_pass" type="<?php echo apply_filters('updraftplus_admin_secret_field_type', 'text'); ?>" name="updraft_extradbs['+updraft_extra_dbs+'][pass]" value="'+pass+'">'+
 						'<div class="updraft_backupextradbs_row_label"><?php echo esc_js(__('Database', 'updraftplus'));?>:</div><input class="updraft_backupextradbs_row_textinput extradb_name" type="text" name="updraft_extradbs['+updraft_extra_dbs+'][name]" value="'+name+'">'+
 						'<div class="updraft_backupextradbs_row_label" title="<?php echo esc_attr('If you enter a table prefix, then only tables that begin with this prefix will be backed up.', 'updraftplus');?>"><?php echo esc_js(__('Table prefix', 'updraftplus'));?>:</div><input class="updraft_backupextradbs_row_textinput extradb_prefix" title="<?php echo esc_attr('If you enter a table prefix, then only tables that begin with this prefix will be backed up.', 'updraftplus');?>" type="text" name="updraft_extradbs['+updraft_extra_dbs+'][prefix]" value="'+prefix+'">'+
-						'<div class="updraft_backupextradbs_row_label updraft_backupextradbs_row_test"><a href="#" class="updraft_backupextradbs_row_testconnection"><?php echo esc_js(__('Test connection...', 'updraftplus'));?></a></div>'+
+						'<div class="updraft_backupextradbs_row_label updraft_backupextradbs_row_test"><a href="<?php echo UpdraftPlus::get_current_clean_url();?>" class="updraft_backupextradbs_row_testconnection"><?php echo esc_js(__('Test connection...', 'updraftplus'));?></a></div>'+
 						'</div>').appendTo($('#updraft_backupextradbs')).fadeIn();
 				}
 				$('#updraft_backupextradb_another').click(function(e) {
@@ -270,9 +265,8 @@ class UpdraftPlus_Addon_MoreDatabase {
 						prefix: $(row).children('.extradb_prefix').val()
 					};
 
-					updraft_send_command('doaction', data, function(response) {
+					updraft_send_command('doaction', data, function(resp, status, response) {
 						try {
-							resp = $.parseJSON(response);
 							if (resp.m && resp.r) {
 								$('#'+resp.r).find('.updraft_backupextradbs_testresultarea').html(resp.m);
 							} else {
@@ -282,7 +276,20 @@ class UpdraftPlus_Addon_MoreDatabase {
 							console.log(err);
 							console.log(data);
 						}
-					}, { json_parse: false });
+					}, { error_callback: function(response, status, error_code, resp) {
+							if (typeof resp !== 'undefined' && resp.hasOwnProperty('fatal_error')) {
+								console.error(resp.fatal_error_message);
+								$('#'+$(row).attr('id')).find('.updraft_backupextradbs_testresultarea').html('<p style="color:red;">'+resp.fatal_error_message+'</p>');
+								alert(resp.fatal_error_message);
+							} else {
+								var error_message = "updraft_send_command: error: "+status+" ("+error_code+")";
+								console.log(error_message);
+								console.log(response);
+								$('#'+$(row).attr('id')).find('.updraft_backupextradbs_testresultarea').html('<p style="color:red;">'+updraftlion.servererrorcode+'</p>');
+								alert(updraftlion.unexpectedresponse+' '+response);
+							}
+						}
+					});
 				});
 				<?php
 				$extradbs = UpdraftPlus_Options::get_updraft_option('updraft_extradbs');
@@ -306,7 +313,7 @@ class UpdraftPlus_Addon_MoreDatabase {
 			$ret .= '<p><strong>'.sprintf(__('Your web-server does not have the %s module installed.', 'updraftplus'), 'PHP/mcrypt / PHP/OpenSSL').' '.__('Without it, encryption will be a lot slower.', 'updraftplus').'</strong></p>';
 		}
 
-		$ret .= '<input type="'.apply_filters('updraftplus_admin_secret_field_type', 'text').'" name="updraft_encryptionphrase" id="updraft_encryptionphrase" value="'.esc_attr($updraft_encryptionphrase).'">';
+		$ret .= '<input type="'.apply_filters('updraftplus_admin_secret_field_type', 'text').'" name="updraft_encryptionphrase" id="updraft_encryptionphrase" value="'.esc_attr($updraft_encryptionphrase).'" class="updraft_input--wide">';
 
 		$ret .= '<p>'.__('If you enter text here, it is used to encrypt database backups (Rijndael). <strong>Do make a separate record of it and do not lose it, or all your backups <em>will</em> be useless.</strong> This is also the key used to decrypt backups from this admin interface (so if you change it, then automatic decryption will not work until you change it back).', 'updraftplus').'</p>';
 
@@ -355,7 +362,7 @@ class UpdraftPlus_Addon_MoreDatabase {
 		$memory_usage2 = round(@memory_get_usage(true)/1048576, 1);
 		$updraftplus->log("Encryption being requested: file_size: ".round($file_size, 1)." KB memory_limit: $memory_limit (used: ${memory_usage}M | ${memory_usage2}M)");
 		
-		$encrypted_file = $this->encrypt($updraft_dir.'/'.$file, $encryption);
+		$encrypted_file = UpdraftPlus_Encryption::encrypt($updraft_dir.'/'.$file, $encryption);
 
 		if (false !== $encrypted_file) {
 			// return basename($file);
@@ -381,190 +388,6 @@ class UpdraftPlus_Addon_MoreDatabase {
 			$updraftplus->log(__("Encryption error occurred when encrypting database. Encryption aborted.", 'updraftplus'), 'error');
 			return basename($file);
 		}
-	}
-	
-	/**
-	 * This is the encryption process when encrypting a file
-	 *
-	 * @param String $fullpath This is the full path to the DB file that needs ecrypting
-	 * @param String $key      This is the key (salting) to be used when encrypting
-	 *
-	 * @return String|Boolean - Return the full path of the encrypted file
-	 */
-	private function encrypt($fullpath, $key) {
-		global $updraftplus;
-
-		if (!function_exists('mcrypt_encrypt') && !extension_loaded('openssl')) {
-			$updraftplus->log(sprintf(__('Your web-server does not have the %s module installed.', 'updraftplus'), 'PHP/mcrypt / PHP/OpenSSL').' '.__('Without it, encryption will be a lot slower.', 'updraftplus'), 'warning', 'nocrypt');
-		}
-
-		// include Rijndael library from phpseclib
-		$ensure_phpseclib = $updraftplus->ensure_phpseclib('Crypt_Rijndael', 'Crypt/Rijndael');
-		
-		if (is_wp_error($ensure_phpseclib)) {
-			$this->log("Failed to load phpseclib classes (".$ensure_phpseclib->get_error_code()."): ".$ensure_phpseclib->get_error_message());
-			return false;
-		}
-
-		// open file to read
-		if (false === ($file_handle = fopen($fullpath, 'rb'))) {
-			$updraftplus->log("Failed to open file for read access: $fullpath");
-			return false;
-		}
-
-		// encrypted path name. The trailing .tmp ensures that it will be cleaned up by the temporary file reaper eventually, if needs be.
-		$encrypted_path = dirname($fullpath).'/encrypt_'.basename($fullpath).'.tmp';
-
-		$data_encrypted = 0;
-		$buffer_size = defined('UPDRAFTPLUS_CRYPT_BUFFER_SIZE') ? UPDRAFTPLUS_CRYPT_BUFFER_SIZE : 2097152;
-
-		$time_last_logged = microtime(true);
-		
-		$file_size = filesize($fullpath);
-
-		// Set initial value to false so we can check it later and decide what to do
-		$resumption = false;
-
-		// setup encryption
-		$rijndael = new Crypt_Rijndael();
-		$rijndael->setKey($key);
-		$rijndael->disablePadding();
-		$rijndael->enableContinuousBuffer();
-		
-		// First we need to get the block length, this method returns the length in bits we need to change this back to bytes in order to use it with the file operation methods.
-		$block_length = $rijndael->getBlockLength() >> 3;
-
-		// Check if the path already exists as this could be a resumption
-		if (file_exists($encrypted_path)) {
-			
-			$updraftplus->log("Temporary encryption file found, will try to resume the encryption");
-
-			// The temp file exists so set resumption to true
-			$resumption = true;
-
-			// Get the file size as this is needed to help resume the encryption
-			$data_encrypted = filesize($encrypted_path);
-			// Get the true file size e.g without padding used for various resumption paths
-			$true_data_encrypted = $data_encrypted - ($data_encrypted % $buffer_size);
-
-			if ($data_encrypted >= $block_length) {
-		
-				// Open existing file from the path
-				if (false === ($encrypted_handle = fopen($encrypted_path, 'rb+'))) {
-					$updraftplus->log("Failed to open file for write access on resumption: $encrypted_path");
-					$resumption = false;
-				}
-				
-				// First check if our buffer size needs padding if it does increase buffer size to length that doesn't need padding
-				if (0 != $buffer_size % 16) {
-					$pad = 16 - ($buffer_size % 16);
-					$true_buffer_size = $buffer_size + $pad;
-				} else {
-					$true_buffer_size = $buffer_size;
-				}
-				
-				// Now check if using modulo on data encrypted and buffer size returns 0 if it doesn't then the last block was a partial write and we need to discard that and get the last useable IV by adding this value to the block length
-				$partial_data_size = $data_encrypted % $true_buffer_size;
-
-				// We need to reconstruct the IV from the previous run in order for encryption to resume
-				if (-1 === (fseek($encrypted_handle, $data_encrypted - ($block_length + $partial_data_size)))) {
-					$updraftplus->log("Failed to move file pointer to correct position to get IV: $encrypted_path");
-					$resumption = false;
-				}
-
-				// Read previous block length from file
-				if (false === ($iv = fread($encrypted_handle, $block_length))) {
-					$updraftplus->log("Failed to read from file to get IV: $encrypted_path");
-					$resumption = false;
-				}
-
-				$rijndael->setIV($iv);
-
-				// Now we need to set the file pointer for the original file to the correct position and take into account the padding added, this padding needs to be removed to get the true amount of bytes read from the original file
-				if (-1 === (fseek($file_handle, $true_data_encrypted))) {
-					$updraftplus->log("Failed to move file pointer to correct position to resume encryption: $fullpath");
-					$resumption = false;
-				}
-				
-			} else {
-				// If we enter here then the temp file exists but it is either empty or has one incomplete block we may as well start again
-				$resumption = false;
-			}
-
-			if (!$resumption) {
-				$updraftplus->log("Could not resume the encryption will now try to start again");
-				// remove the existing encrypted file as it's no good to us now
-				@unlink($encrypted_path);
-				// reset the data encrypted so that the loop can be entered
-				$data_encrypted = 0;
-				// setup encryption to reset the IV
-				$rijndael = new Crypt_Rijndael();
-				$rijndael->setKey($key);
-				$rijndael->disablePadding();
-				$rijndael->enableContinuousBuffer();
-				// reset the file pointer and then we should be able to start from fresh
-				if (-1 === (fseek($file_handle, 0))) {
-					$updraftplus->log("Failed to move file pointer to start position to restart encryption: $fullpath");
-					$resumption = false;
-				}
-			}
-		}
-
-		if (!$resumption) {
-			// open new file from new path
-			if (false === ($encrypted_handle = fopen($encrypted_path, 'wb+'))) {
-				$updraftplus->log("Failed to open file for write access: $encrypted_path");
-				return false;
-			}
-		}
-		
-		// loop around the file
-		while ($data_encrypted < $file_size) {
-
-			// read buffer-sized amount from file
-			if (false === ($file_part = fread($file_handle, $buffer_size))) {
-				$updraftplus->log("Failed to read from file: $fullpath");
-				return false;
-			}
-			
-			// check to ensure padding is needed before encryption
-			$length = strlen($file_part);
-			if (0 != $length % 16) {
-				$pad = 16 - ($length % 16);
-				$file_part = str_pad($file_part, $length + $pad, chr($pad));
-			}
-
-			$encrypted_data = $rijndael->encrypt($file_part);
-			
-			if (false === fwrite($encrypted_handle, $encrypted_data)) {
-				$updraftplus->log("Failed to write to file: $encrypted_path");
-				return false;
-			}
-			
-			$data_encrypted += $buffer_size;
-			
-			$time_since_last_logged = microtime(true) - $time_last_logged;
-			if ($time_since_last_logged > 5) {
-				$time_since_last_logged = microtime(true);
-				$updraftplus->log("Encrypting file: completed $data_encrypted bytes");
-			}
-			
-		}
-
-		// close the main file handle
-		fclose($encrypted_handle);
-		fclose($file_handle);
-
-		// encrypted path
-		$result_path = $fullpath.'.crypt';
-
-		// need to replace original file with tmp file
-		if (false === rename($encrypted_path, $result_path)) {
-			$updraftplus->log("File rename failed: $encrypted_path -> $result_path");
-			return false;
-		}
-
-		return $result_path;
 	}
 
 	/**
@@ -678,6 +501,18 @@ class UpdraftPlus_Addon_MoreDatabase {
 	 */
 	private function cb_get_first_item($a) {
 		return $a[0];
+	}
+
+	/**
+	 * This function is called via the filter updraftplus_job_option_cache it adds the encryption phrase to the option cache so it can be accessed during a job.
+	 *
+	 * @param Array $options_cache - the options cache
+	 *
+	 * @return Array - the updated options cache
+	 */
+	public function encryption_option_cache($options_cache) {
+		$options_cache['updraft_encryptionphrase'] = UpdraftPlus_Options::get_updraft_option('updraft_encryptionphrase');
+		return $options_cache;
 	}
 }
 

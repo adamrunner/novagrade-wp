@@ -36,8 +36,10 @@ class Ignition_Updater_API {
 	private $version;
 
 	public function __construct () {
+		global $ignition_updater_token;
+		
 		$this->version = '2.0';
-		$this->token = 'ignitewoo-updater';
+		$this->token = $ignition_updater_token;
 		$this->api_url = 'https://ignitewoo.com/api2/?api=product-key-api';
 		$this->products_api_url = 'https://ignitewoo.com/api2/?api=installer-api';
 		$this->license_check_url = 'https://ignitewoo.com/api2/?api=license-status-check';

@@ -2,9 +2,9 @@
 /**
  * Plugin Name: IgniteWoo Updater
  * Plugin URI: http://ignitewoo.com/products/
- * Description: I'm here to help you manage licenses and receive updates for your IgniteWoo products.
- * Version: 2.1.7
- * Author: Ignition
+ * Description: Helps you manage licenses and receive updates for your IgniteWoo products.
+ * Version: 2.1.12
+ * Author: IgniteWoo.com
  * Author URI: http://ignitewoo.com/
  * Network: true
  * Requires at least: 3.8.1
@@ -41,7 +41,10 @@ if ( is_admin() && ( isset( $_POST['action'] ) && 'ignition_activate_license_key
 
 
 function __ignition_updater () {
-
+	global $ignition_updater_token; 
+	
+	$ignition_updater_token = 'ignitewoo-updater'; 
+	
 	require_once( 'classes/class-ignition-updater.php' );
 
 	global $ignition_updater;
@@ -52,8 +55,8 @@ function __ignition_updater () {
 	$version = get_file_data( __FILE__, array( 'Version' ), '' );
 
 	$ignition_updater->version = $version[0];
-	$ignition_updater->admin->product_id = 'Updater';
-	$ignition_updater->admin->licence_hash = '6471fb9bec3ef8e9dcafe3ba5bd994c8';
-	$ignition_updater->admin->slug = plugin_basename( __FILE__ );
-	$ignition_updater->admin->dir = dirname( __FILE__ );
+	@$ignition_updater->admin->product_id = 'Updater';
+	@$ignition_updater->admin->licence_hash = '6471fb9bec3ef8e9dcafe3ba5bd994c8';
+	@$ignition_updater->admin->slug = plugin_basename( __FILE__ );
+	@$ignition_updater->admin->dir = dirname( __FILE__ );
 }

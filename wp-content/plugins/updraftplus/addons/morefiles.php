@@ -50,44 +50,31 @@ class UpdraftPlus_Addons_MoreFiles {
 		
 		add_filter('updraftplus_include_wpcore_exclude', array($this, 'include_wpcore_exclude'));
 
+		add_filter('updraftplus_include_manifest', array($this, 'more_include_manifest'), 10, 2);
+		add_filter('updraftplus_more_rebuild', array($this, 'more_rebuild'), 10, 1);
 	}
 
 	/**
 	 * WP filter updraftplus_get_disk_space_used_none
 	 *
-	 * @param String							- $result - the unfiltered value to return
-	 * @param String							- $entity - the entity type
+	 * @param String       $result              - the unfiltered value to return
+	 * @param String       $entity              - the entity type
 	 * @param Array|String $backupable_entities - a path or list of paths
 	 *
-	 * @return String - filtered result
-	 */
-	/**
-	 * Undocumented function
-	 *
-	 * @param string       $result			    The unfiltered value to return
-	 * @param string       $entity				The entity type
-	 * @param array|string $backupable_entities A path or list of paths
-	 * @return string Filtered result
+	 * @return String                           - filtered result
 	 */
 	public function get_disk_space_used_none($result, $entity, $backupable_entities) {
 		return ('more' == $entity && empty($backupable_entities['more'])) ? __('(None configured)', 'updraftplus') : $result;
 	}
 	
 	public function updraftplus_browse_download_link($link) {
-		return '<a href="#" id="updraft_zip_download_item">'._x('Download', '(verb)', 'updraftplus').'</a>';
+		return '<a href="'.UpdraftPlus::get_current_clean_url().'" id="updraft_zip_download_item">'._x('Download', '(verb)', 'updraftplus').'</a>';
 	}
 	
 	public function updraftplus_command_get_zipfile_download($result, $params) {
 		global $updraftplus;
 
-		$zip_object = 'UpdraftPlus_ZipArchive';
-
-		if (!class_exists('UpdraftPlus_PclZip')) include_once(UPDRAFTPLUS_DIR.'/class-zip.php');
-
-		// In tests, PclZip was found to be 25% slower than ZipArchive
-		if (((defined('UPDRAFTPLUS_PREFERPCLZIP') && UPDRAFTPLUS_PREFERPCLZIP == true) || !class_exists('ZipArchive') || !class_exists('UpdraftPlus_ZipArchive') || (!extension_loaded('zip') && !method_exists('ZipArchive', 'AddFile')))) {
-			$zip_object = 'UpdraftPlus_PclZip';
-		}
+		$zip_object = $updraftplus->get_zip_object_name();
 
 		// Retrieve the information from our backup history
 		$backup_history = UpdraftPlus_Backup_History::get_history();
@@ -101,7 +88,7 @@ class UpdraftPlus_Addons_MoreFiles {
 		// Where it should end up being downloaded to
 		$fullpath = $updraftplus->backups_dir_location().'/'.$file;
 
-		$path = substr($params['path'], strpos($params['path'], '/') + 1);
+		$path = substr($params['path'], strpos($params['path'], DIRECTORY_SEPARATOR) + 1);
 
 		if (file_exists($fullpath) && is_readable($fullpath) && filesize($fullpath)>0) {
 
@@ -114,7 +101,8 @@ class UpdraftPlus_Addons_MoreFiles {
 				if ('UpdraftPlus_PclZip' == $zip_object) {
 					$extracted = $zip->extract($updraftplus->backups_dir_location() . DIRECTORY_SEPARATOR . 'ziptemp' . DIRECTORY_SEPARATOR, $path);
 				} else {
-					$extracted = $zip->extractTo($updraftplus->backups_dir_location() . DIRECTORY_SEPARATOR . 'ziptemp' . DIRECTORY_SEPARATOR, $path);
+					$replaced_dir_sep_path = str_replace(DIRECTORY_SEPARATOR, '/', $path);
+					$extracted = $zip->extractTo($updraftplus->backups_dir_location() . DIRECTORY_SEPARATOR . 'ziptemp' . DIRECTORY_SEPARATOR, $replaced_dir_sep_path);
 				}
 				
 				@$zip->close();
@@ -169,7 +157,7 @@ class UpdraftPlus_Addons_MoreFiles {
 	}
 
 	public function admin_directories_description() {
-		return '<div style="float: left; clear: both; padding-top: 3px;">'.__('The above files comprise everything in a WordPress installation.', 'updraftplus').'</div>';
+		return '<div>'.__('The above files comprise everything in a WordPress installation.', 'updraftplus').'</div>';
 	}
 
 	public function backupable_file_entities($arr, $full_info) {
@@ -195,7 +183,7 @@ class UpdraftPlus_Addons_MoreFiles {
 
 		if ('.zip' == strtolower(substr($zipfile, -4, 4))) {
 
-			if (!class_exists('UpdraftPlus_PclZip')) include(UPDRAFTPLUS_DIR.'/class-zip.php');
+			if (!class_exists('UpdraftPlus_PclZip')) include(UPDRAFTPLUS_DIR.'/includes/class-zip.php');
 			$zip = new UpdraftPlus_PclZip;
 
 			if (!$zip->open($zipfile)) {
@@ -203,7 +191,7 @@ class UpdraftPlus_Addons_MoreFiles {
 				return;
 			}
 
-			// Don't put this in the for loop, or the magic __get() method gets called and opens the zip file every time the loop goes round
+			// Don't put this in the for loop, or the magic __get() method gets called every time the loop goes round
 			$numfiles = $zip->numFiles;
 
 			for ($i=0; $i < $numfiles; $i++) {
@@ -267,7 +255,7 @@ class UpdraftPlus_Addons_MoreFiles {
 		if ($full_info) {
 			$arr['more'] = array(
 				'path' => $path,
-				'description' => __('Any other file/directory on your server that you wish to back up', 'updraftplus'),
+				'description' => __('Any other file/directory on your server that you wish to backup', 'updraftplus'),
 				'shortdescription' => __('More Files', 'updraftplus'),
 				'restorable' => false
 			);
@@ -282,12 +270,12 @@ class UpdraftPlus_Addons_MoreFiles {
 		if ($prefix) return $ret;
 
 		$display = UpdraftPlus_Options::get_updraft_option('updraft_include_more') ? '' : 'style="display:none;"';
-		$class = $display ? 'class="updraft-hidden"' : '';
+		$class = $display ? 'updraft-hidden' : '';
 		
 		$paths = UpdraftPlus_Options::get_updraft_option('updraft_include_more_path');
 		if (!is_array($paths)) $paths = array($paths);
 
-		$ret .= "<div id=\"updraft_include_more_options\" $display $class><p>";
+		$ret .= "<div id=\"updraft_include_more_options\" $display class=\"updraft_include_container $class\"><p class=\"updraft-field-description\">";
 
 			$ret .= __('If you are not sure what this option is for, then you will not want it, and should turn it off.', 'updraftplus').' '.__('If using it, select a path from the directory tree below and then press confirm selection.', 'updraftplus');
 			
@@ -305,23 +293,23 @@ class UpdraftPlus_Addons_MoreFiles {
 			} else {
 			foreach ($paths as $ind => $path) {
 				$maxind = max($ind, $maxind);
-				$ret .= '<div class="updraftplus-morefiles-row" style="float: left; clear: left;"><label for="updraft_include_more_path_'.$ind.'"></label>';
-				$ret .= '<input type="text" data-mp_index="'.$ind.'" id="updraft_include_more_path_'.$ind.'" class="updraft_include_more_path" name="updraft_include_more_path[]" size="54" value="'.htmlspecialchars($path).'" title="'.htmlspecialchars($path).'"/> <span title="'.__('Edit', 'updraftplus').'" class="updraftplus-morefiles-row-edit dashicons dashicons-edit hidden-in-updraftcentral"></span> <span title="'.__('Remove', 'updraftplus').'" class="updraftplus-morefiles-row-delete">X</span>';
+				$ret .= '<div class="updraftplus-morefiles-row"><label for="updraft_include_more_path_'.$ind.'"></label>';
+				$ret .= '<input type="text" data-mp_index="'.$ind.'" id="updraft_include_more_path_'.$ind.'" class="updraft_include_more_path" name="updraft_include_more_path[]" size="54" value="'.htmlspecialchars($path).'" title="'.htmlspecialchars($path).'"/> <a href="#" title="'.__('Edit', 'updraftplus').'" class="updraftplus-morefiles-row-edit dashicons dashicons-edit hidden-in-updraftcentral"></a> <a href="#" title="'.__('Remove', 'updraftplus').'" class="updraftplus-morefiles-row-delete dashicons dashicons-no"></a>';
 				$ret .= '</div>';
 			}
 			}
 			
 			$ret .= '</div>';
 
-			$ret .= '<div style="clear:left; float:left;"><a id="updraft_include_more_paths_another">'. __('Add directory...', 'updraftplus') .'</a></div>';
+			$ret .= '<div><a href="#" id="updraft_include_more_paths_another" class="updraft_icon_link"><span class="dashicons dashicons-plus"></span>'. __('Add directory...', 'updraftplus') .'</a></div>';
 			$ret .= '<div id="updraft_more_files_container" class="hidden-in-updraftcentral" style="clear:left;">
-						<div id="updraft_jstree_buttons">
-							<button class="button-primary" id="updraft_jstree_cancel">'. __('Cancel', 'updraftplus') .'</button> 
-							<button class="button-primary" id="updraft_jstree_confirm">'. __('Confirm', 'updraftplus') .'</button>
-						</div>
 						<div id="updraft_jstree_container">
-							<button class="button-primary" id="updraft_parent_directory" title="'.__('Go up a directory', 'updraftplus').'"><span class="dashicons dashicons-arrow-up-alt"></span></button>
+							<button class="button" id="updraft_parent_directory" title="'.__('Go up a directory', 'updraftplus').'"><span class="dashicons dashicons-arrow-up-alt"></span>'.__('Go up a directory', 'updraftplus').'</button>
 							<div id="updraft_more_files_jstree"></div>
+						</div>
+						<div id="updraft_jstree_buttons">
+							<button class="button" id="updraft_jstree_cancel">'. __('Cancel', 'updraftplus') .'</button> 
+							<button class="button button-primary" id="updraft_jstree_confirm">'. __('Confirm', 'updraftplus') .'</button>
 						</div>
 					</div>';
 
@@ -341,9 +329,10 @@ class UpdraftPlus_Addons_MoreFiles {
 					}
 				});
 
-				$('#updraft_include_more_paths_another').click(function(){
+				$('#updraft_include_more_paths_another').click(function(e){
+					e.preventDefault();
 					updraftplus_morefiles_lastind++;
-					$('#updraft_include_more_paths').append('<div class="updraftplus-morefiles-row" style="float: left; clear: left;"><label for="updraft_include_more_path_'+updraftplus_morefiles_lastind+'"></label><input type="text" class="updraft_more_path_editing" id="updraft_include_more_path_'+updraftplus_morefiles_lastind+'" name="updraft_include_more_path[]" size="54" placeholder="$placeholder" value="" title="$placeholder" readonly/> <span title="$edit" class="updraftplus-morefiles-row-edit dashicons dashicons-edit hidden-in-updraftcentral"></span> <span title="$remove"  class="updraftplus-morefiles-row-delete">X</span></div>');
+					$('#updraft_include_more_paths').append('<div class="updraftplus-morefiles-row"><label for="updraft_include_more_path_'+updraftplus_morefiles_lastind+'"></label><input type="text" class="updraft_more_path_editing" id="updraft_include_more_path_'+updraftplus_morefiles_lastind+'" name="updraft_include_more_path[]" size="54" placeholder="$placeholder" value="" title="$placeholder" readonly/> <a href="#" title="$edit" class="updraftplus-morefiles-row-edit dashicons dashicons-edit hidden-in-updraftcentral"></a> <a href="#" title="$remove"  class="updraftplus-morefiles-row-delete dashicons dashicons-no"></a></div>');
 					more_files_jstree('filebrowser');
 				});
 				
@@ -355,10 +344,10 @@ class UpdraftPlus_Addons_MoreFiles {
 				 */
 				function more_files_jstree(entity, path, drop_directory) {
 					$('#updraft_include_more_paths_another').hide();
-					$('#updraft_more_files_container').show();
+					$('#updraft_more_files_container').insertAfter($('.updraft_more_path_editing').closest('.updraftplus-morefiles-row')).show();
 					$('#updraft_jstree_cancel').show();
 					$('#updraft_jstree_confirm').show();
-
+					$('.updraft_more_path_editing').data('previous-value', $('.updraft_more_path_editing').val());
 					$('#updraft_more_files_jstree').jstree({
 						"core": {
 							"multiple": false,
@@ -382,7 +371,8 @@ class UpdraftPlus_Addons_MoreFiles {
 				// Cancel the selection and clean up the UI
 				$('#updraft_jstree_cancel').click(function(e) {
 					e.preventDefault();
-
+					// reset value on cancel
+					$('.updraft_more_path_editing').val($('.updraft_more_path_editing').data('previous-value'));
 					cleanup_jstree_ui();
 				});
 
@@ -401,6 +391,12 @@ class UpdraftPlus_Addons_MoreFiles {
 					$('#updraft_jstree_cancel').hide();
 					$('#updraft_jstree_confirm').hide();
 					$('#updraft_include_more_paths_another').show();
+					
+					// if the new item is cancelled, remove the row
+					if ('' == $('.updraft_more_path_editing').val()) {
+						$('.updraft_more_path_editing').closest('.updraftplus-morefiles-row').remove();
+					}
+
 					$('#updraft_include_more_paths > .updraftplus-morefiles-row > .updraft_more_path_editing').removeClass('updraft_more_path_editing');
 					$('#updraft_more_files_jstree').jstree("destroy").empty();
 				}
@@ -454,20 +450,42 @@ ENDHERE;
 		return $ret;
 	}
 
+	/**
+	 * Gives html for the wp core exclude settings. Called by the updraftplus_config_option_include_wpcore filter
+	 *
+	 * @param String $ret    the value passed by filter. by default, it is empty string
+	 * @param String $prefix Prefix for the ID
+	 * @return String html for exclude wp core
+	 */
 	public function config_option_include_wpcore($ret, $prefix) {
+		global $updraftplus, $updraftplus_admin;
+		
+		$for_updraftcentral = defined('UPDRAFTCENTRAL_COMMAND') && UPDRAFTCENTRAL_COMMAND;
 
 		if ($prefix) return $ret;
 
 		$display = UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore') ? '' : 'style="display:none;"';
+		$exclude_container_class = 'updraft_include_wpcore_exclude';
+		if (!$for_updraftcentral)  $exclude_container_class .= '_container';
 
-		$ret .= "<div id=\"updraft_include_wpcore_exclude\" $display>";
+		$ret .= "<div id=\"".$exclude_container_class."\" class=\"updraft_exclude_container\" $display>";
 
-		$ret .= '<label for="updraft_include_wpcore_exclude">'.__('Exclude these:', 'updraftplus').'</label>';
+		$ret .= '<label class="updraft-exclude-label" for="updraft_include_wpcore_exclude">'.__('Exclude these:', 'updraftplus').'</label>';
 
-		$ret .= '<input title="'.__('If entering multiple files/directories, then separate them with commas. For entities at the top level, you can use a * at the start or end of the entry as a wildcard.', 'updraftplus').'" type="text" id="updraft_include_wpcore_exclude" name="updraft_include_wpcore_exclude" size="54" value="'.esc_attr(UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore_exclude')).'" />';
-
-		$ret .= '<br>';
-
+		$exclude_input_type = $for_updraftcentral ? "text" : "hidden";
+		$exclude_input_extra_attr = $for_updraftcentral ? 'title="'.__('If entering multiple files/directories, then separate them with commas. For entities at the top level, you can use a * at the start or end of the entry as a wildcard.', 'updraftplus').'" size="54"' : '';
+		$ret .= '<input type="'.$exclude_input_type.'" id="updraft_include_wpcore_exclude" name="updraft_include_wpcore_exclude" value="'.esc_attr(UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore_exclude')).'" '.$exclude_input_extra_attr.' />';
+		if (!$for_updraftcentral) {
+			$backupable_file_entities = $updraftplus->get_backupable_file_entities();
+			$path = UpdraftPlus_Manipulation_Functions::wp_normalize_path($backupable_file_entities['wpcore']);
+			$ret .= $updraftplus_admin->include_template('wp-admin/settings/file-backup-exclude.php', true, array(
+				'prefix' => $prefix,
+				'key' => 'wpcore',
+				'include_exclude' => UpdraftPlus_Options::get_updraft_option('updraft_include_wpcore_exclude'),
+				'path' => $path,
+				'show_exclusion_options' => true
+			));
+		}
 		$ret .= '</div>';
 
 		return $ret;
@@ -527,6 +545,15 @@ ENDHERE;
 
 	}
 
+	/**
+	 * This function will build and keep track of a list of more files that will be backed up
+	 *
+	 * @param array   $whichdirs            - an array of directories that need to be backed up
+	 * @param string  $backup_file_basename - the backup file basename
+	 * @param integer $index                - the backup index
+	 *
+	 * @return array|boolean               - returns an array of created more file zips or false if none are created
+	 */
 	public function backup_makezip_more($whichdirs, $backup_file_basename, $index) {
 
 		global $updraftplus, $updraftplus_backup;
@@ -538,10 +565,15 @@ ENDHERE;
 		$final_created = array();
 
 		$first_linked_index = 0;
-
+		
+		// Oct 2018: changed the way more files are tracked, there are now two arrays:
+		// more_locations: a numerical array of unique more file locations
+		// more_map: a numerical array where array keys match the backup file and array values match an array key in the more_locations array
 		// For tracking which "more files" configuration entry goes into which zip, to avoid useless activity (or worse, duplicate backups)
-		$first_linked_indexes = $updraftplus->jobdata_get('morefiles_linked_indexes');
-		if (!is_array($first_linked_indexes)) $first_linked_indexes = array();
+		$more_map = $updraftplus->jobdata_get('morefiles_linked_indexes');
+		$more_locations = $updraftplus->jobdata_get('morefiles_more_locations');
+		if (!is_array($more_map)) $more_map = array();
+		if (!is_array($more_locations)) $more_locations = array();
 
 		foreach ($whichdirs as $i => $whichdir) {
 
@@ -550,18 +582,31 @@ ENDHERE;
 
 			if (count($dirlist)>0) {
 				$this->more_paths[] = $whichdir;
-				if (!isset($first_linked_indexes[$i])) {
-					$first_linked_indexes[$i] = $first_linked_index;
-					$updraftplus->jobdata_set('morefiles_linked_indexes', $first_linked_indexes);
-				} else {
-					$first_linked_index = $first_linked_indexes[$i];
+				
+				if (!in_array($whichdir, $more_locations)) {
+					$more_locations[] = $whichdir;
+					$updraftplus->jobdata_set('morefiles_more_locations', $more_locations);
 				}
+				
+				if (!empty($more_map) && isset($more_map[$first_linked_index])) {
+					$first_linked_index = count($more_map) - 1;
+				}
+
 				$created = $updraftplus_backup->create_zip($dirlist, 'more', $backup_file_basename, $index, $first_linked_index);
-				$index = $updraftplus_backup->index;
+				
 				if (!empty($created)) {
+
+					foreach ($created as $key => $name) {
+						$more_map[$key] = array_search($whichdir, $more_locations);
+					}
+					$updraftplus->jobdata_set('morefiles_linked_indexes', $more_map);
+
+					$keys = array_keys($created);
+					$index = end($keys);
 					$index++;
 					$first_linked_index = $index;
 				}
+				
 				if (is_string($created)) {
 					$final_created[] = $created;
 				} elseif (is_array($created)) {
@@ -622,7 +667,7 @@ ENDHERE;
 // if (true == apply_filters('updraftplus_backup_wpcore_dirlist_strict', false)) {
 // $wpcore_valid = array('wp-admin', 'wp-includes', 'index.php', 'xmlrpc.php');
 // foreach ($wpcore_dirlist as $dir) {
-// 				
+//
 // }
 // }
 
@@ -683,5 +728,105 @@ ENDHERE;
 
 		return $updraftplus_restorer->move_backup_in($working_dir, $wp_dir, $preserve_existing, array(basename(WP_CONTENT_DIR)), 'wpcore');
 
+	}
+
+
+	/**
+	 * This function will filter and return a boolean to indicate if the backup should include a manifest or not
+	 *
+	 * @param boolean $include  - a boolean to indicate if we should include a manifest in the backup
+	 * @param string  $whichone - the entity that this backup is
+	 *
+	 * @return boolean          - returns a boolean to indicate if we should include a manifest in the backup
+	 */
+	public function more_include_manifest($include, $whichone) {
+		return ('more' == $whichone) ? true : $include;
+	}
+
+	/**
+	 * This function will rebuild the more files linked indexes and more locations array if the backup history is missing this information and return the backup history otherwise returns false
+	 *
+	 * @param array $backup_history - the backup history
+	 *
+	 * @return array|boolean        - the modified backup history or false if theres no changes
+	 */
+	public function more_rebuild($backup_history) {
+
+		$changes = false;
+		
+		foreach ($backup_history as $btime => $bdata) {
+			if (!isset($bdata['more'])) continue;
+			foreach ($bdata['more'] as $key => $filename) {
+				if (!isset($bdata['morefiles_linked_indexes'])) $bdata['morefiles_linked_indexes'] = array();
+				if (!isset($bdata['morefiles_more_locations'])) $bdata['morefiles_more_locations'] = array();
+				if (isset($bdata['morefiles_linked_indexes'][$key])) continue;
+
+				$morefile_path = $this->more_manifest_file_directory('', $filename);
+
+				if ('' == $morefile_path) continue;
+
+				$changes = true;
+
+				$morefile_path_key = array_search($morefile_path, $bdata['morefiles_more_locations']);
+
+				if (false !== $morefile_path_key) {
+					$bdata['morefiles_linked_indexes'][$key] = $morefile_path_key;
+				} else {
+					if (!in_array($morefile_path, $bdata['morefiles_more_locations'])) $bdata['morefiles_more_locations'][] = $morefile_path;
+					$bdata['morefiles_linked_indexes'][$key] = count($bdata['morefiles_more_locations']) - 1;
+				}
+			}
+
+			// We sort these here so that they appear in order in the backup history which makes for easier debugging
+			ksort($bdata['morefiles_more_locations']);
+			ksort($bdata['morefiles_linked_indexes']);
+			
+			$backup_history[$btime] = $bdata;
+		}
+
+		if ($changes) return $backup_history;
+		
+		return false;
+	}
+
+	/**
+	 * This function will check the passed in more files zip to see if it includes a manifest file and if so it will extract the directory that them files belong to and return it, otherwise it will return the default value passed in.
+	 *
+	 * @param string $path     - the default passed in path
+	 * @param string $filename - the more file zip name
+	 *
+	 * @return string          - the default path if no manifest is found or the location of the more files if it is found
+	 */
+	private function more_manifest_file_directory($path, $filename) {
+		global $updraftplus;
+
+		$zip_object = $updraftplus->get_zip_object_name();
+		$fullpath = $updraftplus->backups_dir_location() . DIRECTORY_SEPARATOR . $filename;
+
+		if (file_exists($fullpath) && is_readable($fullpath) && filesize($fullpath) > 0) {
+			$zip = new $zip_object;
+			
+			$zip_opened = $zip->open($fullpath);
+
+			if (true !== $zip_opened) {
+				return array('error' => 'UpdraftPlus: opening zip (' . $fullpath . '): failed to open this zip file (object='.$zip_object.', code: '.$zip_opened.')');
+			} else {
+
+				if ('UpdraftPlus_PclZip' == $zip_object) {
+					$extracted = $zip->extract($updraftplus->backups_dir_location() . DIRECTORY_SEPARATOR . 'ziptemp' . DIRECTORY_SEPARATOR, 'updraftplus-manifest.json');
+				} else {
+					$extracted = $zip->extractTo($updraftplus->backups_dir_location() . DIRECTORY_SEPARATOR . 'ziptemp' . DIRECTORY_SEPARATOR, 'updraftplus-manifest.json');
+				}
+				
+				$manifest_path = $updraftplus->backups_dir_location() . DIRECTORY_SEPARATOR . 'ziptemp' . DIRECTORY_SEPARATOR . 'updraftplus-manifest.json';
+				$manifest = json_decode(file_get_contents($manifest_path), true);
+
+				$path = $manifest['directory'];
+
+				@$zip->close();
+			}
+		}
+
+		return $path;
 	}
 }

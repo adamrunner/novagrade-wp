@@ -64,7 +64,9 @@ class Ignition_Updater_Admin {
 	 * @return    void
 	 */
 	public function __construct ( $file ) {
-		$this->token = 'ignitewoo-updater'; // Don't ever change this, as it will mess with the data stored of which products are activated, etc.
+		global $ignition_updater_token;
+		
+		$this->token = $ignition_updater_token; // Don't ever change this, as it will mess with the data stored of which products are activated, etc.
 
 		// Load in the class to use for the admin screens.
 		require_once( 'class-ignition-updater-screen.php' );
@@ -119,8 +121,11 @@ class Ignition_Updater_Admin {
 	 */
 	public function maybe_display_activation_notice () {
 		if ( isset( $_GET['page'] ) && 'ignition-helper' == $_GET['page'] ) return;
+		
 		if ( ! current_user_can( 'manage_options' ) ) return; // Don't show the message if the user isn't an administrator.
+		
 		if ( is_multisite() && ! is_super_admin() ) return; // Don't show the message if on a multisite and the user isn't a super user.
+		
 		$this->maybe_display_renewal_notice();
 
 		if ( true == get_site_option( 'ignition_helper_dismiss_activation_notice', false ) ) return; // Don't show the message if the user dismissed it.
@@ -155,17 +160,18 @@ class Ignition_Updater_Admin {
 		$dismiss_url = add_query_arg( 'action', 'ignition-helper-dismiss-renew', add_query_arg( 'nonce', wp_create_nonce( 'ignition-helper-dismiss-renew' ) ) );
 
 		foreach ( $products as $file => $product ) {
-			if ( isset( $product['license_expiry'] ) ) {
+
+			if ( isset( $product['license_expiry'] ) /*&& !empty( $product['license_expiry'] )*/ ) {
 				try {
 					$date = new DateTime( $product['license_expiry'] );
 				} catch ( Exception $e ) {
 					continue;
 				}
 
-				if ( current_time( 'timestamp' ) > strtotime( '-60 days', $date->format( 'U' ) ) && current_time( 'timestamp' ) < strtotime( '+4 days', $date->format( 'U' ) ) ) {
+				if ( current_time( 'timestamp' ) > strtotime( '-60 days', $date->format( 'U' ) ) && current_time( 'timestamp' ) < strtotime( '+14 days', $date->format( 'U' ) ) ) {
 					$notices[] = sprintf( __( 'Your license for <strong>%s</strong> expires on %s, %sRenew now%s to avoid losing access to updates and support.', 'ignition-updater' ), $product['product_name'], $date->format( get_option( 'date_format' ) ), '<a href="' . esc_url( $renew_link ) . '" target="_blank">', '</a>' );
 				} elseif ( current_time( 'timestamp' ) > $date->format( 'U' ) ) {
-					$notices[] = sprintf( __( 'Your license for <strong>%s</strong> has expired. Please %srenew%s to be eligible for future updates and support.', 'ignition-updater' ), $product['product_name'], '<a href="' . esc_url( $renew_link ) . '" target="_blank">', '</a>' );
+					$notices[] = sprintf( __( 'Your license for <strong>%s</strong> has expired. Please %srenew%s to receive updates and support.', 'ignition-updater' ), $product['product_name'], '<a href="' . esc_url( $renew_link ) . '" target="_blank">', '</a>' );
 				}
 			}
 		}
@@ -216,6 +222,7 @@ if ( jQuery( 'form[name="upgrade-themes"]' ).length ) {
 		add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 		add_action( 'admin_print_scripts', array( $this, 'enqueue_scripts' ) );
+		
 	} // End register_settings_screen()
 
 	/**
@@ -375,7 +382,7 @@ if ( jQuery( 'form[name="upgrade-themes"]' ).length ) {
 	public function enqueue_scripts () {
 
 		$screen = get_current_screen();
-		wp_enqueue_script( 'post' );
+		//wp_enqueue_script( 'post' );
 		wp_register_script( 'ignition-updater-admin', $this->assets_url . 'js/admin.js', array( 'jquery' ) );
 		wp_enqueue_script( 'ignition-jquery-blockui', $this->assets_url . 'js/jquery.blockUI.min.js?version=1.6.0', array( 'jquery' ) );
 		wp_register_script( 'ignition-updater-admin-notice-hider', $this->assets_url . 'js/admin-notice-hider.js?version=1.6.0', array( 'jquery' ) );
@@ -673,16 +680,19 @@ if ( jQuery( 'form[name="upgrade-themes"]' ).length ) {
 		// $themes = wp_get_themes();
 		$themes = array();
 		
+		/*
 		if ( 0 < count( $themes ) ) {
 			foreach ( $themes as $k => $v ) {
 				$filepath = basename( $v->__get( 'stylesheet_dir' ) ) . '/style.css';
 				$products[$filepath] = array( 'Name' => $v->__get( 'name' ), 'Version' => $v->__get( 'version' ) );
 			}
 		}
-
+		*/
+		
 		if ( is_array( $products ) && ( 0 < count( $products ) ) ) {
 			$reference_list = $this->get_product_reference_list();
 			$activated_products = $this->get_activated_products();
+//var_dump( 'x', $activated_products ); die;
 			if ( is_array( $reference_list ) && ( 0 < count( $reference_list ) ) ) {
 				foreach ( $products as $k => $v ) {
 					if ( in_array( $k, array_keys( $reference_list ) ) ) {

@@ -75,7 +75,7 @@ class UpdraftPlus_Addons_Importer {
 			}
 		}
 
-		return '<p><a href="https://updraftplus.com/support/using-third-party-backups/">'.__('Was this a backup created by a different backup plugin? If so, then you might first need to rename it so that it can be recognised - please follow this link.', 'updraftplus').'</a></p><p>'.sprintf(__('Supported backup plugins: %s', 'updraftplus'), $supported).'</p>';
+		return '<p><a href="https://updraftplus.com/support/using-third-party-backups/">'.__('Was this a backup created by a different backup plugin? If so, then you might first need to rename it so that it can be recognized - please follow this link.', 'updraftplus').'</a></p><p>'.sprintf(__('Supported backup plugins: %s', 'updraftplus'), $supported).'</p>';
 	}
 
 	/**
@@ -125,7 +125,7 @@ class UpdraftPlus_Addons_Importer {
 				}
 				break;
 			case 'wpb2d':
-				if (!class_exists('UpdraftPlus_PclZip') && file_exists(UPDRAFTPLUS_DIR.'/class-zip.php')) include_once(UPDRAFTPLUS_DIR.'/class-zip.php');
+				if (!class_exists('UpdraftPlus_PclZip') && file_exists(UPDRAFTPLUS_DIR.'/includes/class-zip.php')) include_once(UPDRAFTPLUS_DIR.'/includes/class-zip.php');
 				global $updraftplus;
 				$updraft_dir = trailingslashit($updraftplus->backups_dir_location());
 				if (file_exists($updraft_dir.$entry) && class_exists('UpdraftPlus_PclZip')) {
@@ -141,7 +141,7 @@ class UpdraftPlus_Addons_Importer {
 						$btime = time();
 					} else {
 
-						// Don't put this in the for loop, or the magic __get() method gets called and opens the zip file every time the loop goes round
+						// Don't put this in the for loop, or the magic __get() method gets called every time the loop goes round
 						$numfiles = $zip->numFiles;
 
 						$latest_mtime = -1;

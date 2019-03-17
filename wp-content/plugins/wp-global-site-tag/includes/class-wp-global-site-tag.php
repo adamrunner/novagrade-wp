@@ -166,6 +166,10 @@ class WP_Global_Site_Tag {
         $this->loader->add_action( 'admin_init', $plugin_admin, 'register_sections' );
         $this->loader->add_action( 'admin_init', $plugin_admin, 'register_fields' );
         $this->loader->add_action( 'admin_notices', $plugin_admin, 'display_admin_notices' );
+        $this->loader->add_filter( 'plugin_action_links_wp-global-site-tag/wp-global-site-tag.php', $plugin_admin, 'add_settings_link' );
+        $this->loader->add_action( 'upgrader_process_complete', $plugin_admin, 'upgrade_completed', 10, 2 );
+        $this->loader->add_action( 'admin_notices', $plugin_admin, 'display_update_notice' );
+        $this->loader->add_action( 'admin_notices', $plugin_admin, 'display_install_notice' );
 
 	}
 

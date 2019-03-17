@@ -250,7 +250,6 @@ class UpdraftPlus_AddOn_FixTime {
 			$last_backup_seen_at[$group_id][$entity] = $backup_datestamp;
 			return false;
 		}
-		
 		$rule = $extra_rules[$latest_relevant_index];
 */
 		if (empty($rule)) {
@@ -304,12 +303,12 @@ class UpdraftPlus_AddOn_FixTime {
 	}
 
 	public function after_dbconfig() {
-		echo '<div id="updraft_retain_db_rules" style="float:left;clear:both;"></div><div style="float:left;clear:both;"><a href="#" id="updraft_retain_db_addnew">'.__('Add an additional retention rule...', 'updraftplus').'</a></div>';
+		echo '<div id="updraft_retain_db_rules"></div><div><a href="'.UpdraftPlus::get_current_clean_url().'" id="updraft_retain_db_addnew" class="updraft_icon_link"><span class="dashicons dashicons-plus"></span>'.__('Add an additional retention rule...', 'updraftplus').'</a></div>';
 	}
 
 	public function after_filesconfig() {
 		add_action('admin_footer', array($this, 'admin_footer_extraretain_js'));
-		echo '<div id="updraft_retain_files_rules" style="float:left;clear:both;"></div><div style="float:left;clear:both;"><a href="#" id="updraft_retain_files_addnew">'.__('Add an additional retention rule...', 'updraftplus').'</a></div>';
+		echo '<div id="updraft_retain_files_rules"></div><div><a href="'.UpdraftPlus::get_current_clean_url().'" id="updraft_retain_files_addnew" class="updraft_icon_link"><span class="dashicons dashicons-plus"></span>'.__('Add an additional retention rule...', 'updraftplus').'</a></div>';
 	}
 
 	public function soonest_first($a, $b) {
@@ -363,7 +362,8 @@ class UpdraftPlus_AddOn_FixTime {
 				e.preventDefault();
 				add_rule('files', 12, 604800, 1, 604800);
 			});
-			$('#updraft_retain_db_rules, #updraft_retain_files_rules').on('click', '.updraft_retain_rules_delete', function() {
+			$('#updraft_retain_db_rules, #updraft_retain_files_rules').on('click', '.updraft_retain_rules_delete', function(e) {
+				e.preventDefault();
 				$(this).parent('.updraft_retain_rules').slideUp(function() {$(this).remove();});
 			});
 			function add_rule(type, howmany_after, period_after, howmany_every, period_every) {
@@ -377,9 +377,9 @@ class UpdraftPlus_AddOn_FixTime {
 					index = files_index;
 				}
 				$('#'+selector).append(
-					'<div style="float:left; clear:left;" class="updraft_retain_rules '+selector+'_entry">'+
+					'<div class="updraft_retain_rules '+selector+'_entry">'+
 					updraftlion.forbackupsolderthan+' '+rule_period_selector(type, index, 'after', howmany_after, period_after)+' keep no more than 1 backup every '+rule_period_selector(type, index, 'every', howmany_every, period_every)+
-					' <span title="'+updraftlion.deletebutton+'" class="updraft_retain_rules_delete">X</span></div>'
+					' <a href="#" title="'+updraftlion.deletebutton+'" class="updraft_retain_rules_delete"><span class="dashicons dashicons-no"></span></a></div>'
 				)
 			}
 			function rule_period_selector(type, index, which, howmany_value, period) {

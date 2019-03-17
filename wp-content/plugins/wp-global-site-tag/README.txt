@@ -3,8 +3,8 @@ Contributors: Digital Apps
 Donate link: https://digitalapps.co/
 Tags: global site tag, analytics, google analytics, google, gtm, google tag manager, global site tag, gtag
 Requires at least: 3.0.1
-Tested up to: 4.9
-Stable tag: 4.9
+Tested up to: 5.0
+Stable tag: 5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,3 +64,10 @@ Follow these steps to install the plugin on your site.
 
 = 1.0 =
 * First Release
+= 1.0.2 =
+* Testing on WordPress 5.0. Version number bump.
+= 1.0.3 =
+* Added settings hyperlink to the plugins page.
+* Move settings page under Settings.
+* Add update/install handlers.
+* Add new screenshot.

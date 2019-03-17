@@ -3,10 +3,10 @@
 /*
 UpdraftPlus Addon: cloudfiles-enhanced:Rackspace Cloud Files, enhanced
 Description: Adds enhanced capabilities for Rackspace Cloud Files users
-Version: 1.6
+Version: 1.7
 RequiresPHP: 5.3.3
 Shop: /shop/cloudfiles-enhanced/
-Latest Change: 1.12.18
+Latest Change: 1.14.8
 */
 // @codingStandardsIgnoreEnd
 
@@ -59,10 +59,17 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 	 * @return string anchor link html for creating new API user
 	 */
 	public function apikeysettings($msg) {
-		$msg = '<a href="#" id="updraft_cloudfiles_newapiuser_{{instance_id}}" class="updraft_cloudfiles_newapiuser" data-instance_id="{{instance_id}}">'.__('Create a new API user with access to only this container (rather than your whole account)', 'updraftplus').'</a>';
+		$msg = '<a href="<?php echo UpdraftPlus::get_current_clean_url();?>" id="updraft_cloudfiles_newapiuser_{{instance_id}}" class="updraft_cloudfiles_newapiuser" data-instance_id="{{instance_id}}">'.__('Create a new API user with access to only this container (rather than your whole account)', 'updraftplus').'</a>';
 		return $msg;
 	}
 	
+	/**
+	 * Calls the Rackspace API to create a new API user
+	 *
+	 * @param  Array $use_settings - expected keys are: adminuser, adminapikey, newuser, container, newemail; also allowed are location, region
+	 *
+	 * @return Array - the contents depend upon the outcome. 'e' will be present (0|1) to indicate failure or success
+	 */
 	public function create_api_user($use_settings) {
 		
 		if (!isset($use_settings['adminuser'])) {
@@ -193,8 +200,14 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 		);
 	}
 	
-	public function newuser() {
-		$use_settings = $_POST;
+	/**
+	 * Create a new user
+	 *
+	 * @uses self::create_api_user()
+	 *
+	 * @param Array $use_settings - user settings
+	 */
+	public function newuser($use_settings = array()) {
 		$data = $this->create_api_user($use_settings);
 		echo json_encode($data);
 		die();
@@ -345,15 +358,7 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 					disableverify: jQuery('#updraft_ssl_disableverify').val()
 				};
 
-				updraft_send_command('doaction', data, function(response) {
-					try {
-						resp = jQuery.parseJSON(response);
-					} catch(err) {
-						console.log(err);
-						jQuery('#updraft-cfnewapiuser-results').html('<p style="color:red;">'+updraftlion.servererrorcode+'</p>');
-						alert(updraftlion.unexpectedresponse+' '+response);
-						return;
-					}
+				updraft_send_command('doaction', data, function(resp, status, response) {
 					if (resp.e == 1) {
 						jQuery('#updraft-cfnewapiuser-results').html('<p style="color:red;">'+resp.m+'</p>');
 					} else if (resp.e == 0) {
@@ -367,7 +372,18 @@ class UpdraftPlus_Addon_CloudFilesEnhanced {
 						jQuery('#updraft_cloudfiles_newapiuser_'+instance_id).after('<p><strong>'+updraftlion.newuserpass+'</strong> '+resp.p+'<p>');
 						jQuery('#updraft-cfnewapiuser-modal').dialog('close');
 					}
-				}, { json_parse: false });
+				}, { error_callback: function(response, status, error_code, resp) {
+						if ('undefined' !== typeof resp  && resp.hasOwnProperty('fatal_error')) {
+							jQuery('#updraft-cfnewapiuser-results').html('<p style="color:red;">'+resp.fatal_error_message+'</p>');
+							console.error(resp.fatal_error_message);
+						} else {
+							console.log("updraft_send_command: error: "+status+" ("+error_code+")");
+							jQuery('#updraft-cfnewapiuser-results').html('<p style="color:red;">'+updraftlion.servererrorcode+'</p>');
+							alert(updraftlion.unexpectedresponse+' '+response);
+							console.log(response);
+						}
+					}
+			 });
 			};
 			jQuery("#updraft-cfnewapiuser-modal").dialog({
 				autoOpen: false, height: 465, width: 555, modal: true,

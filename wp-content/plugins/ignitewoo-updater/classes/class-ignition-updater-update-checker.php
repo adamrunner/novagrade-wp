@@ -18,13 +18,13 @@ class Ignition_Updater_Update_Checker {
 	 * URL of endpoint to check for product/changelog info
 	 * @var string
 	 */
-	private $api_url = 'http://ignitewoo.com/api2/';
+	private $api_url = 'https://ignitewoo.com/api2/';
 
 	/**
 	 * URL of endpoint to check for updates
 	 * @var string
 	 */
-	private $update_check_url = 'http://ignitewoo.com/api2/?api=installer-api&';
+	private $update_check_url = 'https://ignitewoo.com/api2/?api=installer-api&';
 
 	/**
 	 * Array of plugins info
@@ -49,6 +49,8 @@ class Ignition_Updater_Update_Checker {
 	 * @var string
 	 */
 	private $version;
+	
+	private $token; 
 
 	/**
 	 * Constructor.
@@ -58,8 +60,10 @@ class Ignition_Updater_Update_Checker {
 	 * @return void
 	 */
 	public function __construct ( $plugins, $themes ) {
-
-		global $ignition_updater;
+		global $ignition_updater_token, $ignition_updater;
+		
+		$this->token = $ignition_updater_token;
+		
 		$this->version = $ignition_updater->version;
 		$this->plugins = $plugins;
 		$this->themes = $themes;
@@ -115,12 +119,14 @@ class Ignition_Updater_Update_Checker {
 
 		$themes_to_check_updates_for = array();
 		// Loop through all Ignition themes
-		foreach ( $this->themes as $theme ) {
-			// $theme - 0=file, 1=product_id, 2=file_id, 3=license_hash, 4=version
-			// Always fetch all theme data in one call, we loop to append the url
-			$theme[0] = str_replace( '/style.css', '', $theme[0] );
-			$theme[] = esc_url( home_url( '/' ) );
-			$themes_to_check_updates_for[] = $theme;
+		if ( !empty( $this->themes ) ) {
+			foreach ( $this->themes as $theme ) {
+				// $theme - 0=file, 1=product_id, 2=file_id, 3=license_hash, 4=version
+				// Always fetch all theme data in one call, we loop to append the url
+				$theme[0] = str_replace( '/style.css', '', $theme[0] );
+				$theme[] = esc_url( home_url( '/' ) );
+				$themes_to_check_updates_for[] = $theme;
+			}
 		}
 
 		$helper_update_info = array( plugin_basename( $ignition_updater->file ), $ignition_updater->version, $ignition_updater->admin->licence_hash );
@@ -183,8 +189,12 @@ class Ignition_Updater_Update_Checker {
 
 		// Set plugin update info into transient
 		if ( isset( $response->plugins ) ) {
-			$activated_products = get_option( 'ignitewoo-updater-activated', array() );
+ 			$activated_products = get_option( $this->token . '-activated', array() );
 
+ 			if ( empty( $activated_products ) )
+				$activated_products = array();
+				
+				
 			foreach ( $response->plugins as $plugin_key => $plugin ) {
 
 				if ( empty( $plugin_key ) )
@@ -205,6 +215,7 @@ class Ignition_Updater_Update_Checker {
 					
 				// Deactivate a product
 				} elseif ( isset( $plugin->deactivate ) ) {
+
 					$this->errors[] = $plugin->deactivate;
 					global $ignition_updater;
 					$ignition_updater->admin->deactivate_product( $plugin_key, true );
@@ -242,8 +253,8 @@ class Ignition_Updater_Update_Checker {
 					}
 				}
 			}
-
-			update_option( 'ignition-updater-activated', $activated_products );
+//var_dump( 'AP:' , $activated_products ); 
+			update_option( $this->token . '-activated', $activated_products );
 		}
 
 		// Set Ignition Helper update info into transient
@@ -263,7 +274,7 @@ class Ignition_Updater_Update_Checker {
 		}
 
 		// Check if we must output error messages
-		if ( count( $this->errors ) > 0 ) {
+		if ( !empty( $this->errors ) && count( $this->errors ) > 0 ) {
 			add_action( 'admin_notices', array( $this, 'error_notices') );
 		}
 
@@ -279,6 +290,7 @@ class Ignition_Updater_Update_Checker {
 	 * @return object $transient
 	 */
 	public function theme_update_check( $transient ) {
+return;
 		$response = $this->fetch_remote_update_data();
 
 		if ( FALSE == $response ) {
@@ -286,14 +298,14 @@ class Ignition_Updater_Update_Checker {
 		}
 
 		if ( isset( $response->themes ) ) {
-			$activated_products = get_option( 'ignition-updater-activated', array() );
+			$activated_products = get_option( $this->token . '-activated', array() );
 			foreach ( $response->themes as $theme_key => $theme ) {
 				if ( isset( $theme->new_version ) ) {
 					if ( isset( $theme->license_expiry_date ) ) {
 						$activated_products[ $theme_key ][3] = $theme->license_expiry_date;
 					}
 					$transient->response[ $theme_key ]['new_version'] = $theme->new_version;
-		        	$transient->response[ $theme_key ]['url'] = 'http://ignitewoo.com/';
+		        	$transient->response[ $theme_key ]['url'] = 'https://ignitewoo.com/';
 		        	$transient->response[ $theme_key ]['package'] = $theme->package;
 				} elseif ( isset( $theme->error ) ) {
 					$this->errors[] = $theme->error;
@@ -307,7 +319,7 @@ class Ignition_Updater_Update_Checker {
 					}
 				}
 			}
-			update_option( 'ignition-updater-activated', $activated_products );
+			update_option( $this->token . '-activated', $activated_products );
 		}
 
 		// Check if we must output error messages
@@ -327,9 +339,12 @@ class Ignition_Updater_Update_Checker {
 		if ( isset( $this->errors ) && count( $this->errors ) ) {
 			$messages = array();
 			foreach ( $this->errors as $error ) {
+				if ( 1 == $error || true == $error ) 
+					continue;
 				$messages[] = '<p>' . $error . '</p>';
 			}
-			echo '<div id="message" class="error">' . implode( '', $messages ) . '</div>';
+			if ( !empty( $messages ) ) 
+				echo '<div id="message" class="error">' . implode( '', $messages ) . '</div>';
 			$this->errors = null;
 		}
 	} // End error_notices()
@@ -341,6 +356,7 @@ class Ignition_Updater_Update_Checker {
 	 * @since  1.0.0
 	 * @return object $response
 	 */
+	 
 	public function plugin_information ( $false, $action, $args ) {
 		global $ignition_updater;
 		

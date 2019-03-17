@@ -40,6 +40,9 @@ class File extends Instance {
 	// TODO: should somewhat return the content-type as well; this information is
 	// not disclosed by OneDrive
 	public function fetchContent($options = array()) {
+		if ($this->_client->use_msgraph_api()) {
+			return $this->_client->apiGet('me/drive/items/'.$this->_id . '/content', $options, true);
+		}
 		return $this->_client->apiGet('drive/items/'.$this->_id . '/content', $options, true);
 	}
 

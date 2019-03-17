@@ -12,14 +12,29 @@ class UpdraftPlus_Backblaze_CurlClient {
 	protected $authToken;
 	protected $apiUrl;
 	protected $downloadUrl;
+	
+	// Whether to verify the server certificate or not
+	protected $sslVerify = true;
+	
+	// If set to a string, then it indicates a path for a CA store to use
+	protected $useCACerts = false;
 
+	/**
+	 * Constructor
+	 *
+	 * @param String $accountId
+	 * @param String $applicationKey
+	 * @param Array	 $options
+	 */
 	public function __construct($accountId, $applicationKey, array $options = array()) {
 		$this->accountId = $accountId;
 		$this->applicationKey = $applicationKey;
+		if (isset($options['ssl_verify'])) $this->sslVerify = $options['ssl_verify'];
+		if (isset($options['ssl_ca_certs'])) $this->useCACerts = $options['ssl_ca_certs'];
 		$this->authorizeAccount();
 	}
-
-	protected function request($method = 'GET', $uri = '', array $options = array(), $asJson = true) {
+	
+	protected function request($method = 'GET', $uri = '', array $options = array(), $as_json = true) {
 		$session = curl_init($uri);
 
 		$headers = array();
@@ -33,7 +48,19 @@ class UpdraftPlus_Backblaze_CurlClient {
 				$headers[] = $key . ': ' . $header;
 			}
 		}
-
+		
+		if ($this->sslVerify) {
+			curl_setopt($session, CURLOPT_SSL_VERIFYPEER, true);
+			curl_setopt($session, CURLOPT_SSL_VERIFYHOST, 2);
+		} else {
+			curl_setopt($session, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($session, CURLOPT_SSL_VERIFYHOST, 0);
+		}
+		
+		if ($this->useCACerts) {
+			curl_setopt($session, CURLOPT_CAINFO, $this->useCACerts);
+		}
+		
 		if ('GET' == $method) {
 
 			curl_setopt($session, CURLOPT_HTTPGET, true);
@@ -69,6 +96,10 @@ class UpdraftPlus_Backblaze_CurlClient {
 		}
 
 		$response = curl_exec($session);
+		
+		if (0 != ($curl_error = curl_errno($session))) {
+			throw new Exception("Curl error ($curl_error): ".curl_error($session), $curl_error);
+		}
 
 		$decode_response = json_decode($response, true);
 
@@ -82,7 +113,7 @@ class UpdraftPlus_Backblaze_CurlClient {
 
 		if (!empty($sink)) @fclose($sink);
 
-		if ($asJson) return $decode_response;
+		if ($as_json) return $decode_response;
 
 		return $response;
 	}

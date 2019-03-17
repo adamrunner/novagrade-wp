@@ -85,7 +85,6 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 		
 		/*
 		 * This is used for increase chunk size for webdav stream wrapper. WebDav stream wrapper chunk size is 8kb by default. This chunk size impacts on speed of upload
-		 * 
 		 */
 		$read_buffer_size = 131072;
 		if (isset($this->upload_stream_chunk_size) && function_exists('stream_set_chunk_size')) {
@@ -311,7 +310,6 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 			
 			/*
 			 * This is used for increase chunk size for webdav stream wrapper. WebDav stream wrapper chunk size is 8kb by default. This chunk size impacts on speed of download
-			 * 
 			 */
 			 
 			// stream_set_chunk_size function exist in >= 5.4.0 Php version
@@ -344,9 +342,14 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 		return $ret;
 
 	}
-
+	
+	/**
+	 * Perform a credentials test. The results are echoed.
+	 *
+	 * @param String $url - where test file will be put
+	 */
 	public function credentials_test_go($url) {
-
+		
 		$storage = $this->bootstrap();
 
 		if (is_wp_error($storage) || true !== $storage) {
@@ -358,7 +361,12 @@ class UpdraftPlus_AddonStorage_viastream extends UpdraftPlus_RemoteStorage_Addon
 		}
 
 		$x = @mkdir($url);
-
+		
+		// $updraftplus_webdav_filepath shold have readable file path when file is being send on the webdav filesystem
+		if ('webdav' == $this->method) {
+			global $updraftplus, $updraftplus_webdav_filepath;
+			$updraftplus_webdav_filepath = $updraftplus->backups_dir_location().'/index.html';
+		}
 		$testfile = $url.'/'.md5(time().rand());
 		if (file_put_contents($testfile, 'test')) {
 			_e("Success", 'updraftplus');

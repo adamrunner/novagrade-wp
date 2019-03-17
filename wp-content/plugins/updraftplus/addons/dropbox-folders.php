@@ -24,7 +24,7 @@ class UpdraftPlus_Addon_DropboxFolders {
 	 * @param  [object] $backup_module_object - the backup module object this will allow us to get and use various functions and storage options
 	 * @return [string] - the premium HTML content that will be displayed on the page
 	 */
-	public static function get_configuration_template($defmsg, $backup_module_object) {
+	public static function get_configuration_template($defmsg, $backup_module_object) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 		ob_start();
 		$classes = $backup_module_object->get_css_classes();
 		?> 

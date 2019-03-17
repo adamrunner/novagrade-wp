@@ -3,12 +3,12 @@
 /*
 UpdraftPlus Addon: onedrive:Microsoft OneDrive Support
 Description: Microsoft OneDrive Support
-Version: 1.8
+Version: 1.9
 Shop: /shop/onedrive/
 Include: includes/onedrive
 IncludePHP: methods/addon-base-v2.php
 RequiresPHP: 5.3.3
-Latest Change: 1.13.13
+Latest Change: 1.14.13
 */
 // @codingStandardsIgnoreEnd
 
@@ -17,6 +17,7 @@ if (!defined('UPDRAFTPLUS_DIR')) die('No direct access allowed');
 // Converted to multi-options (Feb 2017-) and previous options conversion removed: Yes
 
 if (!class_exists('UpdraftPlus_RemoteStorage_Addons_Base_v2')) require_once(UPDRAFTPLUS_DIR.'/methods/addon-base-v2.php');
+if (!class_exists('UpdraftPlus_OneDrive_Account')) require_once(UPDRAFTPLUS_DIR.'/includes/class-onedrive-account.php');
 
 class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorage_Addons_Base_v2 {
 
@@ -28,11 +29,20 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 	private $the_client_id;
 
 	/**
+	 * German Azure Active Directory client id
+	 *
+	 * @var string
+	 */
+	private $the_germany_client_id;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
 	
 		$this->the_client_id = defined('UPDRAFTPLUS_ONEDRIVE_CLIENT_ID') ? UPDRAFTPLUS_ONEDRIVE_CLIENT_ID : '276d9423-7d0c-41be-a3e1-4cdad89dc36f';
+		// To do: Add Germany AAD app client id here
+		$this->the_germany_client_id = defined('UPDRAFTPLUS_ONEDRIVE_GERMANY_CLIENT_ID') ? UPDRAFTPLUS_ONEDRIVE_GERMANY_CLIENT_ID : '7cc3beb4-daab-4a59-b091-c4c2319d8d2d';
 		$this->the_callback = defined('UPDRAFTPLUS_ONEDRIVE_CALLBACK_URL') ? UPDRAFTPLUS_ONEDRIVE_CALLBACK_URL : 'https://auth.updraftplus.com/auth/onedrive';
 	
 		// 3rd parameter: chunking? 4th: Test button?
@@ -46,22 +56,30 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		global $updraftplus;
 		$opts = $this->get_options();
 		
-		$message = "OneDrive did not return the expected data";
+		$message = " did not return the expected data";
 		
 		if (!function_exists("curl_init") || !function_exists('curl_exec')) {
-			$updraftplus->log('The required Curl PHP module is not installed. This upload will abort');
-			$updraftplus->log(sprintf(__('The required %s PHP module is not installed - ask your web hosting company to enable it.', 'updraftplus'), 'Curl'), 'error');
+			$this->log('The required Curl PHP module is not installed. This upload will abort');
+			$this->log(sprintf(__('The required %s PHP module is not installed - ask your web hosting company to enable it.', 'updraftplus'), 'Curl'), 'error');
 			return false;
 		}
+
+		$endpoint_name = isset($opts['endpoint_tld']) && 'de' == $opts['endpoint_tld'] ? 'OneDrive Germany' : 'OneDrive International';
 		
+		if ($this->use_msgraph_api($opts)) {
+			$this->log("begin cloud upload to {$endpoint_name} (using Microsoft Graph API)");
+		} else {
+			$this->log("begin cloud upload {$endpoint_name} (using Live SDK API)");
+		}
+
 		try {
 			$storage = $this->bootstrap();
 			if (is_wp_error($storage)) throw new Exception($storage->get_error_message());
 			if (!is_object($storage)) throw new Exception("OneDrive service error");
 		} catch (Exception $e) {
 			$message = $e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
-			$updraftplus->log("OneDrive service error: ".$message);
-			$updraftplus->log($message, 'error');
+			$this->log("service error: ".$message);
+			$this->log($message, 'error');
 			return false;
 		}
 		
@@ -76,7 +94,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			
 			if (!is_object($quota)) {
 			
-				$updraftplus->log("OneDrive quota fetching failed; object returned was a: ".gettype($quota));
+				$this->log("quota fetching failed; object returned was a: ".gettype($quota));
 			
 			} else {
 			
@@ -90,8 +108,8 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				}
 
 				if (isset($available) && -1 != $available && $available < $filesize) {
-					$updraftplus->log("File upload expected to fail: file data remaining to upload ($file) size is ".($filesize)." b (overall file size; $filesize b), whereas available quota is only $available b");
-					$updraftplus->log(sprintf(__("Account full: your %s account has only %d bytes left, but the file to be uploaded has %d bytes remaining (total size: %d bytes)", 'updraftplus'), 'OneDrive', $available, $filesize, $filesize), 'error');
+					$this->log("File upload expected to fail: file data remaining to upload ($file) size is ".($filesize)." b (overall file size; $filesize b), whereas available quota is only $available b");
+					$this->log(sprintf(__("Account full: your %s account has only %d bytes left, but the file to be uploaded has %d bytes remaining (total size: %d bytes)", 'updraftplus'), 'OneDrive', $available, $filesize, $filesize), 'error');
 				}
 			}
 			
@@ -99,7 +117,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			$message .= " ".get_class($e).": ".$e->getMessage();
 		}
 
-		$updraftplus->log($message.'. Upload folder: '.$folder);
+		$this->log($message.'. Upload folder: '.$folder);
 		
 		// Ensure directory exists
 		$pointer = $this->get_pointer($folder, $storage);
@@ -110,15 +128,15 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			foreach ($items as $item) {
 				if ($file == $item->getName()) {
 					if ($item->getSize() >= $filesize) {
-						$updraftplus->log("$file: already uploaded");
+						$this->log("$file: already uploaded");
 						return true;
 					} else {
-						$updraftplus->log("$file: partially uploaded (".$item->getSize()." < $filesize)");
+						$this->log("$file: partially uploaded (".$item->getSize()." < $filesize)");
 					}
 				}
 			}
 		} catch (Exception $e) {
-			$updraftplus->log($this->description." file check: exception: ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
+			$this->log($this->description." file check: exception: ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
 		}
 
 		try {
@@ -138,17 +156,16 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 					$possible_session = $this->jobdata_get($session_key, false, '1d_'.$session_key);
 					
 					if (is_object($possible_session) && !empty($possible_session->uploadUrl)) {
-						$updraftplus->log("OneDrive chunked upload: session appears to be underway/resumable; will attempt resumption");
+						$this->log("chunked upload: session appears to be underway/resumable; will attempt resumption");
 						$session = $possible_session;
 						
 						$state = $storage->getState();
-						
-						$upload_status = $storage->apiGet($possible_session->uploadUrl.'?access_token=' . urlencode($state->token->data->access_token), array(), true);
+						$upload_status = $storage->apiGet($possible_session->uploadUrl, array());
 
 						if (!is_object($upload_status) || empty($upload_status->nextExpectedRanges)) {
 							// One retry
-							$updraftplus->log("Failed to get upload status; making second attempt to request prior to re-starting");
-							$upload_status = $storage->apiGet($possible_session->uploadUrl.'?access_token=' . urlencode($state->token->data->access_token), array(), true);
+							$this->log("Failed to get upload status; making second attempt to request prior to re-starting");
+							$upload_status = $storage->apiGet($possible_session->uploadUrl, array());
 						}
 						
 						if (is_object($upload_status) && !empty($upload_status->nextExpectedRanges)) {
@@ -160,21 +177,27 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 
 							if (preg_match('/^(\d+)/', $next_expected, $matches)) {
 								$uploaded_size = $matches[1];
-								$updraftplus->log("Resuming OneDrive upload session from byte: $uploaded_size (".serialize($upload_status->nextExpectedRanges).")");
+								$this->log("Resuming OneDrive upload session from byte: $uploaded_size (".serialize($upload_status->nextExpectedRanges).")");
 							} else {
-								$updraftplus->log("Could not parse next expected range: ".serialize($upload_status->nextExpectedRanges));
+								$this->log("Could not parse next expected range: ".serialize($upload_status->nextExpectedRanges));
 							}
 						} else {
 							$clean_state = $state;
 							if (is_object($state) && !empty($state->token->data->access_token)) $clean_state->token->data->access_token = substr($state->token->data->access_token, 0, 3).'...';
-							$updraftplus->log("Failed to get upload status - will re-start this upload: service_state=".serialize($clean_state).",  upload_status=".serialize($upload_status));
+							$this->log("Failed to get upload status - will re-start this upload: service_state=".serialize($clean_state).",  upload_status=".serialize($upload_status));
 							$this->jobdata_delete($session_key);
 						}
 					}
 
 					if (!isset($uploaded_size)) {
 						$uploaded_size = 0;
-						$session = $storage->apiPost("https://api.onedrive.com/v1.0/drive/root:/". rawurlencode($path).':/upload.createSession');
+						if ($this->use_msgraph_api($opts)) {
+							$endpoint_tld = isset($opts['endpoint_tld']) ? $opts['endpoint_tld'] : 'com';
+							$graph_url = \Onedrive\UpdraftPlus_OneDrive_Account::$types[$endpoint_tld]['graph_url'];
+							$session = $storage->apiPost($graph_url."/v1.0/me/drive/root:/". rawurlencode($path).':/createUploadSession');
+						} else {
+							$session = $storage->apiPost("https://api.onedrive.com/v1.0/drive/root:/". rawurlencode($path).':/upload.createSession');
+						}
 						if (!is_object($session) || empty($session->uploadUrl)) {
 							throw new Exception("Failed to create upload session (".serialize($session).")");
 						}
@@ -194,7 +217,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				throw new Exception("Failed to open file for reading: $from");
 			}
 		} catch (Exception $e) {
-			$updraftplus->log($this->description." upload: error: ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
+			$this->log($this->description." upload: error: ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
 			return false;
 		}
 		
@@ -212,12 +235,12 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		global $updraftplus;
 	
 		// Get the current options (and possibly update them to the new format)
-		$opts = $updraftplus->update_remote_storage_options_format('onedrive');
+		$opts = UpdraftPlus_Storage_Methods_Interface::update_remote_storage_options_format('onedrive');
 
 		if (is_wp_error($opts)) {
 			if ('recursion' !== $opts->get_error_code()) {
-				$msg = "OneDrive (".$opts->get_error_code()."): ".$opts->get_error_message();
-				$updraftplus->log($msg);
+				$msg = "(".$opts->get_error_code()."): ".$opts->get_error_message();
+				$this->log($msg);
 				error_log("UpdraftPlus: $msg");
 			}
 			// The saved options had a problem; so, return the new ones
@@ -227,7 +250,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		if (!is_array($onedrive)) return $opts;
 
 		// Remove instances that no longer exist
-		if (is_array($opts['settings'])) {
+		if (!empty($opts['settings']) && is_array($opts['settings'])) {
 			foreach ($opts['settings'] as $instance_id => $storage_options) {
 				if (!isset($onedrive['settings'][$instance_id])) unset($opts['settings'][$instance_id]);
 			}
@@ -267,9 +290,9 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		);
 
 		try {
-			$put_chunk = $storage->apiPut($this->onedrive_session->uploadUrl, $fp, null, $upload_size, $headers, true);
+			$put_chunk = $storage->apiPut($this->onedrive_session->uploadUrl, $fp, null, $upload_size, $headers);
 		} catch (Exception $e) {
-			$updraftplus->log($this->description." upload: exception (".get_class($e)."): ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
+			$this->log($this->description." upload: exception (".get_class($e)."): ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
 			
 			// See HS#6320 and https://github.com/OneDrive/onedrive-api-docs/blob/master/items/upload_large_files.md#handle-commit-errors
 			if (false !== strpos($e->getMessage(), 'Optimistic concurrency failure during fragmented upload') && 0 == $this->onedrive_uploaded_size) {
@@ -284,7 +307,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 						if ($file_object['name'] == $file && !empty($file_object['size']) && $file_object['size'] > $this->onedrive_uploaded_size) {
 							$this->onedrive_uploaded_size = $file_object['size'];
 							if ($upload_start < $this->onedrive_uploaded_size) {
-								$updraftplus->log("More of file ($upload_start) is uploaded than previous API call indicated ");
+								$this->log("More of file ($upload_start) is uploaded than previous API call indicated ");
 								return 1;
 							}
 						}
@@ -295,9 +318,9 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 // $name = $this->onedrive_folder ? $this->onedrive_folder.'/'.$file : $file;
 					$name = $file;
 				
-					$put_url = 'https://api.onedrive.com/v1.0/drive/root:/'. urlencode($this->onedrive_folder);
+					$put_url = 'https://api.onedrive.'.$opts['endpoint_tld'].'/v1.0/drive/root:/'. urlencode($this->onedrive_folder);
 				
-					$updraftplus->log("Trying to PUT probably-completed upload to OneDrive: name=$name, PUT to: $put_url");
+					$this->log("Trying to PUT probably-completed upload to OneDrive: name=$name, PUT to: $put_url");
 				
 					$commit_body = json_encode(array(
 						'name' => $name,
@@ -321,16 +344,16 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 					fwrite($fp, $commit_body);
 					fseek($fp, 0);
 					
-					$commit = $storage->apiPut($put_url, $fp, null, strlen($commit_body), $commit_headers, true);
+					$commit = $storage->apiPut($put_url, $fp, null, strlen($commit_body), $commit_headers);
 				
 					if (is_object($commit) && (!empty($commit->expirationDateTime) || !empty($commit->id) || $commit === $empty_object)) {
-						$updraftplus->log('Trying to PUT probably-completed upload to OneDrive: success');
+						$this->log('Trying to PUT probably-completed upload to OneDrive: success');
 						return true;
 					}
-					$updraftplus->log('Trying to PUT probably-completed upload to OneDrive: appears to have failed ('.gettype($commit).')');
+					$this->log('Trying to PUT probably-completed upload to OneDrive: appears to have failed ('.gettype($commit).')');
 					
 				} catch (Exception $e) {
-					$updraftplus->log($this->description." upload commit: exception (".get_class($e)."): ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
+					$this->log('upload commit: exception ('.get_class($e)."): ($file) (".$e->getMessage().") (line: ".$e->getLine().', file: '.$e->getFile().')');
 				}
 			
 			}
@@ -343,7 +366,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		// It seems we get an empty response object (but success - i.e. no exception thrown above) when a chunk was already previously uploaded
 		if (is_object($put_chunk) && (!empty($put_chunk->expirationDateTime) || !empty($put_chunk->id) || $put_chunk === $empty_object)) return true;
 
-		$updraftplus->log("Unexpected response when putting chunk $chunk_index: ".serialize($put_chunk));
+		$this->log("Unexpected response when putting chunk $chunk_index: ".serialize($put_chunk));
 		return false;
 
 	}
@@ -390,7 +413,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			return $pointer;
 		} catch (Exception $e) {
 			global $updraftplus;
-			$updraftplus->log("get_pointer($folder) exception: backup may not go into desired folder: ".$e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')');
+			$this->log("get_pointer($folder) exception: backup may not go into desired folder: ".$e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')');
 			return $pointer;
 		}
 	}
@@ -400,15 +423,15 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		global $updraftplus;
 		$opts = $this->get_options();
 		
-		$message = "OneDrive did not return the expected data";
+		$message = " did not return the expected data";
 		
 		try {
 			$storage = $this->bootstrap();
 			if (!is_object($storage)) throw new Exception('OneDrive service error');
 		} catch (Exception $e) {
 			$message = $e->getMessage().' ('.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().')';
-			$updraftplus->log($message);
-			$updraftplus->log($message, 'error');
+			$this->log($message);
+			$this->log($message, 'error');
 			return false;
 		}
 		
@@ -424,8 +447,8 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			}
 		}
 
-		$updraftplus->log("$file: ".sprintf("%s download: failed: file not found", 'OneDrive'));
-		$updraftplus->log("$file: ".sprintf(__("%s download: failed: file not found", 'updraftplus'), 'OneDrive'), 'error');
+		$this->log("$file: ".sprintf("%s download: failed: file not found", 'OneDrive'));
+		$this->log("$file: ".sprintf(__("%s download: failed: file not found", 'updraftplus'), 'OneDrive'), 'error');
 		return false;
 
 	}
@@ -481,7 +504,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				
 				// If new_pointer is same, path doesn't exist, so can't delete
 				if ($pointer == $new_pointer) {
-					$updraftplus->log("OneDrive folder does not exist");
+					$updraftplus->log("folder does not exist");
 					return false;
 				}
 				$pointer = $new_pointer;
@@ -497,16 +520,16 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				}
 			}
 			
-			$updraftplus->log("OneDrive file does not exist");
+			$this->log("file does not exist");
 			return false;
 		}
 
 		if (is_wp_error($storage)) {
-			$updraftplus->log("OneDrive: service was not available (".$storage->get_error_message().")");
+			$this->log("service was not available (".$storage->get_error_message().")");
 			return false;
 		}
 
-		$updraftplus->log("OneDrive delete error");
+		$this->log("delete error");
 		return false;
 	}
 
@@ -574,33 +597,39 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		$use_master = $this->use_master($opts);
 		
 		/*
-			The redirect URI has been taken out of the below so that it no longer stores within OPTS.  
+			The redirect URI has been taken out of the below so that it no longer stores within OPTS
 			This check if this is the master (local call) or Auth call and sets URI's appropriately
 		*/
-		if ($use_master) {
-			$redirect_uri = $this->the_callback.'?ud_source_url='.urlencode(UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth');
+		if ($this->use_msgraph_api($opts)) {
+			$redirect_uri = $this->the_callback;
+		} elseif ($use_master) { // For live sdk compatibility
+			$redirect_uri = $this->the_callback.'?ud_source_url='.urlencode(UpdraftPlus_Options::admin_page_url());
 		} else {
 			$redirect_uri = UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth';
 		}
 		
 		/*
 			To save calls to the AUth server, Checking from the saved details (in $opts) from the last OneDrive call
-			and to see if there needs to be a new call or to re-use the values.  This also double Checks to see 
+			and to see if there needs to be a new call or to re-use the values.  This also double Checks to see
 			if the access_token_timeout is set. if this is a new setup, this would never be set and therfore
 			initial a first request in order to be saved back to $opts for future calls.
 		*/
 		if (!isset($opts['access_token_timeout']) || time() > $opts['access_token_timeout']) {
 			if ($use_master) { // use_master app
 			
-				$client_id = $this->the_client_id;
+				$endpoint_tld = isset($opts['endpoint_tld']) ? $opts['endpoint_tld'] : 'com';
+				$client_id = \Onedrive\UpdraftPlus_OneDrive_Account::get_client_id($endpoint_tld);
 				$refresh_token = empty($opts['refresh_token']) ? '' : $opts['refresh_token'];
 				
 				$args = array(
 					'code' => 'ud_onedrive_bootstrap',
-					'ud_source_url' => UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth',
 					'refresh_token' => $refresh_token,
+					'endpoint_tld' => $opts['endpoint_tld'],
 				);
-				
+				// For live sdk compatibility
+				if ($use_master && !$this->use_msgraph_api($opts)) {
+					$args['ud_source_url'] = UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth';
+				}
 				$result = wp_remote_post($this->the_callback, array(
 					'timeout' => 60,
 					'headers' => apply_filters('updraftplus_auth_headers', ''),
@@ -626,8 +655,12 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 						'grant_type' => 'refresh_token'
 					)
 				);
-				
-				$result = wp_remote_post('https://login.live.com/oauth20_token.srf', $args);
+				if ($this->use_msgraph_api($opts)) {
+					$token_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+				} else {
+					$token_url = 'https://login.live.com/oauth20_token.srf';
+				}
+				$result = wp_remote_post($token_url, $args);
 				
 				$body = wp_remote_retrieve_body($result);
 				
@@ -695,14 +728,13 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 					if (isset($result_body->error_description)) $error_message = $result_body->error_description;
 				}
 	
-				$updraftplus->log("OneDrive: no refresh token found: $error_code - $error_log");
+				$this->log("no refresh token found: $error_code - $error_log");
 	
 				return new WP_Error('no_refresh_token', 'OneDrive: '.sprintf(__('Account is not authorized (%s).', 'updraftplus'), $error_code).' '.$error_message);
 			}
 			
 			/*
-				If no errors returned, setup opts values extra details 
-				to be saved in $opts for less calls to Auth server
+				If no errors returned, setup opts values extra details 				to be saved in $opts for less calls to Auth server
 			*/
 			
 			/*
@@ -718,8 +750,10 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		}
 		
 		// setup array to be sent to oneDrive
+
+		$client_id = (isset($opts['endpoint_tld']) && 'de' == $opts['endpoint_tld']) ? $this->the_germany_client_id : $this->the_client_id;
 		$onedrive_options = array(
-			'client_id' => (empty($opts['clientid']) ? $this->the_client_id : $opts['clientid']),
+			'client_id' => (empty($opts['clientid']) ? $client_id : $opts['clientid']),
 			'state' => (object) array(
 				'redirect_uri' => $redirect_uri,
 				'token' => (object) array(
@@ -730,7 +764,9 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 					)
 				)
 			),
-			'ssl_verify' => true
+			'ssl_verify' => true,
+			'use_msgraph_api' => $this->use_msgraph_api($opts),
+			'endpoint_tld'	=> $opts['endpoint_tld'],
 		);
 
 		if (UpdraftPlus_Options::get_updraft_option('updraft_ssl_disableverify')) $onedrive_options['ssl_verify'] = false;
@@ -751,8 +787,22 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 	 * @return Boolean
 	 */
 	protected function use_master($opts) {
-		if ((!empty($opts['clientid']) && $opts['clientid'] != $this->the_client_id) || (defined('UPDRAFTPLUS_CUSTOM_ONEDRIVE_APP') && UPDRAFTPLUS_CUSTOM_ONEDRIVE_APP)) return false;
+		if ((!empty($opts['clientid']) && ($opts['clientid'] != $this->the_client_id || $opts['clientid'] != $this->the_germany_client_id)) || (defined('UPDRAFTPLUS_CUSTOM_ONEDRIVE_APP') && UPDRAFTPLUS_CUSTOM_ONEDRIVE_APP)) return false;
 		return true;
+	}
+	
+	/**
+	 * Whether or not to use msgraph_api
+	 *
+	 * @param Array $opts - options
+	 *
+	 * @return Boolean
+	 */
+	protected function use_msgraph_api($opts) {
+		if ($this->use_master($opts) && isset($opts['use_msgraph_api']) && $opts['use_msgraph_api']) {
+			return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -811,7 +861,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			$this->auth_request();
 		} catch (Exception $e) {
 			global $updraftplus;
-			$updraftplus->log(sprintf(__("%s error: %s", 'updraftplus'), sprintf(__("%s authentication", 'updraftplus'), 'OneDrive'), $e->getMessage()), 'error');
+			$this->log(sprintf(__("%s error: %s", 'updraftplus'), __("Authentication", 'updraftplus'), $e->getMessage()), 'error');
 		}
 	}
 
@@ -910,6 +960,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 			'secret' => '',
 			'url' => '',
 			'folder' => '',
+			'endpoint_tld' => 'com',
 		);
 	}
 
@@ -934,7 +985,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		
 		// Get the client id
 		if ($use_master) {
-			$client_id = $this->the_client_id;
+			$client_id = (isset($opts['endpoint_tld']) && 'de' == $opts['endpoint_tld']) ? $this->the_germany_client_id : $this->the_client_id;
 		} else {
 			$client_id = empty($opts['clientid']) ? '' : $opts['clientid'];
 		}
@@ -942,28 +993,48 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		$instance_id = isset($_GET['updraftplus_instance']) ? $_GET['updraftplus_instance'] : '';
 
 		if (!$use_master) {
-			$callback = UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth';
+			$redirect_uri = UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth';
+			$callback_uri = '';
 		} else {
-			$callback = $this->the_callback.'?ud_source_url='.urlencode(UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth');
+			$redirect_uri = $this->the_callback;
+			$callback_uri = UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth&endpoint-tld='.$opts['endpoint_tld'];
 		}
 
-		$scope = array(
-			'wl.signin',
-			// 'wl.basic',
-			// 'wl.contacts_skydrive',
-			// 'wl.skydrive_update',
-			'wl.offline_access',
-			'onedrive.readwrite',
-		);
+		// For all permissions https://developer.microsoft.com/en-us/graph/docs/concepts/permissions_reference
+		if ($use_master) {
+			$scope = array(
+				'openid',
+				// 'wl.basic',
+				// 'wl.contacts_skydrive',
+				// 'wl.skydrive_update',
+				// 'wl.offline_access',
+				'offline_access',
+				// 'onedrive.readwrite',
+				'files.readwrite.all',
+			);
+		} else {
+			$scope = array(
+				'wl.signin',
+				// 'wl.basic',
+				// 'wl.contacts_skydrive',
+				// 'wl.skydrive_update',
+				'wl.offline_access',
+				'onedrive.readwrite',
+			);
+		}
 		
 		// Instantiate OneDrive client
-		$onedrive = new \Onedrive\Client(array('client_id' => $client_id));
+		$onedrive = new \Onedrive\Client(array(
+			'client_id' => $client_id,
+			'use_msgraph_api' => $use_master,
+			'endpoint_tld' => $opts['endpoint_tld'],
+		));
 
-		$url = $onedrive->getLogInUrl($scope, $callback, array(), $instance_id);
+		$url = $onedrive->getLogInUrl($scope, $redirect_uri, array(), $instance_id, $callback_uri);
 
 		if (headers_sent()) {
 			global $updraftplus;
-			$updraftplus->log(sprintf(__('The %s authentication could not go ahead, because something else on your site is breaking it. Try disabling your other plugins and switching to a default theme. (Specifically, you are looking for the component that sends output (most likely PHP warnings/errors) before the page begins. Turning off any debugging settings may also help).', 'updraftplus'), 'OneDrive'), 'error');
+			$this->log(sprintf(__('The %s authentication could not go ahead, because something else on your site is breaking it. Try disabling your other plugins and switching to a default theme. (Specifically, you are looking for the component that sends output (most likely PHP warnings/errors) before the page begins. Turning off any debugging settings may also help).', 'updraftplus'), 'OneDrive'), 'error');
 		} else {
 			header('Location: '.esc_url_raw($url));
 		}
@@ -977,7 +1048,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		$secret = (empty($opts['secret'])) ? '' : $opts['secret'];
 		
 		if ($use_master) {
-			$client_id = $this->the_client_id;
+			$client_id = (isset($opts['endpoint_tld']) && 'de' == $opts['endpoint_tld']) ? $this->the_germany_client_id : $this->the_client_id;
 		} else {
 			$client_id = (empty($opts['clientid'])) ? '' : $opts['clientid'];
 		}
@@ -987,12 +1058,14 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		if (!$use_master) {
 			$callback = UpdraftPlus_Options::admin_page_url().'?page=updraftplus&action=updraftmethod-onedrive-auth';
 		} else {
-			$callback = $this->the_callback.'?ud_source_url='.UpdraftPlus_Options::admin_page_url();
+			$callback = $this->the_callback;
 		}
 		
 		$onedrive = new \Onedrive\Client(array(
 			'client_id' => $client_id,
-			'state' => (object) array('redirect_uri' => $callback)
+			'state' => (object) array('redirect_uri' => $callback),
+			// Control comes in this functions, if udp uses custom onedrive app, So it is false
+			'use_msgraph_api' => false,
 		));
 
 		$onedrive->obtainAccessToken($secret, $code);
@@ -1011,7 +1084,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 	private function auth_token_stage2($token, $opts) {
 
 		if (!empty($token->token->data->refresh_token)) {
-
+			$opts['use_msgraph_api'] = true;
 			$opts['refresh_token'] = $token->token->data->refresh_token;
 
 			$this->set_options($opts, true);
@@ -1020,9 +1093,9 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		} else {
 			global $updraftplus;
 			if (!empty($token->token->data->error)) {
-				$updraftplus->log(sprintf(__('%s authorisation failed:', 'updraftplus'), 'OneDrive').' '.$token->token->data->error_description, 'error');
+				$this->log(__('authorization failed:', 'updraftplus').' '.$token->token->data->error_description, 'error');
 			} else {
-				$updraftplus->log(sprintf(__('%s authorisation failed:', 'updraftplus'), 'OneDrive').' '."OneDrive service error: ".serialize($token), 'error');
+				$this->log(__('authorization failed:', 'updraftplus').' '."OneDrive service error: ".serialize($token), 'error');
 			}
 		}
 	}
@@ -1042,6 +1115,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		<tr class="<?php echo $classes . ' ' . 'onedrive_pre_config_container';?>">
 			<td colspan="2">
 				<img src="<?php echo UPDRAFTPLUS_URL;?>/images/onedrive.png">
+				
 				{{#unless use_master}}
 				{{#if is_ip_host}}
 				{{!-- Of course, there are other things that are effectively 127.0.0.1. This is just to help. --}}
@@ -1056,7 +1130,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				{{else}}
 				<p>
 					<?php
-					echo htmlspecialchars(__('You must add the following as the authorised redirect URI in your OneDrive console (under "API Settings") when asked', 'updraftplus')).': <kbd>'.UpdraftPlus_Options::admin_page_url().'</kbd>';
+					echo htmlspecialchars(__('You must add the following as the authorized redirect URI in your OneDrive console (under "API Settings") when asked', 'updraftplus')).': <kbd>'.UpdraftPlus_Options::admin_page_url().'</kbd>';
 					?>
 				</p>
 				<br>
@@ -1064,14 +1138,14 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				<p>
 					<a href="https://account.live.com/developers/applications/create">
 						<?php
-						echo __('Create OneDrive credentials in your OneDrive developer console.', 'updraftplus');
+						_e('Create OneDrive credentials in your OneDrive developer console.', 'updraftplus');
 						?>
 					</a>
 				</p>
 				<p>
 					<a href="https://updraftplus.com/microsoft-onedrive-setup-guide/">
 						<?php
-						echo __('For longer help, including screenshots, follow this link.', 'updraftplus');
+						_e('For longer help, including screenshots, follow this link.', 'updraftplus');
 						?>
 					</a>
 				</p>
@@ -1079,6 +1153,9 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 				{{/unless}}
 			
 				<?php $updraftplus_admin->curl_check('OneDrive', true, 'onedrive', true); ?>
+				<p>
+					<?php echo sprintf(__('Please read %s for use of our %s authorization app (none of your backup data is sent to us).', 'updraftplus'), '<a target="_blank" href="https://updraftplus.com/faqs/what-is-your-privacy-policy-for-the-use-of-your-microsoft-onedrive-app/">'.__('this privacy policy', 'updraftplus').'</a>', 'OneDrive');?>
+				</p>
 			</td>
 		</tr>
 
@@ -1098,19 +1175,30 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		{{#unless use_master}}
 		<tr class="<?php echo $classes; ?>">
 			<th><?php echo __('OneDrive', 'updraftplus').' '.__('Client ID', 'updraftplus'); ?>:</th>
-			<td><input type="text" autocomplete="off" style="width:442px" <?php $this->output_settings_field_name_and_id('clientid');?> value="{{clientid}}" /><br><em><?php echo htmlspecialchars(__('If OneDrive later shows you the message "unauthorized_client", then you did not enter a valid client ID here.', 'updraftplus'));?></em></td>
+			<td><input type="text" autocomplete="off" <?php $this->output_settings_field_name_and_id('clientid');?> value="{{clientid}}" class="updraft_input--wide" /><br><em><?php echo htmlspecialchars(__('If OneDrive later shows you the message "unauthorized_client", then you did not enter a valid client ID here.', 'updraftplus'));?></em></td>
 		</tr>
 		<tr class="<?php echo $classes; ?>">
 			<th><?php echo __('OneDrive', 'updraftplus').' '.__('Client Secret', 'updraftplus'); ?>:</th>
-			<td><input type="<?php echo apply_filters('updraftplus_admin_secret_field_type', 'password'); ?>" style="width:442px" <?php $this->output_settings_field_name_and_id('secret');?> value="{{secret}}" /></td>
+			<td><input type="<?php echo apply_filters('updraftplus_admin_secret_field_type', 'password'); ?>" <?php $this->output_settings_field_name_and_id('secret');?> value="{{secret}}" class="updraft_input--wide" /></td>
 		</tr>
 		{{/unless}}
 		<tr class="<?php echo $classes;?>">
-			<th><?php echo 'OneDrive '.__('Folder', 'updraftplus');?></th>
+			<th><?php echo 'OneDrive '.__('folder', 'updraftplus');?></th>
 			<td>
-				<input title="<?php echo esc_attr(sprintf(__('Enter the path of the %s folder you wish to use here.', 'updraftplus'), 'OneDrive').' '.__('If the folder does not already exist, then it will be created.').' '.sprintf(__('e.g. %s', 'updraftplus'), 'MyBackups/WorkWebsite.').' '.sprintf(__('If you leave it blank, then the backup will be placed in the root of your %s', 'updraftplus'), 'OneDrive account').' '.sprintf(__('N.B. %s is not case-sensitive.', 'updraftplus'), 'OneDrive'));?>" type="text" style="width:442px" <?php $this->output_settings_field_name_and_id('folder');?> value="{{folder}}">
+				<input title="<?php echo esc_attr(sprintf(__('Enter the path of the %s folder you wish to use here.', 'updraftplus'), 'OneDrive').' '.__('If the folder does not already exist, then it will be created.').' '.sprintf(__('e.g. %s', 'updraftplus'), 'MyBackups/WorkWebsite.').' '.sprintf(__('If you leave it blank, then the backup will be placed in the root of your %s', 'updraftplus'), 'OneDrive account').' '.sprintf(__('N.B. %s is not case-sensitive.', 'updraftplus'), 'OneDrive'));?>" type="text" <?php $this->output_settings_field_name_and_id('folder');?> value="{{folder}}" class="updraft_input--wide updraftplus_onedrive_folder_input">
 			</td>
 		</tr>
+		{{#if use_master}}
+		<tr class="<?php echo $classes;?>">
+			<th><?php _e('Account type', 'updraftplus');?></th>
+			<td>
+				<select style="width: 180px" <?php $this->output_settings_field_name_and_id('endpoint_tld');?> >
+					<option {{#ifeq "com" endpoint_tld}}selected="selected"{{/ifeq}} value="com"><?php echo __('OneDrive International', 'updraftplus');?></option>
+					<!-- <option {{#ifeq "de" endpoint_tld}}selected="selected"{{/ifeq}} value="de"><?php // echo __('OneDrive Germany', 'updraftplus');?></option> -->
+				</select>
+			</td>
+		</tr>
+		{{/if}}
 		<tr class="<?php echo $classes;?>">
 			<th>
 				<?php
@@ -1152,6 +1240,7 @@ class UpdraftPlus_Addons_RemoteStorage_onedrive extends UpdraftPlus_RemoteStorag
 		$site_scheme = parse_url(network_site_url(), PHP_URL_SCHEME);
 		$opts['is_ip_host'] = ('127.0.0.1' == $site_host || '::1' == $site_host || 'localhost' == $site_host || 'https' != $site_scheme);
 		$opts['folder'] = (empty($opts['folder'])) ? '' : untrailingslashit($opts['folder']);
+		$opts['endpoint_tld'] = (empty($opts['endpoint_tld'])) ? 'com' : untrailingslashit($opts['endpoint_tld']);
 		$opts['clientid'] = (empty($opts['clientid']) || $opts['use_master']) ? '' : $opts['clientid'];
 		$opts['secret'] = (empty($opts['secret']) || $opts['use_master']) ? '' : $opts['secret'];
 		$opts['is_already_authenticated'] = (!empty($opts['refresh_token']));

@@ -121,7 +121,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		global $updraftplus;
 	
 		// Get the current options (and possibly update them to the new format)
-		$opts = $updraftplus->update_remote_storage_options_format('azure');
+		$opts = UpdraftPlus_Storage_Methods_Interface::update_remote_storage_options_format('azure');
 		
 		if (is_wp_error($opts)) {
 			if ('recursion' !== $opts->get_error_code()) {
@@ -135,7 +135,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 
 		if (!is_array($azure)) return $opts;
 
-		if (is_array($opts['settings'])) {
+		if (!empty($opts['settings']) && is_array($opts['settings'])) {
 			// Remove instances that no longer exist
 			foreach ($opts['settings'] as $instance_id => $storage_options) {
 				if (!isset($azure['settings'][$instance_id])) unset($opts['settings'][$instance_id]);
@@ -170,7 +170,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 	 * @param  string $upload_end   This is the Upload end positions
 	 * @return boolean
 	 */
-	public function chunked_upload($file, $fp, $chunk_index, $upload_size, $upload_start, $upload_end) {
+	public function chunked_upload($file, $fp, $chunk_index, $upload_size, $upload_start, $upload_end) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 
 		global $updraftplus;
 
@@ -248,7 +248,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		return true;
 	}
 
-	public function do_download($file, $fullpath, $start_offset) {
+	public function do_download($file, $fullpath, $start_offset) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 		global $updraftplus;
 
 		$opts = $this->options;
@@ -274,7 +274,7 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 
 	}
 
-	public function chunked_download($file, $headers, $container_name) {
+	public function chunked_download($file, $headers, $container_name) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 
 		$storage = $this->get_storage();
 
@@ -465,10 +465,11 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 			'account_name' => '',
 			'key' => '',
 			'container' => '',
+			'endpoint' => 'blob.core.windows.net',
 		);
 	}
 	
-	public function do_bootstrap($opts, $connect = true) {
+	public function do_bootstrap($opts, $connect = true) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 
 		// The Azure SDK requires PEAR modules - specifically,  HTTP_Request2, Mail_mime, and Mail_mimeDecode; however, an analysis of the used code paths shows that we only need HTTP_Request2
 		if (false === strpos(get_include_path(), UPDRAFTPLUS_DIR.'/includes/PEAR')) set_include_path(UPDRAFTPLUS_DIR.'/includes/PEAR'.PATH_SEPARATOR.get_include_path());
@@ -491,15 +492,15 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		$ssl_ca_path = $ssl_useservercerts ? '' : UPDRAFTPLUS_DIR.'/includes/cacert.pem';
 
 		$connection_string = "DefaultEndpointsProtocol=$protocol;AccountName=$account_name;AccountKey=$account_key";
-		
 		// Non-standard element that our extended builder uses
 		if ('https' == $protocol) $connection_string .=';SSLCAPath='.$ssl_ca_path;
 
 		$storage = $this->get_storage();
+		$endpoint = empty($opts['endpoint']) ? 'blob.core.windows.net' : $opts['endpoint'];
 
 		if (empty($storage)) {
 			try {
-				$blob_rest_proxy = WindowsAzure\Common\UpdraftPlus_ServicesBuilder::getInstance()->createBlobService($connection_string);
+				$blob_rest_proxy = WindowsAzure\Common\UpdraftPlus_ServicesBuilder::getInstance()->createBlobService($connection_string, $endpoint);
 				$storage = $blob_rest_proxy;
 				$this->set_storage($storage);
 				return $blob_rest_proxy;
@@ -595,6 +596,11 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 					}*/
 				?>
 				<img width="434" src="<?php echo UPDRAFTPLUS_URL;?>/images/azure.png">
+				<?php
+					if (!class_exists('SimpleXMLElement')) {
+						$updraftplus_admin->show_double_warning('<strong>'.__('Warning', 'updraftplus').':</strong> '.sprintf(__("Your web server's PHP installation does not included a <strong>required</strong> (for %s) module (%s). Please contact your web hosting provider's support and ask for them to enable it.", 'updraftplus'), 'Azure', 'php-xml - SimpleXMLElement'), 'azure', true);
+					}
+				?>
 				<p><a href="https://account.live.com/developers/applications/create"><?php echo esc_html__('Create Azure credentials in your Azure developer console.', 'updraftplus');?></a></p>
 				<p><a href="https://updraftplus.com/faqs/microsoft-azure-setup-guide/"><?php echo esc_html__('For longer help, including screenshots, follow this link.', 'updraftplus');?></a></p>
 			</td>
@@ -615,22 +621,32 @@ class UpdraftPlus_Addons_RemoteStorage_azure extends UpdraftPlus_RemoteStorage_A
 		$template_str .= '
 			<tr class="'.$classes.'">
 				<th>'.sprintf(esc_html__('%s Account Name', 'updraftplus'), esc_html__('Azure', 'updraftplus')).':</th>
-				<td><input data-updraft_settings_test="account_name" type="text" autocomplete="off" style="width:442px" '.$this->output_settings_field_name_and_id('account_name', true).' value="{{account_name}}" /><br><em>'.esc_html__('This is not your Azure login - see the instructions if needing more guidance.', 'updraftplus').'</em></td>
+				<td><input data-updraft_settings_test="account_name" type="text" autocomplete="off" '.$this->output_settings_field_name_and_id('account_name', true).' value="{{account_name}}" class="updraft_input--wide" /><br><em>'.esc_html__('This is not your Azure login - see the instructions if needing more guidance.', 'updraftplus').'</em></td>
 			</tr>
 			<tr class="'.$classes.'">
 				<th>'.sprintf(esc_html__('%s Key', 'updraftplus'), esc_html__('Azure', 'updraftplus')).':</th>
-				<td><input data-updraft_settings_test="key" type="'. apply_filters('updraftplus_admin_secret_field_type', 'password').'" autocomplete="off" style="width:442px" '.$this->output_settings_field_name_and_id('key', true).' value="{{key}}" /></td>
+				<td><input data-updraft_settings_test="key" type="'. apply_filters('updraftplus_admin_secret_field_type', 'password').'" autocomplete="off" class="updraft_input--wide" '.$this->output_settings_field_name_and_id('key', true).' value="{{key}}" /></td>
 			</tr>';
 		$template_str .= $updraftplus_admin->get_storagemethod_row_multi_configuration_template(
 			$classes,
 			sprintf(esc_html__('%s Container', 'updraftplus'), esc_html__('Azure', 'updraftplus')).':',
-			'<input data-updraft_settings_test="container" title="'.esc_attr(sprintf(__('Enter the path of the %s you wish to use here.', 'updraftplus'), 'container').' '.sprintf(__('If the %s does not already exist, then it will be created.'), 'container')).'" type="text" style="width:442px" '.$this->output_settings_field_name_and_id('container', true).' value="{{container}}"><br><a href="https://azure.microsoft.com/en-gb/documentation/articles/storage-php-how-to-use-blobs/"><em>'.__("See Microsoft's guidelines on container naming by following this link.", 'updraftplus').'</a></em>'
+			'<input data-updraft_settings_test="container" title="'.esc_attr(sprintf(__('Enter the path of the %s you wish to use here.', 'updraftplus'), 'container').' '.sprintf(__('If the %s does not already exist, then it will be created.'), 'container')).'" type="text" class="updraft_input--wide" '.$this->output_settings_field_name_and_id('container', true).' value="{{container}}"><br><a href="https://azure.microsoft.com/en-gb/documentation/articles/storage-php-how-to-use-blobs/"><em>'.__("See Microsoft's guidelines on container naming by following this link.", 'updraftplus').'</a></em>'
 		);
 		$template_str .= $updraftplus_admin->get_storagemethod_row_multi_configuration_template(
 			$classes,
 			sprintf(esc_html__('%s Prefix', 'updraftplus'), esc_html__('Azure', 'updraftplus')).' <em>('.esc_html__('optional', 'updraftplus').')</em>:',
-			'<input title="'.esc_attr(sprintf(__('You can enter the path of any %s virtual folder you wish to use here.', 'updraftplus'), 'Azure').' '.sprintf(__('If you leave it blank, then the backup will be placed in the root of your %s', 'updraftplus').'.', esc_html__('container', 'updraftplus'))).'" data-updraft_settings_test="directory" type="text" style="width:442px"  '.$this->output_settings_field_name_and_id('directory', true).' value="{{directory}}">'
+			'<input title="'.esc_attr(sprintf(__('You can enter the path of any %s virtual folder you wish to use here.', 'updraftplus'), 'Azure').' '.sprintf(__('If you leave it blank, then the backup will be placed in the root of your %s', 'updraftplus').'.', esc_html__('container', 'updraftplus'))).'" data-updraft_settings_test="directory" type="text" class="updraft_input--wide" '.$this->output_settings_field_name_and_id('directory', true).' value="{{directory}}">'
 		);
+		$template_str .= '<tr class="'.$classes.'">
+			<th>'.__('Azure Account', 'updraftplus').':</th>
+			<td>
+				<select data-updraft_settings_test="endpoint" '.$this->output_settings_field_name_and_id('endpoint', true).' style="width: 140px">
+					<option {{#ifeq "blob.core.windows.net" endpoint}}selected="selected"{{/ifeq}} value="blob.core.windows.net">'.__('Azure Global', 'updraftplus').'</option>
+					<option {{#ifeq "blob.core.cloudapi.de" endpoint}}selected="selected"{{/ifeq}} value="blob.core.cloudapi.de">'.__('Azure Germany', 'updraftplus').'</option>
+					<option {{#ifeq "blob.core.usgovcloudapi.net" endpoint}}selected="selected"{{/ifeq}} value="blob.core.usgovcloudapi.net">'.__('Azure Government', 'updraftplus').'</option>
+				</select>
+			</td>
+		</tr>';
 		return $template_str;
 	}
 	

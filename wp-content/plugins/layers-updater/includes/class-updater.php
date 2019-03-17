@@ -9,7 +9,7 @@
 
 class Layers_Updater {
 
-    const LAYERS_API_REMOTE_URL = 'oboxthemes.com/api/v1';
+    const LAYERS_API_REMOTE_URL = 'https://www.layerswp.com/updates/';
 
     private static $instance;
 
@@ -90,14 +90,12 @@ class Layers_Updater {
     *  Obox API Call
     */
 
-    private function _do_api_call( $endpoint = 'verify', $apikey = NULL, $return_array = true ) {
+    private function _do_api_call( $return_array = true ) {
 
         global $layers_api_call;
 
-        $api_param = ( NULL != $apikey ? '?apikey=' . $apikey : '' );
-
         $layers_api_call = wp_remote_get(
-            'http://' . self::LAYERS_API_REMOTE_URL . '/' . $endpoint . $api_param,
+            self::LAYERS_API_REMOTE_URL,
             array(
                     'timeout' => 60,
                     'httpversion' => '1.1'
@@ -131,7 +129,7 @@ class Layers_Updater {
     private function _get_available_updates( $type = 'themes' ){
 
         // Get data
-        $response = $this->_do_api_call( 'updates', $this->_get_api_key(), true );
+        $response = $this->_do_api_call( true );
 
         $this->checks_done = true;
 
@@ -143,33 +141,6 @@ class Layers_Updater {
             return json_decode( json_encode( $response['data'] ), true );
         } else {
             return json_decode( json_encode( $response['data'] ) );
-        }
-    }
-
-    /**
-    *  API key Saving
-    */
-    public function save_api_key(){
-        global $layers_register_message;
-
-        if( isset( $_REQUEST[ '_wpnonce_layers_api_key' ] ) ){
-
-            // Get the posted API key
-            $apikey = $_POST[ 'layers_obox_api_key' ];
-
-            // Get data
-            $apicheck = $this->_do_api_call( 'verify', $apikey, true );
-
-            if( false == $apicheck[ 'success' ] ){
-                $layers_register_message = $apicheck[ 'message' ];
-                return;
-            }
-
-            if( ! wp_verify_nonce( $_REQUEST[ '_wpnonce_layers_api_key' ], 'layers_save_api_key' ) ) return;
-
-            $layers_register_message = __( 'Your API key is valid!' , LAYERS_U);
-
-            update_option( 'layers_api_key' , $apikey );
         }
     }
 
@@ -216,6 +187,7 @@ class Layers_Updater {
 
         return $theme_data;
     } // transient_theme_updates
+
 
     /**
     * Get plugin slug as {plugin-folder}/{hook-file}

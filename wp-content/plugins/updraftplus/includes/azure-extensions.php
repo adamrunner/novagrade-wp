@@ -56,10 +56,11 @@ class UpdraftPlus_ServicesBuilder extends ServicesBuilder {
 	/**
 	 * Here, we pull something that we've added out of the connection string, before carrying on with the previous processing
 	 *
-	 * @param  string $connection_string [the string for the connection
+	 * @param  string $connection_string the string for the connection
+	 * @param  string $endpoint          Azure BLOB storage endpoint
 	 * @return array
 	 */
-	public function createBlobService($connection_string) {
+	public function createBlobService($connection_string, $endpoint) {
 
 		// Remove our bit
 		if (false !== ($i = strpos($connection_string, ';SSLCAPath='))) {
@@ -67,7 +68,7 @@ class UpdraftPlus_ServicesBuilder extends ServicesBuilder {
 			$connection_string = substr($connection_string, 0, $i);
 		}
 
-		return parent::createBlobService($connection_string);
+		return parent::createBlobService($connection_string, $endpoint);
 
 	}
 

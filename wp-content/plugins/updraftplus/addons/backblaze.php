@@ -3,12 +3,12 @@
 /*
 UpdraftPlus Addon: backblaze:Backblaze Support
 Description: Backblaze Support
-Version: 1.2
+Version: 1.3
 Shop: /shop/backblaze/
 Include: includes/backblaze
 IncludePHP: methods/addon-base-v2.php
 RequiresPHP: 5.3.3
-Latest Change: 1.14.4
+Latest Change: 1.15.3
 */
 // @codingStandardsIgnoreEnd
 
@@ -116,7 +116,7 @@ class UpdraftPlus_Addons_RemoteStorage_backblaze extends UpdraftPlus_RemoteStora
 	 *
 	 * @return Boolean|WP_Error
 	 */
-	public function chunked_upload($file, $fp, $chunk_index, $upload_size, $upload_start, $upload_end, $total_file_size) {
+	public function chunked_upload($file, $fp, $chunk_index, $upload_size, $upload_start, $upload_end, $total_file_size) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 	
 		// Already done?
 		if ($upload_start < $this->_uploaded_size) return 1;
@@ -297,7 +297,7 @@ class UpdraftPlus_Addons_RemoteStorage_backblaze extends UpdraftPlus_RemoteStora
 	 *
 	 * @return Boolean|Integer - success/failure, or a byte counter of how much has been downloaded. Exceptions can also be thrown for errors.
 	 */
-	public function do_download($file, $fullpath, $start_offset) {
+	public function do_download($file, $fullpath, $start_offset) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 		global $updraftplus;
 
 		$remote_files = $this->do_listfiles($file);
@@ -460,17 +460,20 @@ class UpdraftPlus_Addons_RemoteStorage_backblaze extends UpdraftPlus_RemoteStora
 	 * @param String $testfile		  - basename to use for the test
 	 * @param Array  $posted_settings - settings to use
 	 *
-	 * @return Boolean - success/failure status
+	 * @return Array - 'result' indicating a success/failure status, and 'data' with returned data
 	 */
 	protected function do_credentials_test($testfile, $posted_settings = array()) {
 
 		$bucket_name = $posted_settings['bucket_name'];
 		
 		$result = false;
+		$data = null;
 		$storage = $this->get_storage();
 		
 		try {
-			if ($this->is_valid_bucket_name($bucket_name)) {
+			if (!$this->is_valid_bucket_name($bucket_name)) {
+				echo __('Invalid bucket name', 'updraftplus')."\n";
+			} else {
 				$buckets = $this->get_bucket_names_array();
 				$new_bucket_created = false;
 				if (!in_array($bucket_name, $buckets)) {
@@ -493,14 +496,12 @@ class UpdraftPlus_Addons_RemoteStorage_backblaze extends UpdraftPlus_RemoteStora
 				} elseif (!$new_bucket_created) {
 					printf(__("Failure: We could not successfully access or create such a bucket. Please check your access credentials, and if those are correct then try another bucket name (as another %s user may already have taken your name).", 'updraftplus'), 'Backblaze');
 				}
-			} else {
-				echo __('Invalid bucket name', 'updraftplus')."\n";
 			}
 		} catch (Exception $e) {
-			echo get_class($e).': '.$e->getMessage()."\n";
+			echo get_class($e).': '.$e->getMessage().' ('.$e->getCode().', '.get_class($e).') (line: '.$e->getLine().', file: '.$e->getFile().")\n";
 		}
 
-		return $result;
+		return array('result' => $result, 'data' => $data);
 		
 	}
 	
@@ -565,7 +566,7 @@ class UpdraftPlus_Addons_RemoteStorage_backblaze extends UpdraftPlus_RemoteStora
 	 *
 	 * @return UpdraftPlus_Backblaze_CurlClient|WP_Error - the storage object. It should also be stored as $this->storage.
 	 */
-	public function do_bootstrap($opts, $connect = true) {
+	public function do_bootstrap($opts, $connect = true) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 		$storage = $this->get_storage();
 
 		if (!empty($storage) && !is_wp_error($storage)) return $storage;
@@ -578,7 +579,12 @@ class UpdraftPlus_Addons_RemoteStorage_backblaze extends UpdraftPlus_RemoteStora
 
 			if (empty($opts['account_id']) || empty($opts['key'])) return new WP_Error('no_settings', __('No settings were found', 'updraftplus').' (Backblaze)');
 			
-			$storage = new UpdraftPlus_Backblaze_CurlClient($opts['account_id'], $opts['key']);
+			$backblaze_options = array(
+				'ssl_verify' => empty($opts['disableverify']),
+				'ssl_ca_certs' => empty($opts['useservercerts']) ? UPDRAFTPLUS_DIR.'/includes/cacert.pem' : false
+			);
+			
+			$storage = new UpdraftPlus_Backblaze_CurlClient($opts['account_id'], $opts['key'], $backblaze_options);
 
 			$this->set_storage($storage);
 			

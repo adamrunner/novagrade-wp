@@ -19,16 +19,7 @@ namespace Onedrive;
 // TODO: support refresh tokens: http://msdn.microsoft.com/en-us/library/live/hh243647.aspx
 // TODO: pass parameters in POST request body when obtaining the access token
 class Client {
-	// The base URL for API requests.
-	const API_URL   = 'https://apis.live.net/v5.0/';
-	const NEW_API_URL = 'https://api.onedrive.com/v1.0/';
-
-	// The base URL for authorization requests.
-	const AUTH_URL  = 'https://login.live.com/oauth20_authorize.srf';
-
-	// The base URL for token requests.
-	const TOKEN_URL = 'https://login.live.com/oauth20_token.srf';
-
+	
 	// Client information.
 	private $_clientId;
 
@@ -48,6 +39,18 @@ class Client {
 	private $_sslCAPath;
 
 	private $safeMode;
+	
+	private $use_msgraph_api;
+	
+	private $api_url;
+	
+	private $route_prefix;
+
+	// The base URL for authorization requests.
+	private $auth_url;
+
+	// The base URL for token requests.
+	private $token_url;
 
 	/**
 	 * Creates a base cURL object which is compatible with the OneDrive API.
@@ -153,6 +156,28 @@ class Client {
 			? $options['ssl_capath'] : false;
 
 		$this->safeMode = (@ini_get('safe_mode') && strtolower(@ini_get('safe_mode')) != "off") ? 1 : 0;
+		
+		$this->use_msgraph_api = array_key_exists('use_msgraph_api', $options) ? $options['use_msgraph_api'] : false;
+
+		if ($this->use_msgraph_api) {
+			$endpoint_tld = (isset($options['endpoint_tld']) && 'de' == $options['endpoint_tld']) ? $options['endpoint_tld'] : 'com';
+			$this->api_url = UpdraftPlus_OneDrive_Account::$types[$endpoint_tld]['api_url'];
+			$this->route_prefix = 'me/';
+			
+			// The base URL for authorization requests.
+			$this->auth_url = UpdraftPlus_OneDrive_Account::$types[$endpoint_tld]['auth_url'];
+			// The base URL for token requests.
+			$this->token_url = UpdraftPlus_OneDrive_Account::$types[$endpoint_tld]['token_url'];
+		} else { // Custom App or old live sdk
+			$this->route_prefix = '';
+			$this->api_url = 'https://api.onedrive.com/v1.0/';
+
+			// The base URL for authorization requests.
+			$this->auth_url =  'https://login.live.com/oauth20_authorize.srf';
+
+			// The base URL for token requests.
+			$this->token_url = 'https://login.live.com/oauth20_token.srf';
+		}
 
 	}
 
@@ -181,31 +206,39 @@ class Client {
 	 * @param  (array) $options. Reserved for future use. Default: array(). TODO:
 	 *         support it.
 	 * @param  (string) $instance_id - the id of the instance that we are currently trying to authorise
+	 * @param  string $callback_uri - the current site url where control should redirect after auth server authenticated
 	 * @return (string) The login URL.
 	 */
-	public function getLogInUrl(array $scopes, $redirectUri, array $options = array(), $instance_id = '') {
+	public function getLogInUrl(array $scopes, $redirectUri, array $options = array(), $instance_id = '', $callback_uri = '') {
 		if (null === $this->_clientId) {
 			throw new \Exception('The client ID must be set to call getLoginUrl()');
 		}
 
-		$imploded    = implode(',', $scopes);
+		if ($this->use_msgraph_api) {
+			$imploded    = implode(' ', $scopes);
+		} else {
+			$imploded    = implode(',', $scopes);
+		}
 		$redirectUri = (string) $redirectUri;
 		$this->_state->redirect_uri = $redirectUri;
 
-		if ($instance_id) $instance_id = ':'.$instance_id;
-		
+		$prefixed_instance_id = ':' . $instance_id;
+		if ($this->use_msgraph_api) {
+			$token = 'token'.$prefixed_instance_id.$callback_uri;			
+		} else {
+			$token = $prefixed_instance_id;
+		}
 		// When using this URL, the browser will eventually be redirected to the
 		// callback URL with a code passed in the URL query string (the name of the
 		// variable is "code"). This is suitable for PHP.
-		$url = self::AUTH_URL
+		$url = $this->auth_url
 			. '?client_id=' . urlencode($this->_clientId)
 			. '&scope=' . urlencode($imploded)
 			. '&response_type=code'
 			. '&redirect_uri=' . urlencode($redirectUri)
-			. '&state=' . urlencode($instance_id)
+			. '&state=' . urlencode($token)
 			. '&display=popup'
 			. '&locale=en';
-
 		return $url;
 	}
 
@@ -264,7 +297,7 @@ class Client {
 			throw new \Exception('The state\'s redirect URI must be set to call obtainAccessToken()');
 		}
 
-		$url = self::TOKEN_URL;
+		$url = $this->token_url;
 
 		$curl = curl_init();
 
@@ -331,17 +364,20 @@ class Client {
 	 *
 	 * @param  (string) $path - The path of the API call (eg. me/skydrive).
 	 * @param  (array) $options - Further curl options to set.
+ 
+	 * @return (boolean) Object of result
 	 */
-	public function apiGet($path, $options = array(), $new_api = true) {
-		$api = ($new_api) ? self::NEW_API_URL : self::API_URL;
+	public function apiGet($path, $options = array()) {
+		$api = $this->api_url;
 		
-		$url  = (strpos($path, 'https://') === 0) ? $path : $api . $path;//. '?access_token=' . urlencode($this->_state->token->data->access_token);
-
+		$url  = (strpos($path, 'https://') === 0) ? $path : $api . $path;
+		
+		if (!$this->use_msgraph_api) $url .= '?access_token=' . urlencode($this->_state->token->data->access_token);
+		
 		$curl = $this->_createCurl($path, $options);
 		
 		$curl_options = array(
 			CURLOPT_URL			=> $url,
-			
 			CURLOPT_HTTPHEADER 	=> array(
 				'Authorization: Bearer ' . $this->_state->token->data->access_token
 			),
@@ -359,8 +395,8 @@ class Client {
 	 * @param  (string) $path - The path of the API call (eg. me/skydrive).
 	 * @param  (array|object) $data - The data to pass in the body of the request.
 	 */
-	public function apiPost($path, $data = null, $new_api = true) {
-		$api = ($new_api) ? self::NEW_API_URL : self::API_URL;
+	public function apiPost($path, $data = null) {
+		$api = $this->api_url;
 		
 		$url  = (strpos($path, 'https://') === 0) ? $path : $api . $path;
 
@@ -400,8 +436,8 @@ class Client {
 	 * @param (int) $size - The number of bytes to send. Default: as many as are left in the stream.
 	 * @param (array) $headers - Further headers to send
 	 */
-	public function apiPut($path, $stream, $contentType = null, $size = null, $headers = array(), $new_api = true) {
-		$api = ($new_api) ? self::NEW_API_URL : self::API_URL;
+	public function apiPut($path, $stream, $contentType = null, $size = null, $headers = array()) {
+		$api = $this->api_url;
 		
 		$url   = (strpos($path, 'https://') === 0) ? $path : $api . $path;
 		$curl  = $this->_createCurl($path);
@@ -435,7 +471,7 @@ class Client {
 	 * @param  (string) $path - The path of the API call (eg. me/skydrive).
 	 */
 	public function apiDelete($path) {
-		$url = self::NEW_API_URL . $path;
+		$url = $this->api_url . $path;
 		//	. '?access_token=' . urlencode($this->_state->token->data->access_token);
 
 		$curl = $this->_createCurl($path);
@@ -459,7 +495,7 @@ class Client {
 	 * @param  (array|object) $data - The data to pass in the body of the request.
 	 */
 	public function apiMove($path, $data) {
-		$url  = self::NEW_API_URL . $path;
+		$url  = $this->api_url . $path;
 		$data = (object) $data;
 		$curl = $this->_createCurl($path);
 
@@ -485,7 +521,7 @@ class Client {
 	 * @param  (array|object) $data - The data to pass in the body of the request.
 	 */
 	public function apiCopy($path, $data) {
-		$url  = self::NEW_API_URL . $path;
+		$url  = $this->api_url . $path;
 		$data = (object) $data;
 		$curl = $this->_createCurl($path);
 
@@ -518,9 +554,9 @@ class Client {
 	 */
 	public function createFolder($name, $parentId = null, $description = null) {
 		if (null === $parentId) {
-			$parent_path = 'drive/root/children';
+			$parent_path = $this->route_prefix.'drive/root/children';
 		} else{
-			$parent_path = 'drive/items/'.$parentId.'/children';
+			$parent_path = $this->route_prefix.'drive/items/'.$parentId.'/children';
 		}
 
 		$properties = array(
@@ -534,7 +570,7 @@ class Client {
 		
 		$folder_body = (object) $properties;
 		
-		$folder = $this->apiPost($parent_path, $folder_body, true);
+		$folder = $this->apiPost($parent_path, $folder_body);
 		return new Folder($this, $folder->id, $folder);
 	}
 
@@ -552,9 +588,9 @@ class Client {
 	 */
 	public function createFile($name, $parentId = null, $content = '') {
 		if (null === $parentId) {
-			$parent_path = 'drive/root';
+			$parent_path = $this->route_prefix.'drive/root';
 		} else{
-			$parent_path = 'drive/items/'.$parentId;
+			$parent_path = $this->route_prefix.'drive/items/'.$parentId;
 		}
 
 		if (is_resource($content)) {
@@ -579,7 +615,7 @@ class Client {
 
 		// TODO: some versions of cURL cannot PUT memory streams? See here for a
 		// workaround: https://bugs.php.net/bug.php?id=43468
-		$file = $this->apiPut($parent_path . '/children/' . urlencode($name).'/content/', $stream, null, null, array(), true);
+		$file = $this->apiPut($parent_path . '/children/' . urlencode($name).'/content/', $stream, null, null, array());
 		if (!is_resource($content)) fclose($stream);
 		return new File($this, $file->id, $file);
 	}
@@ -593,8 +629,8 @@ class Client {
 	 *         the OneDrive object fetched.
 	 */
 	public function fetchObject($objectId = null) {
-		$objectId = null !== $objectId ? $objectId : 'drive/root';
-		$result   = $this->apiGet($objectId, array(), true);
+		$objectId = null !== $objectId ? $objectId : $this->route_prefix.'drive/root';
+		$result   = $this->apiGet($objectId, array());
 
 		if (property_exists($result, 'folder')) {
 			return new Folder($this, $objectId, $result);
@@ -620,7 +656,7 @@ class Client {
 	 *         to the OneDrive "Camera Roll" folder.
 	 */
 	public function fetchCameraRoll() {
-		return $this->fetchObject('drive/special/cameraroll');
+		return $this->fetchObject($this->route_prefix.'drive/special/cameraroll');
 	}
 
 	/**
@@ -630,7 +666,7 @@ class Client {
 	 *         to the OneDrive "Documents" folder.
 	 */
 	public function fetchDocs() {
-		return $this->fetchObject('drive/special/documents');
+		return $this->fetchObject($this->route_prefix.'drive/special/documents');
 	}
 
 	/**
@@ -640,7 +676,7 @@ class Client {
 	 *         the OneDrive "Pictures" folder.
 	 */
 	public function fetchPics() {
-		return $this->fetchObject('drive/special/photos');
+		return $this->fetchObject($this->route_prefix.'drive/special/photos');
 	}
 
 	/**
@@ -650,7 +686,7 @@ class Client {
 	 *         the OneDrive "Public" folder.
 	 */
 	public function fetchPublicDocs() {
-		return $this->fetchObject('drive/special/public_documents');
+		return $this->fetchObject($this->route_prefix.'drive/special/public_documents');
 	}
 
 	/**
@@ -660,12 +696,12 @@ class Client {
 	 */
 	public function fetchProperties($objectId) {
 		if (null === $objectId) {
-			$object_path = 'drive/root';
+			$object_path = $this->route_prefix.'drive/root';
 		} else {
-			$object_path = 'drive/items/'.$objectId;
+			$object_path = $this->route_prefix.'drive/items/'.$objectId;
 		}
 
-		return $this->apiGet($objectId, array(), true);
+		return $this->apiGet($objectId, array());
 	}
 
 	/**
@@ -676,9 +712,9 @@ class Client {
 	 */
 	public function fetchObjects($objectId) {
 		if (null === $objectId) {
-			$object_path = 'drive/root';
+			$object_path = $this->route_prefix.'drive/root';
 		} else{
-			$object_path = 'drive/items/'.$objectId;
+			$object_path = $this->route_prefix.'drive/items/'.$objectId;
 		}
 
 		$fetch_url = $object_path . '/children';
@@ -687,7 +723,7 @@ class Client {
 		
 		while ($fetch_url) {
 		
-			$result   = $this->apiGet($fetch_url, array(), true);
+			$result   = $this->apiGet($fetch_url, array());
 			
 			foreach ($result->value as $data) {
 				$object = property_exists($data, 'folder') ?
@@ -731,7 +767,7 @@ class Client {
 			throw new \Exception('rewind() failed');
 		}
 
-		$this->apiPut($objectId, $stream, 'application/json', null, array(), true);
+		$this->apiPut($objectId, $stream, 'application/json', null, array());
 	}
 
 	/**
@@ -744,7 +780,7 @@ class Client {
 	 */
 	public function moveObject($objectId, $destinationId = null) {
 		if (null === $destinationId) {
-			$destinationId = 'drive/root';
+			$destinationId = $this->route_prefix.'drive/root';
 		}
 
 		$this->apiMove($objectId, array(
@@ -763,7 +799,7 @@ class Client {
 	 */
 	public function copyFile($objectId, $destinationId = null) {
 		if (null === $destinationId) {
-			$destinationId = 'drive/root';
+			$destinationId = $this->route_prefix.'drive/root';
 		}
 
 		$this->apiCopy($objectId, array(
@@ -778,7 +814,7 @@ class Client {
 	 */
 	public function deleteObject($objectId) {
 		$objectId = $objectId;
-		$this->apiDelete('drive/items/'.$objectId);
+		$this->apiDelete($this->route_prefix.'drive/items/'.$objectId);
 	}
 
 	/**
@@ -789,7 +825,7 @@ class Client {
 	 *           (int) available - The available space, in bytes.
 	 */
 	public function fetchQuota() {
-		$drive = $this->apiGet('drive', array(), true);
+		$drive = $this->apiGet($this->route_prefix.'drive', array());
 		return $drive->quota;
 	}
 
@@ -805,7 +841,8 @@ class Client {
 	 *           (string) locale - account owner's locale.
 	 */
 	public function fetchAccountInfo() {
-		$drive = $this->apiGet('drive', array(), true);
+		//$drive = $this->apiGet('drive', array(), true);
+		$drive = $this->apiGet($this->route_prefix.'drive', array());
 		return $drive->owner;
 	}
 
@@ -816,7 +853,7 @@ class Client {
 	 *           (array) data - The list of the recent documents uploaded.
 	 */
 	public function fetchRecentDocs() {
-		return $this->apiGet('drive/special/recent_docs', array(), true);
+		return $this->apiGet($this->route_prefix.'drive/special/recent_docs', array());
 	}
 
 	/**
@@ -826,6 +863,15 @@ class Client {
 	 *           (array) data - The list of the shared objects.
 	 */
 	public function fetchShared() {
-		return $this->apiGet('drive/special/shared', array(), true);
+		return $this->apiGet($this->route_prefix.'drive/special/shared', array());
+	}
+	
+	/**
+	 * Give $use_msgraph_api variable
+	 *
+	 * @return boolean private $use_msgraph_api var 
+	 */
+	public function use_msgraph_api() {
+		return $this->use_msgraph_api;
 	}
 }

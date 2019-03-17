@@ -30,7 +30,7 @@ class WP_Global_Site_Tag_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-
+        set_transient( 'wp_gst_activated', 1 );
 	}
 
 }

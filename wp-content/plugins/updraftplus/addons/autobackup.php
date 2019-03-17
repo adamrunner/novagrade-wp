@@ -26,6 +26,9 @@ class UpdraftPlus_Addon_Autobackup {
 
 	private $is_autobackup_core = null;
 
+	/**
+	 * Plugin constructor
+	 */
 	public function __construct() {
 		add_filter('updraftplus_autobackup_blurb', array($this, 'updraftplus_autobackup_blurb'));
 		add_action('admin_action_update-selected',  array($this, 'admin_action_update_selected'));
@@ -45,8 +48,24 @@ class UpdraftPlus_Addon_Autobackup {
 		add_action('jetpack_pre_theme_upgrade', array($this, 'jetpack_pre_theme_upgrade'), 10, 2);
 		add_action('jetpack_pre_core_upgrade', array($this, 'jetpack_pre_core_upgrade'));
 		
-		include(ABSPATH.WPINC.'/version.php');
+		add_action('plugins_loaded', array($this, 'plugins_loaded'));
+		
+		add_action('admin_footer', array($this, 'admin_footer_possibly_network_themes'));
+		add_action('pre_current_active_plugins', array($this, 'pre_current_active_plugins'));
+		add_action('install_plugins_pre_plugin-information', array($this, 'install_plugins_pre_plugin'));
+		add_filter('updraftplus_dirlist_wpcore_override', array($this, 'updraftplus_dirlist_wpcore_override'), 10, 2);
+		add_filter('updraft_wpcore_description', array($this, 'wpcore_description'));
+	}
 
+	/**
+	 * Runs upon the WP action plugins_loaded
+	 */
+	public function plugins_loaded() {
+	
+		global $updraftplus;
+	
+		$wp_version = $updraftplus->get_wordpress_version();
+		
 		if (version_compare($wp_version, '4.4.0', '<')) {
 			// Somewhat inelegant... see: https://core.trac.wordpress.org/ticket/30441
 			add_filter('auto_update_plugin', array($this, 'auto_update_plugin'), PHP_INT_MAX, 2);
@@ -61,14 +80,9 @@ class UpdraftPlus_Addon_Autobackup {
 		if (version_compare($wp_version, '4.5.999', '>')) {
 			add_action('load-themes.php', array($this, 'load_themes_php'));
 		}
-		
-		add_action('admin_footer', array($this, 'admin_footer_possibly_network_themes'));
-		add_action('pre_current_active_plugins', array($this, 'pre_current_active_plugins'));
-		add_action('install_plugins_pre_plugin-information', array($this, 'install_plugins_pre_plugin'));
-		add_filter('updraftplus_dirlist_wpcore_override', array($this, 'updraftplus_dirlist_wpcore_override'), 10, 2);
-		add_filter('updraft_wpcore_description', array($this, 'wpcore_description'));
-	}
 
+	}
+	
 	/**
 	 * All 3 of these hooks since JetPack 3.9.2 (assuming our patch goes in)
 	 *
@@ -77,11 +91,11 @@ class UpdraftPlus_Addon_Autobackup {
 	 * @param  array $update_attempted
 	 * @return array
 	 */
-	public function jetpack_pre_plugin_upgrade($plugin, $plugins, $update_attempted) {
+	public function jetpack_pre_plugin_upgrade($plugin, $plugins, $update_attempted) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 		$this->auto_update(true, $plugin, 'plugins');
 	}
 	
-	public function jetpack_pre_theme_upgrade($theme, $themes) {
+	public function jetpack_pre_theme_upgrade($theme, $themes) {// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Filter use
 		$this->auto_update(true, $theme, 'themes');
 	}
 	
@@ -265,6 +279,11 @@ class UpdraftPlus_Addon_Autobackup {
 		return (!empty($wpcore_dirlist)) ? $wpcore_dirlist : $l;
 	}
 
+	/**
+	 * Reschedule the automatic update check event
+	 *
+	 * @param Integer $how_long - how many seconds in the future from now to reschedule for
+	 */
 	private function reschedule($how_long) {
 		wp_clear_scheduled_hook('ud_wp_maybe_auto_update');
 		if (!$how_long) return;
@@ -339,7 +358,7 @@ ENDHERE;
 				function updraft_autobackup_showlastlog(repeat) {
 					updraft_send_command('activejobs_list', lastlog_sdata, function(response) {
 						try {
-							resp = jQuery.parseJSON(response);
+							resp = JSON.parse(response);
 							if (resp.l != null) { jQuery('#updraft_lastlogcontainer').html(resp.l); }
 							if (resp.j != null && resp.j != '') {
 								jQuery('#updraft_activejobs').html(resp.j);
@@ -437,7 +456,7 @@ ENDHERE;
 					function updraft_autobackup_showlastlog(repeat) {
 						updraft_send_command('activejobs_list', lastlog_sdata, function(response) {
 							try {
-								resp = jQuery.parseJSON(response);
+								resp = JSON.parse(response);
 								if (resp.l != null) { jQuery('#updraft_lastlogcontainer').html(resp.l); }
 								if (resp.j != null && resp.j != '') {
 									jQuery('#updraft_activejobs').html(resp.j);
@@ -526,9 +545,9 @@ ENDHERE;
 		echo "<script>var h = document.getElementById('updraftplus-autobackup-log'); h.style.display='none';</script>";
 
 		if ($jquery) {
-			echo '<p>'.__('Backup succeeded', 'updraftplus').' <a href="#updraftplus-autobackup-log" onclick="jQuery(\'#updraftplus-autobackup-log\').slideToggle();">'.__('(view log...)', 'updraftplus').'</a> - '.__('now proceeding with the updates...', 'updraftplus').'</p>';
+			echo '<p>'.__('Backup succeeded', 'updraftplus').' <a href="<?php echo UpdraftPlus::get_current_clean_url();?>#updraftplus-autobackup-log" onclick="jQuery(\'#updraftplus-autobackup-log\').slideToggle();">'.__('(view log...)', 'updraftplus').'</a> - '.__('now proceeding with the updates...', 'updraftplus').'</p>';
 		} else {
-			echo '<p>'.__('Backup succeeded', 'updraftplus').' <a href="#updraftplus-autobackup-log" onclick="var s = document.getElementById(\'updraftplus-autobackup-log\'); s.style.display = \'block\';">'.__('(view log...)', 'updraftplus').'</a> - '.__('now proceeding with the updates...', 'updraftplus').'</p>';
+			echo '<p>'.__('Backup succeeded', 'updraftplus').' <a href="<?php echo UpdraftPlus::get_current_clean_url();?>#updraftplus-autobackup-log" onclick="var s = document.getElementById(\'updraftplus-autobackup-log\'); s.style.display = \'block\';">'.__('(view log...)', 'updraftplus').'</a> - '.__('now proceeding with the updates...', 'updraftplus').'</p>';
 		}
 
 	}

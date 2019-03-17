@@ -92,15 +92,19 @@ class UpdraftPlus_Addon_S3_Enhanced {
 	}
 
 	public function apikeysettings($msg) {
-		$msg = '<a href="#" id="updraft_s3_newapiuser">'.__('If you have an AWS admin user, then you can use this wizard to quickly create a new AWS (IAM) user with access to only this bucket (rather than your whole account)', 'updraftplus').'</a>';
+		$msg = '<a href="'.UpdraftPlus::get_current_clean_url().'" id="updraft_s3_newapiuser">'.__('If you have an AWS admin user, then you can use this wizard to quickly create a new AWS (IAM) user with access to only this bucket (rather than your whole account)', 'updraftplus').'</a>';
 		return $msg;
 	}
 
 	/**
 	 * Called upon the WP action updraft_s3_newuser. Dies.
+	 *
+	 * @param array $data - the posted data
+	 *
+	 * @return void
 	 */
-	public function newuser() {
-		echo json_encode($this->newuser_go(array(), stripslashes_deep($_POST)));
+	public function newuser($data) {
+		echo json_encode($this->newuser_go(array(), stripslashes_deep($data)));
 		die;
 	}
 	
@@ -367,6 +371,7 @@ class UpdraftPlus_Addon_S3_Enhanced {
 						'canada-central-1' => __('Canada Central', 'updraftplus'),
 						'eu-west-1' => __('Europe (Ireland)', 'updraftplus'),
 						'eu-west-2' => __('Europe (London)', 'updraftplus'),
+						'eu-west-3' => __('Europe (Paris)', 'updraftplus'),
 						'eu-central-1' => __('Europe (Frankfurt)', 'updraftplus'),
 						'ap-northeast-2' => __('Asia Pacific (Seoul)', 'updraftplus'),
 						'ap-southeast-1' => __('Asia Pacific (Singapore)', 'updraftplus'),
@@ -452,17 +457,7 @@ class UpdraftPlus_Addon_S3_Enhanced {
 					allowdownload: $('#updraft_s3newapiuser_allowdownload').is(':checked') ? 1 : 0,
 				};
 
-				updraft_send_command('doaction', data, function(response) {
-					
-					try {
-						resp = $.parseJSON(response);
-					} catch(err) {
-						console.log(response);
-						console.log(err);
-						$('#updraft-s3newapiuser-results').html('<p style="color:red;">'+updraftlion.servererrorcode+'</p>');
-						alert(updraftlion.unexpectedresponse+' '+response);
-						return;
-					}
+				updraft_send_command('doaction', data, function(resp, status, response) {
 					if (resp.e == 1) {
 						$('#updraft-s3newapiuser-results').html('<p style="color:red;">'+resp.m+'</p>');
 					} else if (resp.e == 0) {
@@ -484,7 +479,22 @@ class UpdraftPlus_Addon_S3_Enhanced {
 						$('#updraft-s3newapiuser-modal').dialog('close');
 					}
 
-				}, { json_parse: false });
+				}, { error_callback: function(response, status, error_code, resp) {
+						if (typeof resp !== 'undefined' && resp.hasOwnProperty('fatal_error')) {
+							console.error(resp.fatal_error_message);
+							$('#updraft-s3newapiuser-results').html('<p style="color:red;">'+resp.fatal_error_message+'</p>');
+							alert(resp.fatal_error_message);
+						} else {
+							var error_message = "updraft_send_command: error: "+status+" ("+error_code+")";
+							console.log(error_message);
+							console.log(response);
+							$('#updraft-s3newapiuser-results').html('<p style="color:red;">'+updraftlion.servererrorcode+'</p>');
+							alert(updraftlion.unexpectedresponse+' '+response);
+							return;
+							
+						}
+					}
+				});
 			};
 			$("#updraft-s3newapiuser-modal").dialog({
 				autoOpen: false, height: 525, width: 555, modal: true,

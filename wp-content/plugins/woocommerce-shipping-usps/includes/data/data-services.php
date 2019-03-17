@@ -3,7 +3,7 @@
 /**
  * USPS Services and subservices
  */
-return array(
+return apply_filters( 'wc_usps_services', array(
 	// Domestic
 	'D_FIRST_CLASS' => array(
 		// Name of the service shown to the user
@@ -12,10 +12,11 @@ return array(
 		// Services which costs are merged if returned (cheapest is used). This gives us the best possible rate.
 		'services' => array(
 			'0'  => array(
-				'first-class-mail-parcel'         => 'First-Class Mail&#0174; Parcel',
-				'first-class-mail-large-envelope' => 'First-Class Mail&#0174; Large Envelope',
-				'first-class-mail-postcards'      => 'First-Class Mail&#0174; Postcards',
-				'first-class-mail-stamped-letter' => 'First-Class Mail&#0174; Stamped Letter'
+				'first-class-mail-parcel'            => 'First-Class Mail&#0174; Parcel',
+				'first-class-mail-large-envelope'    => 'First-Class Mail&#0174; Large Envelope',
+				'first-class-mail-postcards'         => 'First-Class Mail&#0174; Postcards',
+				'first-class-mail-stamped-letter'    => 'First-Class Mail&#0174; Stamped Letter',
+				'first-class-package-service-retail' => 'First-Class Package Service - Retail&#8482;',
 			),
 			'12' => 'First-Class&#8482; Postcard Stamped',
 			'15' => 'First-Class&#8482; Large Postcards',
@@ -128,4 +129,4 @@ return array(
 			"21"  => "International Postcards"
 		)
 	)
-);
+) );

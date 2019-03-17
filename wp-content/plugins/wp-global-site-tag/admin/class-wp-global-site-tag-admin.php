@@ -89,10 +89,10 @@ class WP_Global_Site_Tag_Admin {
     }
 
 	/**
-     * Adds a settings page link to a menu
+     * Adds a settings sub-page link under Settings
      *
      * @link            https://codex.wordpress.org/Administration_Menus
-     * @since           1.0.0
+     * @since           1.0.3
      * @return          void
      */
     public function add_menu() {
@@ -108,12 +108,77 @@ class WP_Global_Site_Tag_Admin {
         $capability = 'manage_options';
         $slug = $this->plugin_name . '-settings-page';
         $callback = array( $this, 'page_options' );
-        $icon = 'dashicons-chart-bar';
-        $position = 100;
 
-        add_menu_page( $page_title, $menu_title, $capability, $slug, $callback, $icon, $position );
+        add_options_page( $page_title, $menu_title, $capability, $slug, $callback );
 
     } // add_menu()
+
+    /**
+     * Adds a settings link next to Deactivate on the Plugins page
+     *
+     * @since           1.0.3
+     */
+    public function add_settings_link( $links ) {
+
+        $settings_link = '<a href="options-general.php?page=' . $this->plugin_name . '-settings-page">' . __( 'Settings' ) . '</a>';
+        array_push( $links, $settings_link );
+
+        return $links;
+
+    }
+
+    /**
+     * This function runs when WordPress completes its upgrade process
+     * It iterates through each plugin updated to see if ours is included
+     *
+     * @since           1.0.3
+     * @param $upgrader_object Array
+     * @param $options Array
+     */
+    public function upgrade_completed( $upgrader_object, $options ) {
+
+        // The path to our plugin's main file
+        $our_plugin = $this->plugin_name . '/' . $this->plugin_name . '.php';
+
+        // If an update has taken place and the updated type is plugins and the plugins element exists
+        if( $options['action'] == 'update' && $options['type'] == 'plugin' && isset( $options['plugins'] ) ) {
+            // Iterate through the plugins being updated and check if ours is there
+            foreach( $options['plugins'] as $plugin ) {
+                if( $plugin == $our_plugin ) {
+                    // Set a transient to record that our plugin has just been updated
+                    set_transient( 'wp_gst_updated', 1 );
+                }
+            }
+        }
+    }
+
+    /**
+     * Show a notice to anyone who has just updated this plugin
+     * This notice shouldn't display to anyone who has just installed the plugin for the first time
+     *
+     * @since           1.0.3
+     */
+    public function display_update_notice() {
+        // Check the transient to see if we've just updated the plugin
+        if( get_transient( 'wp_gst_updated' ) ) {
+            echo '<div class="notice notice-success"><p>' . __( 'WP Global Site Tag: Settings page has been moved under <b>Settings > WP Global Site Tag</b>', 'wp-upe' ) . '</p></div>';
+            delete_transient( 'wp_gst_updated' );
+        }
+    }
+
+    /**
+     * Show a notice to anyone who has just installed the plugin for the first time
+     * This notice shouldn't display to anyone who has just updated this plugin
+     */
+    public function display_install_notice() {
+
+        // Check the transient to see if we've just activated the plugin
+        if( get_transient( 'wp_gst_activated' ) ) {
+            echo '<div class="notice notice-success"><p>' . __( 'Thanks for installing WP Global Site Tag. Settings page can be found under <b>Settings > WP Global Site Tag</b>', 'wp-upe' ) . '</p></div>';
+            // Delete the transient so we don't keep displaying the activation message
+            delete_transient( 'wp_gst_activated' );
+        }
+    }
 
     /**
      * Sets the class variable $options

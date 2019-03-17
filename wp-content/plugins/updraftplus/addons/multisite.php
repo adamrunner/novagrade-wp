@@ -3,9 +3,9 @@
 /*
 UpdraftPlus Addon: multisite:Multisite/Network
 Description: Makes UpdraftPlus compatible with a WordPress Network (a.k.a. multi-site) and adds Network-related features
-Version: 3.4
+Version: 3.6
 Shop: /shop/network-multisite/
-Latest Change: 1.12.33
+Latest Change: 1.15.4
 */
 // @codingStandardsIgnoreEnd
 
@@ -20,6 +20,11 @@ if (is_multisite()) {
 
 	class UpdraftPlus_Options {
 
+		/**
+		 * Whether or not the current user has permission to manage UpdraftPlus
+		 *
+		 * @return Boolean
+		 */
 		public static function user_can_manage() {
 			$user_can_manage = is_super_admin();
 			// true: multisite add-on
@@ -45,23 +50,40 @@ if (is_multisite()) {
 			return apply_filters('updraftplus_get_option', $ret, $option, $default);
 		}
 
-		public static function update_updraft_option($option, $value, $use_cache = true) {
+		/**
+		 * Update an option. N.B. The $autoload parameter has no effect on a multisite install.
+		 *
+		 * @param String  $option	 specify option name
+		 * @param String  $value	 specify option value
+		 * @param Boolean $use_cache whether or not to use the WP options cache
+		 * @param String  $autoload	 whether to autoload (takes no effect on multisite)
+		 *
+		 * @return Boolean - as from update_site_option()
+		 */
+		public static function update_updraft_option($option, $value, $use_cache = true, $autoload = 'yes') {
 			$tmp = get_site_option('updraftplus_options', array(), $use_cache);
 			if (!is_array($tmp)) $tmp = array();
 			$tmp[$option] = apply_filters('updraftplus_update_option', $value, $option, $use_cache);
 			return update_site_option('updraftplus_options', $tmp);
 		}
 
+		/**
+		 * Delete an option
+		 *
+		 * @param String $option - the option name
+		 */
 		public static function delete_updraft_option($option) {
 			$tmp = get_site_option('updraftplus_options');
-			if (is_array($tmp)) {
-				if (isset($tmp[$option])) unset($tmp[$option]);
-			} else {
-				$tmp = array();
-			}
+			if (!is_array($tmp)) $tmp = array();
+			if (isset($tmp[$option])) unset($tmp[$option]);
 			update_site_option('updraftplus_options', $tmp);
 		}
 
+		/**
+		 * Get the URL of the admin page
+		 *
+		 * @return String
+		 */
 		public static function admin_page_url() {
 			return network_admin_url('settings.php');
 		}
@@ -71,7 +93,7 @@ if (is_multisite()) {
 		}
 
 		public static function add_admin_pages() {
-			if (is_super_admin()) add_submenu_page('settings.php', 'UpdraftPlus', __('UpdraftPlus Backups', 'updraftplus'), 'manage_options', 'updraftplus', array('UpdraftPlus_Options', 'options_printpage'));
+			if (is_super_admin() || apply_filters('updraft_user_can_manage', false, true)) add_submenu_page('settings.php', 'UpdraftPlus', __('UpdraftPlus Backups', 'updraftplus'), apply_filters('option_page_capability_updraft-options-group', 'manage_options'), 'updraftplus', array('UpdraftPlus_Options', 'options_printpage'));
 		}
 
 		/**
@@ -80,76 +102,78 @@ if (is_multisite()) {
 		public static function set_defaults() {
 			$tmp = get_site_option('updraftplus_options');
 			
-			if (!is_array($tmp)) {
-				$arr = array(
-					'updraft_encryptionphrase' => '',
-					'updraft_service' => '',
+			if (is_array($tmp)) return;
+			
+			$arr = array(
+				'updraft_encryptionphrase' => '',
+				'updraft_service' => '',
 
-					'updraftplus_dismissedautobackup' => 0, // Notice with information about the auto-backup add-on
-					'updraftplus_dismisseddashnotice' => 0, // Notice on the main dashboard for free users who've been using the plugin for a few weeks
-					'dismissed_general_notices_until' => 0, // Notices on the UD dashboard page
-					'dismissed_season_notices_until' => 0, // Seasonal notices on the UD dashboard page
-					'updraftplus_dismissedexpiry' => 0, // Notice from the updates connector about support/updates expiry
+				'updraftplus_dismissedautobackup' => 0, // Notice with information about the auto-backup add-on
+				'updraftplus_dismisseddashnotice' => 0, // Notice on the main dashboard for free users who've been using the plugin for a few weeks
+				'dismissed_general_notices_until' => 0, // Notices on the UD dashboard page
+				'dismissed_season_notices_until' => 0, // Seasonal notices on the UD dashboard page
+				'updraftplus_dismissedexpiry' => 0, // Notice from the updates connector about support/updates expiry
 
-					'updraft_log_syslog' => 0,
-					'updraft_ssl_nossl' => 0,
-					'updraft_ssl_useservercerts' => 0,
-					'updraft_ssl_disableverify' => 0,
-					'updraft_split_every' => 400,
+				'updraft_log_syslog' => 0,
+				'updraft_ssl_nossl' => 0,
+				'updraft_auto_updates' => 0,
+				'updraft_ssl_useservercerts' => 0,
+				'updraft_ssl_disableverify' => 0,
+				'updraft_split_every' => 400,
 
-					'updraft_dir' => '',
-					'updraft_report_warningsonly' => array(),
-					'updraft_report_wholebackup' => array(),
+				'updraft_dir' => '',
+				'updraft_report_warningsonly' => array(),
+				'updraft_report_wholebackup' => array(),
+				'updraft_report_dbackup' => array(),
 
-					'updraft_databases' => array(),
-					'updraft_backupdb_nonwp' => 0,
+				'updraft_databases' => array(),
+				'updraft_backupdb_nonwp' => 0,
 
-					'updraft_remotesites' => array(),
-					'updraft_migrator_localkeys' => array(),
-					'updraft_central_localkeys' => array(),
+				'updraft_remotesites' => array(),
+				'updraft_migrator_localkeys' => array(),
+				'updraft_central_localkeys' => array(),
 
-					'updraft_autobackup_default' => 1,
-					'updraft_delete_local' => 1,
-					'updraft_debug_mode' => 1,
-					'updraft_include_plugins' => 1,
-					'updraft_include_themes' => 1,
-					'updraft_include_uploads' => 1,
-					'updraft_include_others' => 1,
-					'updraft_include_wpcore' => 0,
-					'updraft_include_wpcore_exclude' => '',
-					'updraft_include_more' => 0,
-					'updraft_include_more_path' => '',
-					'updraft_include_muplugins' => 1,
-					'updraft_include_blogs' => 1,
-					'updraft_include_others_exclude' => UPDRAFT_DEFAULT_OTHERS_EXCLUDE,
-					'updraft_include_uploads_exclude' => UPDRAFT_DEFAULT_UPLOADS_EXCLUDE,
-					'updraft_interval' => 'manual',
-					'updraft_interval_increments' => 'none',
-					'updraft_interval_database' => 'manual',
-					'updraft_extradbs' => array(),
-					'updraft_retain' => 1,
-					'updraft_retain_db' => 1,
-					'updraft_retain_extra' => array(),
-					'updraft_starttime_files' => date('H:i', time()+600),
-					'updraft_starttime_db' => date('H:i', time()+600),
-					'updraft_startday_files' => date('w', time()+600),
-					'updraft_startday_db' => date('w', time()+600)
-				);
+				'updraft_autobackup_default' => 1,
+				'updraft_delete_local' => 1,
+				'updraft_debug_mode' => 1,
+				'updraft_include_plugins' => 1,
+				'updraft_include_themes' => 1,
+				'updraft_include_uploads' => 1,
+				'updraft_include_others' => 1,
+				'updraft_include_wpcore' => 0,
+				'updraft_include_wpcore_exclude' => '',
+				'updraft_include_more' => 0,
+				'updraft_include_more_path' => '',
+				'updraft_include_muplugins' => 1,
+				'updraft_include_blogs' => 1,
+				'updraft_include_others_exclude' => UPDRAFT_DEFAULT_OTHERS_EXCLUDE,
+				'updraft_include_uploads_exclude' => UPDRAFT_DEFAULT_UPLOADS_EXCLUDE,
+				'updraft_interval' => 'manual',
+				'updraft_interval_increments' => 'none',
+				'updraft_interval_database' => 'manual',
+				'updraft_extradbs' => array(),
+				'updraft_retain' => 1,
+				'updraft_retain_db' => 1,
+				'updraft_retain_extra' => array(),
+				'updraft_starttime_files' => date('H:i', time()+600),
+				'updraft_starttime_db' => date('H:i', time()+600),
+				'updraft_startday_files' => date('w', time()+600),
+				'updraft_startday_db' => date('w', time()+600)
+			);
+			
+			global $updraftplus;
+			if (is_a($updraftplus, 'UpdraftPlus')) {
+				$backup_methods = array_keys($updraftplus->backup_methods);
 				
-				global $updraftplus;
-				if (is_a($updraftplus, 'UpdraftPlus')) {
-					$backup_methods = array_keys($updraftplus->backup_methods);
-					
-					foreach ($backup_methods as $service) {
-						$arr['updraft_'.$service] = array();
-					}
+				foreach ($backup_methods as $service) {
+					$arr['updraft_'.$service] = array();
 				}
-				
-				update_site_option('updraftplus_options', $arr);
 			}
+			
+			update_site_option('updraftplus_options', $arr);
 		}
 
-		public static function options_form_begin($settings_fields = 'updraft-options-group', $allow_autocomplete = true, $get_params = array()) {
+		public static function options_form_begin($settings_fields = 'updraft-options-group', $allow_autocomplete = true, $get_params = array(), $classes = '') {
 
 			$page = '';
 			if (!empty($get_params)) {
@@ -168,6 +192,7 @@ if (is_multisite()) {
 			if (!$page) $page = '?page=updraftplus';
 
 			echo '<form method="post" action="'.$page.'"';
+			if ('' != $classes) echo ' class="'.$classes.'"';
 			if (!$allow_autocomplete) echo ' autocomplete="off"';
 			echo '>';
 		}
@@ -211,20 +236,22 @@ if (is_multisite()) {
 			
 			foreach ($new_options as $key => $value) {
 				if ('updraft_include_others_exclude' == $key || 'updraft_include_uploads_exclude' == $key || 'updraft_include_wpcore_exclude' == $key) {
-					$options[$key] = $updraftplus->strip_dirslash($value);
+					$options[$key] = UpdraftPlus_Manipulation_Functions::strip_dirslash($value);
 				} elseif ('updraft_include_more_path' == $key) {
-					$options[$key] = $updraftplus->remove_empties($value);
+					$options[$key] = UpdraftPlus_Manipulation_Functions::remove_empties($value);
 				} elseif ('updraft_delete_local' == $key || 'updraft_debug_mode' == $key || (preg_match('/^updraft_include_/', $key))) {
 					// Booleans/numeric
 					$options[$key] = absint($value);
 				} elseif ('updraft_split_every' == $key) {
 					$options[$key] = $updraftplus_admin->optionfilter_split_every($value);
 				} elseif ('updraft_retain' == $key || 'updraft_retain_db' == $key) {
-					$options[$key] = $updraftplus->retain_range($value);
+					$options[$key] = UpdraftPlus_Manipulation_Functions::retain_range($value);
 				} elseif ('updraft_interval' == $key) {
 					$options[$key] = $updraftplus->schedule_backup($value);
 				} elseif ('updraft_interval_database' == $key) {
 					$options[$key] = $updraftplus->schedule_backup_database($value);
+				} elseif ('updraft_interval_increments' == $key) {
+					$options[$key] = $updraftplus->schedule_backup_increments($value);
 				} elseif ('updraft_service' == $key) {
 					if (is_array($value)) {
 						foreach ($value as $subkey => $subvalue) {
@@ -245,7 +272,7 @@ if (is_multisite()) {
 					if ($value>28) $value=1;
 					$options[$key] = $value;
 				} elseif ('updraft_dir' == $key) {
-					$options[$key] = $updraftplus_admin->prune_updraft_dir_prefix($value);
+					$options[$key] = UpdraftPlus_Manipulation_Functions::prune_updraft_dir_prefix($value);
 				} elseif ('updraft_updraftvault' !== $key && preg_match('/^updraft_(.*)$/', $key, $matches) && in_array($matches[1], $backup_methods)) {
 					$options[$key] = call_user_func(array($updraftplus, 'storage_options_filter'), $value, $key);
 				} elseif (preg_match("/^updraft_/", $key)) {
@@ -262,9 +289,11 @@ if (is_multisite()) {
 
 			if (empty($new_options['updraft_report_warningsonly'])) $new_options['updraft_report_warningsonly'] = array();
 			if (empty($new_options['updraft_report_wholebackup'])) $new_options['updraft_report_wholebackup'] = array();
+			if (empty($new_options['updraft_report_dbbackup'])) $new_options['updraft_report_dbbackup'] = array();
 
 			$options['updraft_report_warningsonly'] = $updraftplus_admin->return_array($new_options['updraft_report_warningsonly']);
 			$options['updraft_report_wholebackup'] = $updraftplus_admin->return_array($new_options['updraft_report_wholebackup']);
+			$options['updraft_report_dbbackup'] = $updraftplus_admin->return_array($new_options['updraft_report_dbbackup']);
 
 			update_site_option('updraftplus_options', $options);
 
@@ -279,17 +308,23 @@ if (is_multisite()) {
 
 	class UpdraftPlusAddOn_MultiSite {
 	
+		/**
+		 * Class constructor
+		 */
 		public function __construct() {
 			add_filter('updraft_backupable_file_entities', array($this, 'add_backupable_file_entities'), 10, 2);
 			add_filter('updraft_admin_menu_hook', array($this, 'updraft_admin_menu_hook'));
 			add_action('wp_before_admin_bar_render', array($this, 'add_networkadmin_page'));
-			add_filter('updraftplus_restore_all_downloaded_postscan', array($this, 'restore_all_downloaded_postscan'), 10, 7);
+			add_filter('updraftplus_restore_all_downloaded_postscan', array($this, 'restore_all_downloaded_postscan'), 20, 7);
 			add_action('updraftplus_admin_enqueue_scripts', array($this, 'updraftplus_admin_enqueue_scripts'));
 			
 			// Actions/filters that need UD to be fully loaded before we can consider adding them
 			add_action('plugins_loaded', array($this, 'plugins_loaded'));
 		}
 		
+		/**
+		 * Runs upon the WP action plugins_loaded
+		 */
 		public function plugins_loaded() {
 			global $updraftplus;
 			// We don't support restoring specific sites within a multisite until WP 3.5
@@ -473,11 +508,12 @@ if (is_multisite()) {
 		/**
 		 * $site_id is >=2 in current implementations (not called otherwise)
 		 *
-		 * @param  array  $restore_or_not
-		 * @param  string $site_id
-		 * @param  string $unprefixed_table_name
-		 * @param  string $restore_options
-		 * @return array
+		 * @param  Boolean $restore_or_not        - whether to restore the site
+		 * @param  String  $site_id
+		 * @param  String  $unprefixed_table_name
+		 * @param  String  $restore_options
+		 *
+		 * @return Boolean                        - filtered value
 		 */
 		public function restore_this_site($restore_or_not, $site_id, $unprefixed_table_name, $restore_options) {
 		
@@ -520,12 +556,16 @@ if (is_multisite()) {
 			return $restore_or_not;
 		}
 		
+		/**
+		 * Called upon the WP action updraftplus_admin_enqueue_scripts
+		 */
 		public function updraftplus_admin_enqueue_scripts() {
 			global $updraftplus;
 			$updraftplus->enqueue_select2();
 		}
 		
 		public function restore_all_downloaded_postscan($backups, $timestamp, $entities, &$info, &$mess, &$warn, &$err) {
+			global $updraftplus;
 
 		// "Others", because on pre-WP-3.5-style networks, uploads are in wp-content/blogs.dir
 			// $entities is an set of index numbers, which in the common case of 1 zip only, will be '0' - so, don't test with empty()
@@ -545,12 +585,14 @@ if (is_multisite()) {
 			unset($other_entities['uploads']);
 			unset($other_entities['others']);
 			
+			$wp_version = $updraftplus->get_wordpress_version();
 			$page = 0;
 			while (!$page || (!empty($sites) && 100 == count($sites))) {
 				// N.B. get_current_site() actually gets the current network - the function is named using old terminology
 				$current_network = get_current_site();
 				$params = array('network_id' => $current_network->id, 'offset' => $page * 100, 'limit' => 100);
-				$sites = function_exists('wp_get_sites') ? wp_get_sites($params) : $this->wp_get_sites($params);
+				// The wp_get_sites() function is deprecated since WP version 4.6.0!
+				$sites = (function_exists('wp_get_sites') && version_compare($wp_version, '4.6.0', '<')) ? wp_get_sites($params) : $this->wp_get_sites($params);
 				// Check that there's currently >1 site, because otherwise a) there's only one to restore anyway, and b) it may confuse the user if they're thinking they can selectively restore not-currently-existing sites (they can't)
 				if (is_array($sites) && count($sites) > 1) {
 					foreach ($sites as $si) {
@@ -670,6 +712,13 @@ if (is_multisite()) {
 			return $arr;
 		}
 
+		/**
+		 * WP filter updraft_admin_menu_hook
+		 *
+		 * @param String $h - existing action to use for the menu hook
+		 *
+		 * @return String - filtered value
+		 */
 		public function updraft_admin_menu_hook($h) {
 			return 'network_admin_menu';
 		}
@@ -678,7 +727,7 @@ if (is_multisite()) {
 			global $wp_admin_bar;
 			
 			if (!is_object($wp_admin_bar) || !is_super_admin() || !function_exists('is_admin_bar_showing') || !is_admin_bar_showing()) {
-				return;
+				if (!apply_filters('updraft_user_can_manage', false, true)) return;
 			}
 			
 			$wp_admin_bar->add_node(array(

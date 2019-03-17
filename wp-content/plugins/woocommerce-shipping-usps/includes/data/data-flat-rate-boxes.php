@@ -3,7 +3,7 @@
 /**
  * An array of flat rate boxes sizes for USPS
  */
-return array(
+return apply_filters( 'wc_usps_flat_rate_boxes', array(
 	// Priority Mail Express
 	"d13"     => array(
 		"name"     => "Priority Mail Express Flat Rate Envelope",
@@ -11,7 +11,7 @@ return array(
 		"width"    => "9.5",
 		"height"   => "0.25",
 		"weight"   => "70",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "express"
 	),
 	"d30"     => array(
@@ -29,7 +29,7 @@ return array(
 		"width"    => "9.5",
 		"height"   => "1",
 		"weight"   => "70",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "express"
 	),
 
@@ -40,11 +40,11 @@ return array(
 		"width"    => "9.5",
 		"height"   => "0.25",
 		"weight"   => "70",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "priority"
 	),
 	"d17"     => array(
-		"name"     => "Priority Mail Flat Rate Medium Box",
+		"name"     => "Priority Mail Flat Rate Medium Box - 2",
 		"length"   => "13.625",
 		"width"    => "11.875",
 		"height"   => "3.375",
@@ -52,7 +52,7 @@ return array(
 		"box_type" => "priority"
 	),
 	"d17b"     => array(
-		"name"     => "Priority Mail Flat Rate Medium Box",
+		"name"     => "Priority Mail Flat Rate Medium Box - 1",
 		"length"   => "11",
 		"width"    => "8.5",
 		"height"   => "5.5",
@@ -68,7 +68,7 @@ return array(
 		"box_type" => "priority"
 	),
 	"d22a"     => array(
-		"name"     => "Priority Mail Flat Rate Large Box",
+		"name"     => "Priority Mail Large Flat Rate Board Game Box",
 		"length"   => "23.69",
 		"width"    => "11.75",
 		"height"   => "3",
@@ -89,7 +89,7 @@ return array(
 		"width"    => "9.5",
 		"height"   => "1",
 		"weight"   => "70",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "priority"
 	),
 	"d38"     => array(
@@ -116,7 +116,7 @@ return array(
 		"width"    => "10",
 		"height"   => "0.25",
 		"weight"   => "70",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "priority"
 	),
 	"d44"     => array(
@@ -136,7 +136,7 @@ return array(
 		"width"    => "9.5",
 		"height"   => "0.25",
 		"weight"   => "4",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "express"
 	),
 	"i30"     => array(
@@ -154,7 +154,7 @@ return array(
 		"width"    => "9.5",
 		"height"   => "1",
 		"weight"   => "4",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "express"
 	),
 
@@ -165,7 +165,7 @@ return array(
 		"width"    => "9.5",
 		"height"   => "0.25",
 		"weight"   => "4",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "priority"
 	),
 	"i29"     => array(
@@ -174,7 +174,7 @@ return array(
 		"width"    => "9.5",
 		"height"   => "1",
 		"weight"   => "4",
-		"type"     => "packet",
+		"type"     => "envelope",
 		"box_type" => "priority"
 	),
 	"i16"     => array(
@@ -208,5 +208,13 @@ return array(
 		"height"   => "5.5",
 		"weight"   => "20",
 		"box_type" => "priority"
-	)
-);
+	),
+	"i11a"     => array(
+		"name"     => "Priority Mail Large Flat Rate Board Game Box",
+		"length"   => "23.69",
+		"width"    => "11.75",
+		"height"   => "3",
+		"weight"   => "70",
+		"box_type" => "priority"
+	),
+) );

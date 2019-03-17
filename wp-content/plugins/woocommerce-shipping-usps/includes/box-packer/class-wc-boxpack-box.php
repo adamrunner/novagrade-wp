@@ -90,6 +90,18 @@ class WC_Boxpack_Box {
 	}
 
 	/**
+	 * Get the type of the box.
+	 *
+	 * @since 1.0.1
+	 * @version 1.0.1
+	 *
+	 * @return string Box type.
+	 */
+	public function get_type() {
+		return $this->type;
+	}
+
+	/**
 	 * Set the type of box
 	 * @param string $type
 	 */
@@ -245,6 +257,7 @@ class WC_Boxpack_Box {
 
 		$package           = new stdClass();
 		$package->id       = $this->id;
+		$package->type     = $this->type;
 		$package->packed   = $packed;
 		$package->unpacked = $unpacked;
 		$package->weight   = $packed_weight;

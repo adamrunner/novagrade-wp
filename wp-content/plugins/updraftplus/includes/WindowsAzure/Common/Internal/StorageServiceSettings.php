@@ -357,10 +357,11 @@ class StorageServiceSettings extends ServiceSettings
      * Creates a StorageServiceSettings object from the given connection string.
      * 
      * @param string $connectionString The storage settings connection string.
+	 * @param  string $endpoint Azure BLOB storage endpoint
      * 
      * @return StorageServiceSettings 
      */
-    public static function createFromConnectionString($connectionString)
+    public static function createFromConnectionString($connectionString, $endpoint = 'blob.core.windows.net')
     {
         $tokenizedSettings = self::parseAndValidateKeys($connectionString);
         
@@ -398,7 +399,8 @@ class StorageServiceSettings extends ServiceSettings
                 $tokenizedSettings,
                 self::_getDefaultServiceEndpoint(
                     $tokenizedSettings,
-                    Resources::BLOB_BASE_DNS_NAME
+					// Changed in library from UpdraftPlus for compatibility with German Azure
+					$endpoint
                 ),
                 self::_getDefaultServiceEndpoint(
                     $tokenizedSettings,

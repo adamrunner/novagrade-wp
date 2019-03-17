@@ -3,9 +3,9 @@
 /*
 UpdraftPlus Addon: migrator:Migrate a WordPress site to a different location.
 Description: Import a backup into a different site, including database search-and-replace. Ideal for development and testing and cloning of sites.
-Version: 3.5
+Version: 3.7
 Shop: /shop/migrator/
-Latest Change: 1.12.24
+Latest Change: 1.14.12
 */
 // @codingStandardsIgnoreEnd
 
@@ -27,6 +27,8 @@ class UpdraftPlus_Addons_Migrator {
 
 	private $restore_options = array();
 	
+	private $known_incomplete_classes = array();
+	
 	// This is also used to detect the situation of importing a single site into a multisite
 	// Public, as it is used externally
 	public $new_blogid;
@@ -46,7 +48,7 @@ class UpdraftPlus_Addons_Migrator {
 		add_action('updraftplus_restored_themes_one', array($this, 'restored_themes_one'));
 		add_action('updraftplus_debugtools_dashboard', array($this, 'debugtools_dashboard'), 30);
 		add_action('updraftplus_adminaction_searchreplace', array($this, 'adminaction_searchreplace'));
-		add_action('updraftplus_migrate_modal_output', array($this, 'updraftplus_migrate_modal_output'));
+		add_action('updraftplus_migrate_tab_output', array($this, 'updraftplus_migrate_tab_output'));
 		add_action('updraftplus_creating_table', array($this, 'updraftplus_creating_table'), 10, 1);
 		// Displaying notices after migration if migrated url exists in .htaccess file
 		add_action('all_admin_notices', array($this, 'migration_admin_notices'));
@@ -161,33 +163,49 @@ class UpdraftPlus_Addons_Migrator {
 		return $restore_or_not;
 	}
 
+	/**
+	 * Runs upon the WP filter updraftplus_get_history_status_result
+	 *
+	 * @param Array $result - the pre-filtered information
+	 *
+	 * @return Array - after our filtering
+	 */
 	public function get_history_status_result($result) {
 		if (!is_array($result)) return $result;
 		ob_start();
-		$this->updraftplus_migrate_modal_output();
-		$modal_output = ob_get_contents();
+		$this->updraftplus_migrate_tab_output();
+		$tab_output = ob_get_contents();
 		ob_end_clean();
-		$result['migrate_modal'] = $modal_output;
+		$result['migrate_tab'] = $tab_output;
 		return $result;
 	}
 	
-	public function updraftplus_migrate_modal_output() {
+	public function updraftplus_migrate_tab_output() {
+		global $updraftplus, $updraftplus_admin; ?>
+		<div id="updraft_migrate_tab_main">
 
-		echo '<div id="updraft_migrate_modal_main">';
+			<?php $updraftplus_admin->include_template('wp-admin/settings/temporary-clone.php'); ?>
 
-		echo '<p>'.__('A "migration" is ultimately the same as a restoration - but using backup archives that you import from another site.', 'updraftplus').' '.__('The UpdraftPlus Migrator modifies the restoration operation appropriately, to fit the backup data to the new site.', 'updraftplus');
+			<h2><?php _e('Migrate (create a copy of a site on hosting you control)', 'updraftplus'); ?></h2>
 
-// echo __('To restore using any of the backup sets below, press the button.', 'updraftplus').' '.
-		echo ' '.sprintf(__('<a href="%s">Read this article to see step-by-step how it\'s done.</a>', 'updraftplus'), 'https://updraftplus.com/faqs/how-do-i-migrate-to-a-new-site-location/').'</p>';
+			<div id="updraft_migrate" class="postbox">
+				<div class="updraft_migrate_intro">
+					<p>
+						<?php echo __('A "migration" is ultimately the same as a restoration - but using backup archives that you import from another site.', 'updraftplus').' '.__('The UpdraftPlus Migrator modifies the restoration operation appropriately, to fit the backup data to the new site.', 'updraftplus'); ?>
+						<a href="https://updraftplus.com/faqs/how-do-i-migrate-to-a-new-site-location/"><?php _e('Read this article to see step-by-step how it\'s done.', 'updraftplus'); ?></a>
+					</p>
+				</div>
+				<?php
+				
+				echo $this->migrate_widget();
 
-		echo $this->migrate_widget();
-
-		do_action('updraft_migrate_after_widget');
-
-		echo '</div>';
-
-		echo '<div id="updraft_migrate_modal_alt" style="display:none;"></div>';
-
+				do_action('updraft_migrate_after_widget');
+				
+				?>
+				<div id="updraft_migrate_tab_alt" style="display:none;"></div>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**
@@ -202,22 +220,36 @@ class UpdraftPlus_Addons_Migrator {
 		global $updraftplus, $updraftplus_admin;
  
 		if (false === $backup_history) $backup_history = UpdraftPlus_Backup_History::get_history();
-
-		if (empty($backup_history)) return "<p><em>".__('This site has no backups to restore from yet.', 'updraftplus')."</em></p>";
+		
+		// Save on SQL queries by using the method that batch-fetches
+		$backup_history = UpdraftPlus_Backup_History::add_jobdata($backup_history);
 
 		$updraft_dir = $updraftplus->backups_dir_location();
 		$backupable_entities = $updraftplus->get_backupable_file_entities(true, true);
 
-		$ret = '<div style="margin:8px 4px; padding: 0px 8px 8px; border: 1px dotted;">';
+		$ret = '<div class="updraft_migrate_widget_module_content">';
+		$ret .= '<header>';
+		$ret .= '<button class="button button-link close"><span class="dashicons dashicons-arrow-left-alt2"></span>'.__('back', 'updraftplus').'</button>';
+		$ret .= '<h3><span class="dashicons dashicons-migrate"></span>'.__('Restore an existing backup set onto this site', 'updraftplus').'</h3>';
+		$ret .= '</header>';
 
-		$ret .= '<p style="margin-top: 4px; padding-top: 4px;"><strong>'.__('Restore an existing backup set onto this site', 'updraftplus').'</strong> <a href="#" onclick="jQuery(\'#updraft-migrate-modal\').dialog(\'close\'); updraft_openrestorepanel(); return false;">('.htmlspecialchars(__('To import a backup set, go to the "Existing Backups" tab', 'updraftplus')).")</a></p>";
+		$ret .= '<a href="'.UpdraftPlus::get_current_clean_url().'" onclick="jQuery(\'#updraft-navtab-backups\').trigger(\'click\'); return false;">'.__('To import a backup set, go to the "Existing Backups" section in the "Backup/Restore" tab', 'updraftplus')."</a>";
+		
+		if (empty($backup_history)) {
+			$ret .= '<p><em>'.__('This site has no backups to restore from yet.', 'updraftplus').'</em></p>';
+			$ret .= '</div>';
+			return $ret;
+		}
 
-		$ret .= '<div style="height:30px; clear:left;">
-			<select id="updraft_migrate_select_backup" style="height:28px; margin-right: 6px; width:555px; float:left;">';
+		$incremental_set_found = false;
+
+		$ret .= '<p class="updraft_migrate_select_backup">
+			<select id="updraft_migrate_select_backup">';
 
 		krsort($backup_history);
 		foreach ($backup_history as $key => $backup) {
-
+			if (count($backup['incremental_sets']) > 1) $incremental_set_found = true;
+			
 			// https://core.trac.wordpress.org/ticket/25331 explains why the following line is wrong
 			// $pretty_date = date_i18n('Y-m-d G:i',$key);
 			// Convert to blog time zone
@@ -226,7 +258,7 @@ class UpdraftPlus_Addons_Migrator {
 
 			$non = $backup['nonce'];
 
-			$jobdata = $updraftplus->jobdata_getarray($non);
+			$jobdata = isset($backup['jobdata']) ? $backup['jobdata'] : $updraftplus->jobdata_getarray($non);
 
 			// $delete_button = $this->delete_button($key, $non, $backup);
 
@@ -239,8 +271,12 @@ class UpdraftPlus_Addons_Migrator {
 
 		$ret .= '</select>';
 
-		$ret .= '<button id="updraft_migrate_select_backup_go" title="'.__('After pressing this button, you will be given the option to choose which components you wish to migrate', 'updraftplus').'" type="button" class="button-primary" style="float: left; font-size:16px !important; height:28px; position:relative; top:1px;" onclick="var whichset=jQuery(\'#updraft_migrate_select_backup\').val();  updraft_initiate_restore(whichset);">'.__('Restore', 'updraftplus').'</button></div>';
+		$ret .= '<button id="updraft_migrate_select_backup_go" title="'.__('After pressing this button, you will be given the option to choose which components you wish to migrate', 'updraftplus').'" type="button" class="button button-primary" onclick="var whichset=jQuery(\'#updraft_migrate_select_backup\').val();  updraft_initiate_restore(whichset);">'.__('Restore', 'updraftplus').'</button>';
 
+		$ret .= '</p>';
+
+		if ($incremental_set_found) $ret .= '<p>'.__('For incremental backups, you will be able to choose which increments to restore at a later stage.', 'updraftplus').'</p>';
+		
 		$ret .= '</div>';
 
 // $ret .= '</tbody></table>';
@@ -463,9 +499,8 @@ class UpdraftPlus_Addons_Migrator {
 				$err[] = sprintf(__('You selected %s to be included in the restoration - this cannot / should not be done when importing a single site into a network.', 'updraftplus'), __('Must-use plugins', 'updraftplus')).' <a href="https://updraftplus.com/information-on-importing-a-single-site-wordpress-backup-into-a-wordpress-network-i-e-multisite/">'.__('Go here for more information.', 'updraftplus').'</a>';
 			}
 
-			global $wp_version;
-			include(ABSPATH.WPINC.'/version.php');
-			if (version_compare($wp_version, '3.5', '<')) {
+			global $updraftplus;
+			if (version_compare($updraftplus->get_wordpress_version(), '3.5', '<')) {
 				$err[] = __('Importing a single site into a multisite install', 'updraftplus').': '.sprintf(__('This feature requires %s version %s or later', 'updraftplus'), 'WordPress', '3.5');
 			} elseif (get_site_option('ms_files_rewriting')) {
 				$err[] = __('Importing a single site into a multisite install', 'updraftplus').': '.sprintf(__('This feature is not compatible with %s', 'updraftplus'), 'pre-WordPress-3.5-style multisite uploads rewriting', 'updraftplus');
@@ -494,7 +529,7 @@ class UpdraftPlus_Addons_Migrator {
 				
 				$class = (!defined('UPDRAFTPLUS_SELECT2_ENABLE') || UPDRAFTPLUS_SELECT2_ENABLE) ? 'updraft_select2' : '';
 				
-				$info['addui'] .= '<select style="width:100%;" id="updraft_restore_content_to_user" name="updraft_restore_content_to_user" class="'.$class.'">';
+				$info['addui'] .= '<selectx style="width:100%;" id="updraft_restore_content_to_user" name="updraft_restore_content_to_user" class="'.$class.'">';
 
 // $main_site_id = $current_site->blog_id;
 				$page = 0;
@@ -576,7 +611,7 @@ class UpdraftPlus_Addons_Migrator {
 				$uploads_host = parse_url($this->uploads, PHP_URL_HOST);
 				$expected_uploads_host = parse_url($this->home, PHP_URL_HOST);
 				if ($uploads_host && $expected_uploads_host && $uploads_host != $expected_uploads_host) {
-					$this->uploads = $updraftplus->str_replace_once($uploads_host, $expected_uploads_host, $this->uploads);
+					$this->uploads = UpdraftPlus_Manipulation_Functions::str_replace_once($uploads_host, $expected_uploads_host, $this->uploads);
 					$updraftplus->log("wp_upload_dir() returned an unexpected uploads hosts on a subdomain multisite ($uploads_host, rather than $expected_uploads_host) - correcting; destination uploads URL is now: ".$this->uploads);
 				}
 			}
@@ -624,7 +659,7 @@ class UpdraftPlus_Addons_Migrator {
 		if (domain_exists($domain, $path, $site_id))
 			return __('<strong>ERROR</strong>: Site URL already taken.');
 	 
-		// Need to back up wpdb table names, and create a new wp_blogs entry for new blog.
+		// Need to backup wpdb table names, and create a new wp_blogs entry for new blog.
 		// Need to get blog_id from wp_blogs, and create new table names.
 		// Must restore table names at the end of function.
 	 
@@ -684,7 +719,7 @@ class UpdraftPlus_Addons_Migrator {
 				$this->use_wpdb = true;
 			} else {
 				$this->wpdb_obj = $wpdb_obj;
-				$mysql_dbh = $wpdb_obj->updraftplus_getdbh();
+				$mysql_dbh = $wpdb_obj->updraftplus_get_database_handle();
 				$use_mysqli = $wpdb_obj->updraftplus_use_mysqli();
 			}
 		}
@@ -695,7 +730,7 @@ class UpdraftPlus_Addons_Migrator {
 		if (true == $this->use_wpdb) $updraftplus->log_e('Database access: Direct MySQL access is not available, so we are falling back to wpdb (this will be considerably slower)');
 
 		if (is_multisite()) {
-			$sites = $wpdb->get_results('SELECT id, domain, path FROM '.$updraftplus->backquote($this->base_prefix.'site'), ARRAY_N);
+			$sites = $wpdb->get_results('SELECT id, domain, path FROM '.UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.'site'), ARRAY_N);
 			if (is_array($sites)) {
 				$nsites = array();
 				foreach ($sites as $site) $nsites[$site[0]] = array($site[1], $site[2]);
@@ -721,7 +756,7 @@ class UpdraftPlus_Addons_Migrator {
 		if (!empty($this->new_blogid) && !empty($this->restore_options['updraft_restore_content_to_user'])) {
 			if ($table == $import_table_prefix.'posts') {
 				$updraftplus->log("Setting all content (posts/post_author) to be owned by ID: ".$this->restore_options['updraft_restore_content_to_user']);
-				$posts_updated = $wpdb->query("UPDATE ".$updraftplus->backquote($table)." SET post_author=".(int) $this->restore_options['updraft_restore_content_to_user']);
+				$posts_updated = $wpdb->query("UPDATE ".UpdraftPlus_Manipulation_Functions::backquote($table)." SET post_author=".(int) $this->restore_options['updraft_restore_content_to_user']);
 				if (is_numeric($posts_updated)) {
 					$updraftplus->log("Number of rows updated: ".$posts_updated);
 				} else {
@@ -729,7 +764,7 @@ class UpdraftPlus_Addons_Migrator {
 				}
 			} elseif ($table == $import_table_prefix.'postmeta') {
 				// Set WooCommerce orders to belong to guest
-				$keys_deleted = $wpdb->query("DELETE FROM ".$updraftplus->backquote($table)." WHERE meta_key='_customer_user'");
+				$keys_deleted = $wpdb->query("DELETE FROM ".UpdraftPlus_Manipulation_Functions::backquote($table)." WHERE meta_key='_customer_user'");
 				if (is_numeric($keys_deleted)) {
 					$updraftplus->log("Number of WooCommerce orders re-assigned to Guest: ".$keys_deleted);
 				}
@@ -803,7 +838,7 @@ class UpdraftPlus_Addons_Migrator {
 		// If we just replaced either the blogs or site table, then populate our records of what is *now* (i.e. post-restore) in them
 		if (!empty($try_site_blog_replace)) {
 			if ($table == $this->base_prefix.'blogs') {
-				$blogs = $wpdb->get_results('SELECT blog_id, domain, path, site_id FROM '.$updraftplus->backquote($this->base_prefix.'blogs'), ARRAY_N);
+				$blogs = $wpdb->get_results('SELECT blog_id, domain, path, site_id FROM '.UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.'blogs'), ARRAY_N);
 				if (is_array($blogs)) {
 					$nblogs = array();
 					foreach ($blogs as $blog) {
@@ -812,7 +847,7 @@ class UpdraftPlus_Addons_Migrator {
 					$this->restored_blogs = $nblogs;
 				}
 			} elseif ($table == $this->base_prefix.'site') {
-				$sites = $wpdb->get_results('SELECT id, domain, path FROM '.$updraftplus->backquote($this->base_prefix.'site').' ORDER BY id ASC', ARRAY_N);
+				$sites = $wpdb->get_results('SELECT id, domain, path FROM '.UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.'site').' ORDER BY id ASC', ARRAY_N);
 				if (is_array($sites)) {
 					$nsites = array();
 					foreach ($sites as $site) {
@@ -844,10 +879,10 @@ class UpdraftPlus_Addons_Migrator {
 				if ($any_site_changes) {
 					$updraftplus->log_e('Adjusting multisite paths');
 					foreach ($this->restored_sites as $site_id => $osite) {
-						$wpdb->query($wpdb->prepare("UPDATE ".$updraftplus->backquote($this->base_prefix.'site')." SET path='%s' WHERE id=%d", array($osite[1], (int) $site_id)));
+						$wpdb->query($wpdb->prepare("UPDATE ".UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.'site')." SET path='%s' WHERE id=%d", array($osite[1], (int) $site_id)));
 					}
 					foreach ($this->restored_blogs as $blog_id => $blog) {
-						$wpdb->query($wpdb->prepare("UPDATE ".$updraftplus->backquote($this->base_prefix.'blogs')." SET path='%s' WHERE blog_id=%d", array($blog['path'], (int) $blog_id)));
+						$wpdb->query($wpdb->prepare("UPDATE ".UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.'blogs')." SET path='%s' WHERE blog_id=%d", array($blog['path'], (int) $blog_id)));
 					}
 				}
 			}
@@ -1028,9 +1063,9 @@ class UpdraftPlus_Addons_Migrator {
 		// Until 1.12.25, we just used the main options table, which resulted in wrong results when importing a single site into a multisite
 		$options_table = empty($this->new_blogid) ? 'options' : $this->new_blogid.'_options';
 		
-		$db_siteurl_thissite = $wpdb->get_row("SELECT option_value FROM ".$updraftplus->backquote($this->base_prefix.$options_table)." WHERE option_name='siteurl'")->option_value;
+		$db_siteurl_thissite = $wpdb->get_row("SELECT option_value FROM ".UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.$options_table)." WHERE option_name='siteurl'")->option_value;
 		
-		$db_home_thissite = $wpdb->get_row("SELECT option_value FROM ".$updraftplus->backquote($this->base_prefix.$options_table)." WHERE option_name='home'")->option_value;
+		$db_home_thissite = $wpdb->get_row("SELECT option_value FROM ".UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.$options_table)." WHERE option_name='home'")->option_value;
 
 		if (!$replace_this_siteurl) {
 			$replace_this_siteurl = $db_siteurl_thissite;
@@ -1100,14 +1135,14 @@ class UpdraftPlus_Addons_Migrator {
 				 $updraftplus->log_e(sprintf(__("Warning: the database's site URL (%s) is different to what we expected (%s)", 'updraftplus'), $db_siteurl_thissite, $info['expected_oldsiteurl']));
 			// Here, we change only the site URL entry; we don't run a full search/replace based on it. In theory, if someone developed using two different URLs, then this might be needed.
 			if (!empty($this->base_prefix) && !empty($this->siteurl)) {
-				$wpdb->query($wpdb->prepare("UPDATE ".$updraftplus->backquote($this->base_prefix.$options_table)." SET option_value='%s' WHERE option_name='siteurl'", array($this->siteurl)));
+				$wpdb->query($wpdb->prepare("UPDATE ".UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.$options_table)." SET option_value='%s' WHERE option_name='siteurl'", array($this->siteurl)));
 			}
 		}
 		
 		if (isset($info['expected_oldhome']) && $info['expected_oldhome'] != $db_home_thissite && $db_home_thissite != $this->home) {
 			$updraftplus->log_e(sprintf(__("Warning: the database's home URL (%s) is different to what we expected (%s)", 'updraftplus'), $db_home_thissite, $info['expected_oldhome']));
 			if (!empty($this->base_prefix) && !empty($this->home)) {
-				$wpdb->query($wpdb->prepare("UPDATE ".$updraftplus->backquote($this->base_prefix.$options_table)." SET option_value='%s' WHERE option_name='home'", array($this->home)));
+				$wpdb->query($wpdb->prepare("UPDATE ".UpdraftPlus_Manipulation_Functions::backquote($this->base_prefix.$options_table)." SET option_value='%s' WHERE option_name='home'", array($this->home)));
 			}
 		}
 
@@ -1138,13 +1173,13 @@ class UpdraftPlus_Addons_Migrator {
 		$is_multisite = is_multisite();
 		if ($examine_siteurls && $is_multisite && empty($this->new_blogid)) {
 		
-			$sites = $wpdb->get_results('SELECT id, domain, path FROM '.$updraftplus->backquote($import_table_prefix.'site').' ORDER BY id ASC', ARRAY_N);
+			$sites = $wpdb->get_results('SELECT id, domain, path FROM '.UpdraftPlus_Manipulation_Functions::backquote($import_table_prefix.'site').' ORDER BY id ASC', ARRAY_N);
 			$nsites = array();
 			foreach ($sites as $site) {
 				$nsites[$site[0]] = array('dom' => $site[1], 'path' => $site[2]);
 			}
 		
-			$blogs = $wpdb->get_results('SELECT blog_id, domain, path, site_id FROM '.$updraftplus->backquote($import_table_prefix.'blogs').' ORDER BY blog_id ASC', ARRAY_N);
+			$blogs = $wpdb->get_results('SELECT blog_id, domain, path, site_id FROM '.UpdraftPlus_Manipulation_Functions::backquote($import_table_prefix.'blogs').' ORDER BY blog_id ASC', ARRAY_N);
 			$nblogs = array();
 			foreach ($blogs as $blog) {
 				$nblogs[$blog[0]] = array('dom' => $blog[1], 'path' => $blog[2], 'site_id' => $blog[3]);
@@ -1165,7 +1200,7 @@ class UpdraftPlus_Addons_Migrator {
 
 				// Type equality is necessary, as we don't want to match false
 				// "Warning: strpos(): Empty delimiter" means that the second parameter is a zero-length string
-				if (strpos($table[0], $import_table_prefix) === 0) {
+				if (0 === strpos($table[0], $import_table_prefix)) {
 					$tablename = $table[0];
 
 					$stripped_table = substr($tablename, strlen($import_table_prefix));
@@ -1188,7 +1223,7 @@ class UpdraftPlus_Addons_Migrator {
 						$blog_id = $tmatches[1];
 						if (empty($multisite_processed_sites[$blog_id])) {
 							$multisite_processed_sites[$blog_id] = true;
-							$site_url_current = $wpdb->get_var("SELECT option_value FROM ".$updraftplus->backquote($import_table_prefix.$blog_id)."_options WHERE option_name='siteurl'");
+							$site_url_current = $wpdb->get_var("SELECT option_value FROM ".UpdraftPlus_Manipulation_Functions::backquote($import_table_prefix.$blog_id)."_options WHERE option_name='siteurl'");
 							if (is_string($site_url_current)) {
 								$bpathroot = $this->restored_blogs[1]['path'];
 								$bpath = $this->restored_blogs[$blog_id]['path'];
@@ -1356,7 +1391,7 @@ class UpdraftPlus_Addons_Migrator {
 			$updraftplus->check_db_connection($this->wpdb_obj, true);
 
 			// Get a list of columns in this table
-			$fields = $wpdb->get_results('DESCRIBE '.$updraftplus->backquote($table), ARRAY_A);
+			$fields = $wpdb->get_results('DESCRIBE '.UpdraftPlus_Manipulation_Functions::backquote($table), ARRAY_A);
 
 			$indexkey_field = "";
 
@@ -1495,7 +1530,7 @@ class UpdraftPlus_Addons_Migrator {
 				$wpdb->escape_by_ref($ed);
 				// Undo breakage introduced in WP 4.8.3 core
 				if (is_callable(array($wpdb, 'remove_placeholder_escape'))) $ed = $wpdb->remove_placeholder_escape($ed);
-				$update_sql[] = $updraftplus->backquote($column) . ' = "' . $ed . '"';
+				$update_sql[] = UpdraftPlus_Manipulation_Functions::backquote($column) . ' = "' . $ed . '"';
 				$upd = true;
 			}
 
@@ -1504,12 +1539,12 @@ class UpdraftPlus_Addons_Migrator {
 				$wpdb->escape_by_ref($df);
 				// Undo breakage introduced in WP 4.8.3 core
 				if (is_callable(array($wpdb, 'remove_placeholder_escape'))) $df = $wpdb->remove_placeholder_escape($df);
-				$where_sql[] = $updraftplus->backquote($column) . ' = "' . $df . '"';
+				$where_sql[] = UpdraftPlus_Manipulation_Functions::backquote($column) . ' = "' . $df . '"';
 			}
 		}
 
 		if ($upd && !empty($where_sql)) {
-			$sql = 'UPDATE '.$updraftplus->backquote($table).' SET '.implode(', ', $update_sql).' WHERE '.implode(' AND ', array_filter($where_sql));
+			$sql = 'UPDATE '.UpdraftPlus_Manipulation_Functions::backquote($table).' SET '.implode(', ', $update_sql).' WHERE '.implode(' AND ', array_filter($where_sql));
 			$result = $updraftplus_restorer->sql_exec($sql, 5, '', false);
 			if (false === $result || is_wp_error($result)) {
 				$last_error = $this->_migrator_print_error($sql);
@@ -1526,7 +1561,33 @@ class UpdraftPlus_Addons_Migrator {
 		return $report;
 
 	}
-
+	
+	/**
+	 * Inspect incomplete class object and make a note in the restoration log if it is a new class
+	 *
+	 * @param object $data Object expected to be of __PHP_Incomplete_Class_Name
+	 */
+	private function unserialize_log_incomplete_class($data) {
+		global $updraftplus;
+		
+		try {
+			$patch_object = new ArrayObject($data);
+			$class_name = $patch_object['__PHP_Incomplete_Class_Name'];
+		} catch (Exception $e) {
+			error_log('unserialize_log_incomplete_class: '.$e->getMessage());
+			// @codingStandardsIgnoreLine
+		} catch (Error $e) {
+			error_log('unserialize_log_incomplete_class: '.$e->getMessage());
+		}
+		
+		// Check if this class is known
+		// Have to serialize incomplete class to find original class name
+		if (!in_array($class_name, $this->known_incomplete_classes)) {
+			$this->known_incomplete_classes[] = $class_name;
+			$updraftplus->log('Incomplete object detected in database: '.$class_name.'; Search and replace will be skipped for these entries');
+		}
+	}
+	
 	/**
 	 * Take a serialised array and unserialise it replacing elements as needed and
 	 * unserialising any subordinate arrays and performing the replace on those too.
@@ -1540,7 +1601,6 @@ class UpdraftPlus_Addons_Migrator {
 	 * @return array	The original array with all elements replaced as needed.
 	 */
 	private function _migrator_recursive_unserialize_replace($from = '', $to = '', $data = '', $serialised = false) {
-
 		// some unserialised data cannot be re-serialised eg. SimpleXMLElements
 		try {
 
@@ -1550,26 +1610,51 @@ class UpdraftPlus_Addons_Migrator {
 			} elseif (is_array($data)) {
 				$_tmp = array();
 				foreach ($data as $key => $value) {
-					$_tmp[$key] = $this->_migrator_recursive_unserialize_replace($from, $to, $value, false);
+					// Check that we aren't attempting search/replace on an incomplete class
+					// We assume that if $data is an __PHP_Incomplete_Class, it is extremely likely that the original did not contain the domain
+					if (is_a($value, '__PHP_Incomplete_Class')) {
+						// Check if this class is known
+						$this->unserialize_log_incomplete_class($value);
+						
+						// return original data
+						$_tmp[$key] = $value;
+					} else {
+						$_tmp[$key] = $this->_migrator_recursive_unserialize_replace($from, $to, $value, false);
+					}
 				}
 
 				$data = $_tmp;
 				unset($_tmp);
 			} elseif (is_object($data)) {
-				// $data_class = get_class($data);
 				$_tmp = $data; // new $data_class();
-				$props = get_object_vars($data);
-				foreach ($props as $key => $value) {
-					$_tmp->$key = $this->_migrator_recursive_unserialize_replace($from, $to, $value, false);
+				// Check that we aren't attempting search/replace on an incomplete class
+				// We assume that if $data is an __PHP_Incomplete_Class, it is extremely likely that the original did not contain the domain
+				if (is_a($data, '__PHP_Incomplete_Class')) {
+					// Check if this class is known
+					$this->unserialize_log_incomplete_class($data);
+				} else {
+					$props = get_object_vars($data);
+					foreach ($props as $key => $value) {
+						$_tmp->$key = $this->_migrator_recursive_unserialize_replace($from, $to, $value, false);
+					}
 				}
-
 				$data = $_tmp;
 				unset($_tmp);
 			} elseif (is_string($data) && (null !== ($_tmp = json_decode($data, true)))) {
 
 				if (is_array($_tmp)) {
 					foreach ($_tmp as $key => $value) {
-						$_tmp[$key] = $this->_migrator_recursive_unserialize_replace($from, $to, $value, false);
+						// Check that we aren't attempting search/replace on an incomplete class
+						// We assume that if $data is an __PHP_Incomplete_Class, it is extremely likely that the original did not contain the domain
+						if (is_a($value, '__PHP_Incomplete_Class')) {
+							// Check if this class is known
+							$this->unserialize_log_incomplete_class($value);
+							
+							// return original data
+							$_tmp[$key] = $value;
+						} else {
+							$_tmp[$key] = $this->_migrator_recursive_unserialize_replace($from, $to, $value, false);
+						}
 					}
 
 					$data = json_encode($_tmp);
@@ -1631,524 +1716,111 @@ class UpdraftPlus_Addons_Migrator {
 	}
 }
 
-$updraftplus_addons_migrator_remotesend = new UpdraftPlus_Addons_Migrator_RemoteSend();
+if (!class_exists('UpdraftPlus_Addons_Migrator_RemoteSend_UI')) require_once(UPDRAFTPLUS_DIR.'/includes/class-remote-send.php');
+if (!class_exists('UpdraftPlus_Addons_Migrator_RemoteSend')) {
+	class UpdraftPlus_Addons_Migrator_RemoteSend extends UpdraftPlus_RemoteSend {
 
-class UpdraftPlus_Addons_Migrator_RemoteSend {
-
-	private $receivers = array();
-
-	private $php_events = array();
-
-	public function __construct() {
-		add_action('updraft_migrate_after_widget', array($this, 'updraft_migrate_after_widget'));
-		add_action('admin_footer', array($this, 'admin_footer'));
-		add_action('updraft_migrate_newdestination', array($this, 'updraft_migrate_newdestination'));
-		add_action('updraft_remote_ping_test', array($this, 'updraft_remote_ping_test'));
-		add_action('updraft_migrate_key_create', array($this, 'updraft_migrate_key_create'));
-		add_action('updraft_migrate_key_delete', array($this, 'updraft_migrate_key_delete'));
-		add_filter('updraftplus_initial_jobdata', array($this, 'updraftplus_initial_jobdata'), 10, 3);
-		add_filter('updraft_printjob_beforewarnings', array($this, 'updraft_printjob_beforewarnings'), 10, 2);
-		add_action('plugins_loaded', array($this, 'plugins_loaded'));
-	}
-
-	public function plugins_loaded() {
-
-		global $updraftplus;
-		
-		// Prevent fatal errors if UD was not loaded (e.g. some CLI method)
-		if (!is_a($updraftplus, 'UpdraftPlus')) return;
-
-		// Create a receiver for each key
-		if (!class_exists('UpdraftPlus_Options')) {
-			error_log("UpdraftPlus_Options class not found: is UpdraftPlus properly installed?");
-			return;
-		}
-		$our_keys = UpdraftPlus_Options::get_updraft_option('updraft_migrator_localkeys');
-		if (is_array($our_keys) && !empty($our_keys)) {
-			foreach ($our_keys as $name_hash => $key) {
-				if (!is_array($key)) return;
-				$ud_rpc = $updraftplus->get_udrpc($name_hash.'.migrator.updraftplus.com');
-				$ud_rpc->set_message_format(1);
-				$this->receivers[$name_hash] = $ud_rpc;
-				$ud_rpc->set_key_local($key['key']);
-				// Create listener (which causes WP actions to be fired when messages are received)
-				$ud_rpc->activate_replay_protection();
-				$ud_rpc->create_listener();
-			}
-			add_filter('udrpc_command_send_chunk', array($this, 'udrpc_command_send_chunk'), 10, 3);
-			add_filter('udrpc_command_get_file_status', array($this, 'udrpc_command_get_file_status'), 10, 3);
-		}
-	}
-
-	private function initialise_listener_error_handling($hash) {
-		global $updraftplus;
-		$updraftplus->error_reporting_stop_when_logged = true;
-		set_error_handler(array($updraftplus, 'php_error'), E_ALL & ~E_STRICT);
-		$this->php_events = array();
-		add_filter('updraftplus_logline', array($this, 'updraftplus_logline'), 10, 4);
-		if (!UpdraftPlus_Options::get_updraft_option('updraft_debug_mode')) return;
-		$updraftplus->nonce = $hash;
-		$updraftplus->logfile_open($hash);
-	}
-
-	private function return_rpc_message($msg) {
-		if (is_array($msg) && isset($msg['response']) && 'error' == $msg['response']) {
-			global $updraftplus;
-			$updraftplus->log('Unexpected response code in remote communications: '.serialize($msg));
-		}
-		if (!empty($this->php_events)) {
-			if (!isset($msg['data'])) $msg['data'] = null;
-			$msg['data'] = array('php_events' => array(), 'previous_data' => $msg['data']);
-			foreach ($this->php_events as $logline) {
-				$msg['data']['php_events'][] = $logline;
-			}
-		}
-		restore_error_handler();
-
-		return $msg;
-	}
-
-	public function updraftplus_logline($line, $nonce, $level, $uniq_id) {
-		if ('notice' === $level && 'php_event' === $uniq_id) {
-			$this->php_events[] = $line;
-		}
-		return $line;
-	}
-
-	public function udrpc_command_send_chunk($response, $data, $name_indicator) {
-
-		if (!preg_match('/^([a-f0-9]+)\.migrator.updraftplus.com$/', $name_indicator, $matches)) return $response;
-		$name_hash = $matches[1];
-
-		$this->initialise_listener_error_handling($name_hash);
-
-		global $updraftplus;
-
-		// send_message('send_chunk', array('file' => $file, 'data' => $chunk, 'start' => $upload_start))
-
-		if (!is_array($data)) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_input_expected_array'));
-
-		if (!isset($data['file'])) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_input_no_file'));
-
-		if (!isset($data['data'])) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_input_no_data'));
-
-		if (!isset($data['start'])) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_input_no_start'));
-
-		// Make sure the parameters are valid
-		if (!is_numeric($data['start']) || absint($data['start']) != $data['start']) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_start'));
-
-		// Sanity-check the file name
-		$file = $data['file'];
-		if (!preg_match('/(-db\.gz|-db\.gz\.crypt|-db|\.(sql|sql\.gz|sql\.bz2|zip|tar|tar\.bz2|tar\.gz|txt))/i', $file)) return array('response' => 'error', 'data' => 'illegal_file_name1');
-		if (basename($file) != $file) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_input_illegal_character'));
-
-		$start = $data['start'];
-
-		$is_last_chunk = empty($data['last_chunk']) ? 0 : 1;
-		if (!$is_last_chunk) {
-		} else {
-			$orig_file = $file;
-			if (!empty($data['label'])) $label = $data['label'];
-		}
-		$file .= '.tmp';
-
-		// Intentionally over-write the variable, in case memory is short and in case PHP's garbage collector is this clever
-		$data = base64_decode($data['data']);
-
-		$updraft_dir = $updraftplus->backups_dir_location();
-		$fullpath = $updraft_dir.'/'.$file;
-
-		$existing_size = file_exists($fullpath) ? filesize($fullpath) : 0;
-
-		if ($start > $existing_size) {
-			return $this->return_rpc_message(array('response' => 'error', 'data' => "invalid_start_too_big:start=${start},existing_size=${existing_size}"));
+		public function __construct() {
+			parent::__construct();
+			add_action('updraft_migrate_after_widget', array($this, 'updraft_migrate_after_widget'));
+			add_action('admin_footer', array($this, 'admin_footer'));
 		}
 
-		if (false == ($fhandle = fopen($fullpath, 'ab'))) {
-			return $this->return_rpc_message(array('response' => 'error', 'data' => 'file_open_failure'));
-		}
+		public function updraft_migrate_after_widget() {
+			global $updraftplus_admin;
+			?>
+			<div class="updraft_migrate_widget_module_content">
+				<header>
+					<button class="button button-link close"><span class="dashicons dashicons-arrow-left-alt2"></span><?php _e('back', 'updraftplus'); ?></button>
+					<h3><span class="dashicons dashicons-upload"></span><?php _e('Send a backup to another site', 'updraftplus');?></h3>
+				</header>
+				<div id="updraft_migrate_receivingsites" style="clear:both; margin-top:10px;">
+					<?php echo $this->get_remotesites_selector();?>
+					<a href="#" class="updraft_migrate_add_site--trigger"><span class="dashicons dashicons-plus"></span><?php _e('Add a site', 'updraftplus'); ?></a>
+				</div>
+				<div class="updraft_migrate_add_site" style="display: none;">
+					<p>
+						<?php
+						echo __("To add a site as a destination for sending to, enter that site's key below.", 'updraftplus').' <a href="'.UpdraftPlus::get_current_clean_url().'" onclick="alert(\''.esc_js(__('Keys for a site are created in the section "receive a backup from a remote site".', 'updraftplus').' '.__("So, to get the key for the remote site, open the 'Migrate Site' window on that site, and go to that section.", 'updraftplus')).'\'); return false;">'.__("How do I get a site's key?", 'updraftplus').'</a>';
+						?>
+					</p>
+					<div style="clear:both;">
+						<label><?php _e('Site key', 'updraftplus'); ?></label> <input type="text" id="updraft_migrate_receiving_new" placeholder="<?php esc_attr(__('Paste key here', 'updraftplus'));?>"> <button class="button-primary" id="updraft_migrate_receiving_makenew" onclick="updraft_migrate_receiving_makenew();"><?php _e('Add site', 'updraftplus');?></button>
+					</div>
+				</div>
+			</div>
 
-		// fseek() returns 0 for success, or -1 for failure
-		if ($start != $existing_size && -1 == fseek($fhandle, $start))  return $this->return_rpc_message(array('response' => 'error', 'data' => 'fseek_failure'));
+			<div class="updraft_migrate_widget_module_content">
+				<header>
+					<button class="button button-link close"><span class="dashicons dashicons-arrow-left-alt2"></span><?php _e('back', 'updraftplus'); ?></button>
+					<h3><span class="dashicons dashicons-download"></span><?php _e('Receive a backup from a remote site', 'updraftplus');?></h3>
+				</header>
+				<p><?php echo htmlspecialchars(__("To allow another site to send a backup to this site, create a key below. When you are shown the key, then press the 'Migrate' button on the other (sending) site, and copy-and-paste the key over there (in the 'Send a backup to another site' section).", 'updraftplus')); ?></p>
+				<p>
+					<?php _e('Create a key: give this key a unique name (e.g. indicate the site it is for), then press "Create key":', 'updraftplus'); ?><br>
+					<input id="updraft_migrate_receivingsites_keyname" type="text" placeholder="<?php _e('Enter your chosen name', 'updraftplus');?>" value="<?php echo __('Key', 'updraftplus').' - '.date('Y-m-d');?>">
+					
+					<?php _e('Encryption key size:', 'updraftplus');?>
+					<select id="updraft_migrate_receivingsites_keysize">
+						<option value="512"><?php printf(__('%s bits', 'updraftplus').' - '.__('easy to break, fastest', 'updraftplus'), '512');?></option>
+						<option value="1024"><?php printf(__('%s bits', 'updraftplus').' - '.__('faster (possibility for slow PHP installs)', 'updraftplus'), '1024');?></option>
+						<option value="2048" selected="selected"><?php printf(__('%s bytes', 'updraftplus').' - '.__('recommended', 'updraftplus'), '2048');?></option>
+						<option value="4096"><?php printf(__('%s bits', 'updraftplus').' - '.__('slower, strongest', 'updraftplus'), '4096');?></option>
+					</select>
+					
+					<button id="updraft_migrate_receivingsites_createkey" class="button button-primary" onclick="updraft_migrate_receivingsites_createkey();"><?php _e('Create key', 'updraftplus');?></button>
+					
+				</p>
 
-		$write_status = fwrite($fhandle, $data);
-		
-		if (false === $write_status || (false == $write_status && !empty($data))) return $this->return_rpc_message(array('response' => 'error', 'data' => 'fwrite_failure'));
+				<div id="updraft_migrate_new_key_container" style="display:none;">
+					<?php _e('Your new key:', 'updraftplus'); ?><br>
+					<textarea id="updraft_migrate_new_key" onclick="this.select();" style="width:625px; height:235px; word-wrap:break-word; border: 1px solid #aaa; border-radius: 3px; padding:4px;"></textarea>
+				</div>
 
-		@fclose($fhandle);
+				<div id="updraft_migrate_our_keys_container">
+					<?php echo $this->list_our_keys(); ?>
+				</div>
+			</div>
 
-		$our_keys = UpdraftPlus_Options::get_updraft_option('updraft_migrator_localkeys');
-		if (is_array($our_keys) && isset($our_keys[$name_hash]) && !empty($our_keys[$name_hash]['name'])) $updraftplus->log("Received data chunk on key ".$our_keys[$name_hash]['name']. " ($file, ".$start.", is_last=$is_last_chunk)");
-
-		if ($is_last_chunk) {
-			if (!rename($fullpath, $updraft_dir.'/'.$orig_file)) return $this->return_rpc_message(array('response' => 'error', 'data' => 'rename_failure'));
-			$only_add_this_file = array('file' => $orig_file);
-			if (isset($label)) $only_add_this_file['label'] = $label;
-			UpdraftPlus_Backup_History::rebuild(false, $only_add_this_file);
-		}
-
-		return $this->return_rpc_message(array(
-			'response' => 'file_status',
-			'data' => $this->get_file_status($file)
-		));
-	}
-
-	private function get_file_status($file) {
-
-		global $updraftplus;
-		$fullpath = $updraftplus->backups_dir_location().'/'.basename($file);
-
-		if (file_exists($fullpath)) {
-			$size = filesize($fullpath);
-			$status = 1;
-		} elseif (file_exists($fullpath.'.tmp')) {
-			$size = filesize($fullpath.'.tmp');
-			$status = 0;
-		} else {
-			$size = 0;
-			$status = 0;
-		}
-
-		return array(
-			'size' => $size,
-			'status' => $status,
-		);
-	}
-
-	public function udrpc_command_get_file_status($response, $data, $name_indicator) {
-		if (!preg_match('/^([a-f0-9]+)\.migrator.updraftplus.com$/', $name_indicator, $matches)) return $response;
-		$name_hash = $matches[1];
-
-		$this->initialise_listener_error_handling($name_hash);
-
-		if (!is_string($data)) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_input_expected_string'));
-
-		if (basename($data) != $data) return $this->return_rpc_message(array('response' => 'error', 'data' => 'invalid_input_illegal_character'));
-
-		return $this->return_rpc_message(array(
-			'response' => 'file_status',
-			'data' => $this->get_file_status($data)
-		));
-	}
-
-	public function updraftplus_initial_jobdata($initial_jobdata, $options, $split_every) {
-
-		if (is_array($options) && !empty($options['extradata']) && preg_match('#services=remotesend/(\d+)#', $options['extradata'], $matches)) {
-
-			// Load the option now - don't wait until send time
-			$site_id = $matches[1];
-			$remotesites = UpdraftPlus_Options::get_updraft_option('updraft_remotesites');
-			if (!is_array($remotesites)) $remotesites = array();
-
-			if (empty($remotesites[$site_id]) || empty($remotesites[$site_id]['url']) || empty($remotesites[$site_id]['key']) || empty($remotesites[$site_id]['name_indicator'])) {
-				throw new Exception("Remote site id ($site_id) not found - send aborted");
-			}
-
-			array_push($initial_jobdata, 'remotesend_info', $remotesites[$site_id]);
-
-			// Reduce to 100MB if it was above. Since the user isn't expected to directly manipulate these zip files, the potentially higher number of zip files doesn't matter.
-			if ($split_every > 100) array_push($initial_jobdata, 'split_every', 100);
+			<?php
 
 		}
 
-		return $initial_jobdata;
-	}
+		/**
+		 * Runs upon the WP action admin_footer. If on a relevant page, we output some JavaScript.
+		 */
+		public function admin_footer() {
+			global $updraftplus, $pagenow;
+			// Next, the actions that only come on the UpdraftPlus page
+			if (UpdraftPlus_Options::admin_page() != $pagenow || empty($_REQUEST['page']) || 'updraftplus' != $_REQUEST['page']) return;
 
-	public function updraft_printjob_beforewarnings($ret, $jobdata) {
-		if (!empty($jobdata['remotesend_info']) && !empty($jobdata['remotesend_info']['url'])) {
-			$ret .= '<p style="padding:0px; margin:2px 0;">'.__('Backup data will be sent to:', 'updraftplus').' '.htmlspecialchars($jobdata['remotesend_info']['url']).'</p>';
-		}
-		return $ret;
-	}
-
-	public function updraft_remote_ping_test() {
-
-		global $updraftplus;
-
-		if (!isset($_POST['id']) || !is_numeric($_POST['id']) || empty($_POST['url'])) die;
-
-		$remotesites = UpdraftPlus_Options::get_updraft_option('updraft_remotesites');
-		if (!is_array($remotesites)) $remotesites = array();
-
-		if (empty($remotesites[$_POST['id']]) || $_POST['url'] != $remotesites[$_POST['id']]['url'] || empty($remotesites[$_POST['id']]['key']) || empty($remotesites[$_POST['id']]['name_indicator'])) {
-			echo json_encode(array('e' => 1, 'r' => __('Error:', 'updraftplus').' '.__('site not found', 'updraftplus')));
-			die();
-		}
-
-		try {
-		
-			$updraftplus->error_reporting_stop_when_logged = true;
-			set_error_handler(array($updraftplus, 'php_error'), E_ALL & ~E_STRICT);
-			$this->php_events = array();
-			add_filter('updraftplus_logline', array($this, 'updraftplus_logline'), 10, 4);
-		
-			$opts = $remotesites[$_POST['id']];
-		
-			$ud_rpc = $updraftplus->get_udrpc($opts['name_indicator']);
-			$ud_rpc->set_message_format(1);
-			$ud_rpc->set_key_local($opts['key']);
-			$ud_rpc->set_destination_url($_POST['url']);
-			$ud_rpc->activate_replay_protection();
-			
-			do_action('updraftplus_remotesend_udrpc_object_obtained', $ud_rpc, $opts);
-			
-			$response = $ud_rpc->send_message('ping');
-
-			restore_error_handler();
-			
-			if (is_wp_error($response)) {
-
-				$err_msg = __('Error:', 'updraftplus').' '.$response->get_error_message();
-				$err_data = $response->get_error_data();
-				$err_code = $response->get_error_code();
-
-			} elseif (!is_array($response) || empty($response['response']) || 'pong' != $response['response']) {
-
-				$err_msg = __('Error:', 'updraftplus').' '.sprintf(__('You should check that the remote site is online, not firewalled, does not have security modules that may be blocking access, has UpdraftPlus version %s or later active and that the keys have been entered correctly.', 'updraftplus'), '2.10.3');
-				$err_data = $response;
-				$err_code = 'no_pong';
-
-			}
-
-			if (isset($err_msg)) {
-
-				$res = array('e' => 1, 'r' => $err_msg);
-
-				if ($this->url_looks_internal($_POST['url'])) {
-					$res['moreinfo'] = '<p>'.sprintf(__('The site URL you are sending to (%s) looks like a local development website. If you are sending from an external network, it is likely that a firewall will be blocking this.', 'updraftplus'), htmlspecialchars($_POST['url'])).'</p>';
-				}
-
-				// We got several support requests from people who didn't seem to be aware of other methods
-				$msg_try_other_method = '<p>'.__('If sending directly from site to site does not work for you, then there are three other methods - please try one of these instead.', 'updraftplus').'<a href="https://updraftplus.com/faqs/how-do-i-migrate-to-a-new-site-location/#importing">'.__('For longer help, including screenshots, follow this link.', 'updraftplus').'</a></p>';
-
-				$res['moreinfo'] = isset($res['moreinfo']) ? $res['moreinfo'].$msg_try_other_method : $msg_try_other_method;
-
-				if (isset($err_data)) $res['data'] = $err_data;
-				if (isset($err_code)) $res['code'] = $err_code;
+			?>
+			<script>
 				
-				if (!empty($this->php_events)) $res['php_events'] = $this->php_events;
-				
-				echo json_encode($res);
-				die;
-			}
+				function updraft_migrate_receivingsites_createkey() {
+					
+					var $ = jQuery;
+					
+					// Remember to tell them that this key will never be shown again
+					
+					var key_name = $('#updraft_migrate_receivingsites_keyname').val();
+					var key_size = $('#updraft_migrate_receivingsites_keysize').val();
 
-			$ret = '<p>'.__('Testing connection...', 'updraftplus').' '.__('OK', 'updraftplus').'</p>';
-
-			global $updraftplus, $updraftplus_admin;
-
-			$ret .= '<input type="checkbox" checked="checked" id="remotesend_backupnow_db"> <label for="remotesend_backupnow_db">'.__("Database", 'updraftplus').'</label><br>';
-			$ret .= $updraftplus_admin->files_selector_widgetry('remotesend_', false, false);
-
-			$service = $updraftplus->just_one(UpdraftPlus_Options::get_updraft_option('updraft_service'));
-			if (is_string($service)) $service = array($service);
-
-			if (is_array($service) && !empty($service) && array('none') !== $service) {
-				$first_one = true;
-				foreach ($service as $s) {
-					if (!$s) continue;
-					if (isset($updraftplus->backup_methods[$s])) {
-						if ($first_one) {
-							$first_one = false;
-							$ret .= '<p>';
-							$ret .= '<input type="checkbox" id="remotesend_backupnow_cloud"> <label for="remotesend_backupnow_cloud">'.__("Also send this backup to the active remote storage locations", 'updraftplus');
-							$ret .= ' (';
-						} else {
-							$ret .= ', ';
-						}
-						$ret .= $updraftplus->backup_methods[$s];
+					if ('' == key_name || false == key_name || null == key_name) {
+						alert(updraftlion.nokeynamegiven);
+						return false;
 					}
-				}
-				if (!$first_one) $ret .= ')';
-				$ret .= '</label></p>';
-			}
 
-			$ret .= apply_filters('updraft_backupnow_modal_afteroptions', '', 'remotesend_');
+					$('#updraft_migrate_new_key_container').show();
+					$('#updraft_migrate_new_key').html(updraftlion.creating_please_allow);
 
-			echo json_encode(array('success' => 1, 'r' => $ret));
-		} catch (Exception $e) {
-			echo json_encode(array('e' => 1, 'r' => __('Error:', 'updraftplus').' '.$e->getMessage().' (line: '.$e->getLine().', file: '.$e->getFile().')'));
-		}
-		die;
-	}
-
-	/**
-	 * This is used only for an advisory warning - does not have to be able to always detect
-	 *
-	 * @param  string $url
-	 */
-	private function url_looks_internal($url) {
-		$url_host = strtolower(parse_url($url, PHP_URL_HOST));
-		if ('localhost' == $url_host || strpos($url_host, '127.') === 0 || strpos($url_host, '10.') === 0 || '::1' == $url_host || strpos($url_host, 'localhost') !== false || substr($url_host, -4, 4) == '.dev') return true;
-		return false;
-	}
-
-	public function updraft_migrate_key_delete() {
-		if (empty($_POST['keyid'])) die;
-		$our_keys = UpdraftPlus_Options::get_updraft_option('updraft_migrator_localkeys');
-		if (!is_array($our_keys)) $our_keys = array();
-		unset($our_keys[$_POST['keyid']]);
-		UpdraftPlus_Options::update_updraft_option('updraft_migrator_localkeys', $our_keys);
-		echo json_encode(array('ourkeys' => $this->list_our_keys($our_keys)));
-		die;
-	}
-
-	/**
-	 * Called upon the WP action updraft_migrate_key_create. Dies.
-	 */
-	public function updraft_migrate_key_create() {
-
-		if (empty($_POST['name'])) die;
-		$name = stripslashes($_POST['name']);
-		
-		$size = (empty($_POST['size']) || !is_numeric($_POST['size']) || $_POST['size'] < 512) ? 2048 : (int) $_POST['size'];
-
-		$name_hash = md5($name); // 32 characters
-		$indicator_name = $name_hash.'.migrator.updraftplus.com';
-
-		$our_keys = UpdraftPlus_Options::get_updraft_option('updraft_migrator_localkeys');
-		if (!is_array($our_keys)) $our_keys = array();
-		
-		if (isset($our_keys[$name_hash])) {
-			echo json_encode(array('e' => 1, 'r' => __('Error:', 'updraftplus').' '.__('A key with this name already exists; you must use a unique name.', 'updraftplus')));
-			die;
-		}
-
-		global $updraftplus;
-		$ud_rpc = $updraftplus->get_udrpc($indicator_name);
-
-		if (is_object($ud_rpc) && $ud_rpc->generate_new_keypair($size)) {
-			$local_bundle = $ud_rpc->get_portable_bundle('base64_with_count');
-
-			$our_keys[$name_hash] = array('name' => $name, 'key' => $ud_rpc->get_key_local());
-			UpdraftPlus_Options::update_updraft_option('updraft_migrator_localkeys', $our_keys);
-
-			echo json_encode(array(
-				'bundle' => $local_bundle,
-				'r' => __('Key created successfully.', 'updraftplus').' '.__('You must copy and paste this key now - it cannot be shown again.', 'updraftplus'),
-				'selector' => $this->get_remotesites_selector(array()),
-				'ourkeys' => $this->list_our_keys($our_keys),
-			));
-			die;
-		}
-		echo json_encode(array('e' => 1));
-		die;
-	}
-
-	public function updraft_migrate_newdestination() {
-
-		global $updraftplus;
-		$ret = array();
-
-		if (empty($_POST['key'])) {
-			$ret['e'] = sprintf(__("Failure: No %s was given.", 'updraftplus'), __('key', 'updraftplus'));
-		} else {
-			$ud_rpc = $updraftplus->get_udrpc();
-
-			// A bundle has these keys: key, name_indicator, url
-			$decode_bundle = $ud_rpc->decode_portable_bundle($_POST['key'], 'base64_with_count');
-
-			if (!is_array($decode_bundle) || !empty($decode_bundle['code'])) {
-				$ret['e'] = __('Error:', 'updraftplus');
-				if (!empty($decode_bundle['code']) && 'invalid_wrong_length' == $decode_bundle['code']) {
-					$ret['e'] .= ' '.__('The entered key was the wrong length - please try again.', 'updraftplus');
-				} elseif (!empty($decode_bundle['code']) && 'invalid_corrupt' == $decode_bundle['code']) {
-					$ret['e'] .= ' '.__('The entered key was corrupt - please try again.', 'updraftplus').' ('.$decode_bundle['data'].')';
-				} elseif (empty($decode_bundle['key']) || empty($decode_bundle['url'])) {
-					$ret['e'] .= ' '.__('The entered key was corrupt - please try again.', 'updraftplus');
-					$ret['data'] = $decode_bundle;
-				}
-			} elseif (empty($decode_bundle['key']) || empty($decode_bundle['url'])) {
-					$ret['e'] = __('Error:', 'updraftplus').' '.__('The entered key was corrupt - please try again.', 'updraftplus');
-					$ret['data'] = $decode_bundle;
-			} else {
-				
-				if (trailingslashit(network_site_url()) == $decode_bundle['url']) {
-					$ret['e'] = __('Error:', 'updraftplus').' '.__('The entered key does not belong to a remote site (it belongs to this one).', 'updraftplus');
-				} else {
-
-					// Store the information
-					$remotesites = UpdraftPlus_Options::get_updraft_option('updraft_remotesites');
-					if (!is_array($remotesites)) $remotesites = array();
-					foreach ($remotesites as $k => $rsite) {
-						if (!is_array($rsite)) continue;
-						if ($rsite['url'] == $decode_bundle['url']) unset($remotesites[$k]);
+					var data = {
+						subsubaction: 'updraft_migrate_key_create',
+						name: key_name,
+						size: key_size
 					}
-					$remotesites[] = $decode_bundle;
-					UpdraftPlus_Options::update_updraft_option('updraft_remotesites', $remotesites);
-
-					$ret['selector'] = $this->get_remotesites_selector($remotesites);
-
-					// Return the new HTML widget to the front end
-					$ret['r'] = __('The key was successfully added.', 'updraftplus').' '.__('It is for sending backups to the following site: ', 'updraftplus').htmlspecialchars($decode_bundle['url']);
-
-				}
-			}
-
-		}
-
-		echo json_encode($ret);
-		die;
-	}
-
-	private function get_remotesites_selector($remotesites = false) {
-
-		if (false === $remotesites) {
-			$remotesites = UpdraftPlus_Options::get_updraft_option('updraft_remotesites');
-			if (!is_array($remotesites)) $remotesites = array();
-		}
-
-		if (empty($remotesites)) {
-			return '<span id="updraft_migrate_receivingsites_nonemsg"><em>'.__('No receiving sites have yet been added.', 'updraftplus').'</em></span>';
-		} else {
-			$ret = '<div style="height:34px;"><div style="width:100px; float:left; padding-top:5px;"><strong>'.__('Send to site:', 'updraftplus').'</strong></div><select id="updraft_remotesites_selector" style="width:455px;float:left;">';
-			foreach ($remotesites as $k => $rsite) {
-				if (!is_array($rsite) || empty($rsite['url'])) continue;
-				$ret .= '<option value="'.esc_attr($k).'">'.htmlspecialchars($rsite['url']).'</option>';
-			}
-			$ret .= '</select>';
-			$ret .= '<div style="float:left;"><button class="button-primary" style="height:30px; font-size:16px; margin-left: 3px; width:85px;" id="updraft_migrate_send_button">'.__('Send', 'updraftplus').'</button></div></div>';
-		}
-
-		return $ret;
-	}
-	
-	/**
-	 * Runs upon the WP action admin_footer. If on a relevant page, we output some JavaScript.
-	 */
-	public function admin_footer() {
-		global $updraftplus, $pagenow;
-		// Next, the actions that only come on the UpdraftPlus page
-		if (UpdraftPlus_Options::admin_page() != $pagenow || empty($_REQUEST['page']) || 'updraftplus' != $_REQUEST['page']) return;
-
-		?>
-		<script>
-		
-			function updraft_migrate_receivingsites_createkey() {
-				
-				var $ = jQuery;
-				
-				// Remember to tell them that this key will never be shown again
-				
-				var key_name = $('#updraft_migrate_receivingsites_keyname').val();
-				var key_size = $('#updraft_migrate_receivingsites_keysize').val();
-
-				if ('' == key_name || false == key_name || null == key_name) {
-					alert(updraftlion.nokeynamegiven);
-					return false;
-				}
-
-				$('#updraft_migrate_new_key_container').show();
-				$('#updraft_migrate_new_key').html(updraftlion.creating_please_allow);
-
-				var data = {
-					subsubaction: 'updraft_migrate_key_create',
-					name: key_name,
-					size: key_size
-				}
-				
-				updraft_send_command('doaction', data, function(response) {
-					try {
-						resp = $.parseJSON(response);
+					
+					updraft_send_command('doaction', data, function(resp) {
 						if (resp.hasOwnProperty('bundle')) {
 							$('#updraft_migrate_receivingsites_keyname').val('');
 							$('#updraft_migrate_new_key').html(resp.bundle);
@@ -2170,78 +1842,173 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 							console.log(response);
 							$('#updraft_migrate_new_key_container').hide();
 						}
-					} catch(err) {
-						console.log(err);
-						console.log(response);
-						alert(updraftlion.unexpectedresponse+' '+response);
-						return;
-					}
-				}, { json_parse: false, error_callback: function(response, status, error_code) {
-						var msg = '';
-						if (response.hasOwnProperty('responseText') && response.responseText) {
-							msg = response.responseText;
-							if (response.hasOwnProperty('statusText') && response.statusText) {
-								msg += ' ('+response.statusText+')';
+					}, { error_callback: function(response, status, error_code, resp) {
+							var msg = '';
+							if (typeof resp !== 'undefined' && resp.hasOwnProperty('fatal_error')) {
+								console.error(resp.fatal_error_message);
+								msg = resp.fatal_error_message;
 							}
-						} else if (response.hasOwnProperty('statusText') && response.statusText) {
-							msg = response.statusText;
-						}
-						$('#updraft_migrate_new_key').html(updraftlion.error+' '+msg);
-						alert(updraftlion.error+' '+msg);
-						console.log(response);
-						console.log(status);
-					} 
-				});
-				
-				// Update (via AJAX) the list of existing keys
-				// AJAX command to delete an existing key
-			};
-			
-			function updraft_migrate_local_key_delete(keyid) {
-			
-				var $ = jQuery;
-			
-				var $keylink = $('a.updraft_migrate_local_key_delete[data-keyid="'+keyid+']');
-				
-				var data = {
-					subsubaction: 'updraft_migrate_key_delete',
-					keyid: keyid,
-				}
-				
-				$keylink.html(updraftlion.deleting);
-				
-				updraft_send_command('doaction', data, function(response) {
-					try {
-						resp = $.parseJSON(response);
-						if (resp.hasOwnProperty('ourkeys')) {
-							$('#updraft_migrate_our_keys_container').html(resp.ourkeys);
-						} else {
-							alert(updraftlion.unexpectedresponse+' '+response);
-							console.log(resp);
+							if (response.hasOwnProperty('responseText') && response.responseText) {
+								msg = response.responseText;
+								if (response.hasOwnProperty('statusText') && response.statusText) {
+									msg += ' ('+response.statusText+')';
+								}
+							} else if (response.hasOwnProperty('statusText') && response.statusText) {
+								msg = response.statusText;
+							}
+							$('#updraft_migrate_new_key').html(updraftlion.error+' '+msg);
+							alert(updraftlion.error+' '+msg);
 							console.log(response);
+							console.log(status);
 						}
-					} catch(err) {
-						alert(updraftlion.unexpectedresponse+' '+response);
-						console.log(err);
-						console.log(response);
-						return;
+					});
+					
+					// Update (via AJAX) the list of existing keys
+					// AJAX command to delete an existing key
+				};
+				
+				function updraft_migrate_local_key_delete(keyid) {
+				
+					var $ = jQuery;
+				
+					var $keylink = $('a.updraft_migrate_local_key_delete[data-keyid="'+keyid+']');
+					
+					var data = {
+						subsubaction: 'updraft_migrate_key_delete',
+						keyid: keyid,
 					}
-				}, { json_parse: false });
-			}
-			
-			function updraft_migrate_receiving_makenew() {
-			
-				var $ = jQuery;
-			
-				var data = {
-					subsubaction: 'updraft_migrate_newdestination',
-					key: $('#updraft_migrate_receiving_new').val()
+					
+					$keylink.html(updraftlion.deleting);
+					
+					updraft_send_command('doaction', data, function(resp) {
+							if (resp.hasOwnProperty('ourkeys')) {
+								$('#updraft_migrate_our_keys_container').html(resp.ourkeys);
+							} else {
+								alert(updraftlion.unexpectedresponse+' '+response);
+								console.log(resp);
+								console.log(response);
+							}
+					}, { error_callback: function(response, status, error_code, resp) {
+							if (typeof resp !== 'undefined' && resp.hasOwnProperty('fatal_error')) {
+								console.error(resp.fatal_error_message);
+								alert(resp.fatal_error_message);
+							} else {
+								var error_message = "updraft_send_command: error: "+status+" ("+error_code+")";
+								console.log(error_message);
+								alert(error_message);
+							console.log(response);
+							}
+						}
+					});
 				}
-				$('#updraft_migrate_receiving_makenew').html(updraftlion.addingsite);
-				updraft_send_command('doaction', data, function(response) {
-					$('#updraft_migrate_receiving_makenew').html(updraftlion.addsite);
-					try {
-						resp = jQuery.parseJSON(response);
+				
+				function updraft_migrate_send_backup() {
+
+					var $ = jQuery;
+
+					$('#updraft_migrate .updraft_migrate_widget_module_content, .updraft_migrate_intro').hide();
+					var site_id = $('#updraft_remotesites_selector').val();
+					var site_url = $('#updraft_remotesites_selector option:selected').text();
+					$('#updraft_migrate_tab_alt').html('<p><strong>'+updraftlion.sendtosite+'</strong> '+site_url+'</p><p id="updraft_migrate_testinginprogress">'+updraftlion.testingconnection+'</p>').slideDown('fast');
+
+					var data = {
+						subsubaction: 'updraft_remote_ping_test',
+						id: site_id,
+						url: site_url
+					};
+					updraft_send_command('doaction', data, function(resp, status, response) {
+						try {
+							if (resp.hasOwnProperty('e')) {
+								console.log(resp);
+								$('#updraft_migrate_tab_alt').append('<p style="color:red;">'+updraftlion.unexpectedresponse+' '+resp.r+' ('+resp.code+'). '+updraftlion.checkrpcsetup+'</p>');
+								if (resp.hasOwnProperty('moreinfo')) {
+									$('#updraft_migrate_tab_alt').append(resp.moreinfo);
+								}
+								// alert(updraftlion.unexpectedresponse+' '+resp.r+' ('+resp.code+'). '+updraftlion.checkrpcsetup);
+							} else if (resp.hasOwnProperty('success')) {
+								if (resp.hasOwnProperty('r')) {
+									$('#updraft_migrate_testinginprogress').replaceWith('<p style="">'+resp.r+'</p>');
+								}
+							}
+						} catch(err) {
+							$('#updraft_migrate_tab_alt').append('<p style="color:red;">'+updraftlion.unexpectedresponse+' '+response+'</p>');
+							console.log(err);
+							console.log(response);
+							return;
+						}
+					}, { error_callback: function(response, status, error_code, resp) {
+							if (typeof resp !== 'undefined' && resp.hasOwnProperty('fatal_error')) {
+								$('#updraft_migrate_tab_alt').append('<p style="color:red;">'+resp.fatal_error_message+'</p>');
+								console.error(resp.fatal_error_message);
+							} else {
+								$('#updraft_migrate_tab_alt').append('<p style="color:red;">'+updraftlion.unexpectedresponse+' '+response+'</p>');
+								console.log(err);
+								console.log(response);
+							}
+						}
+					});
+				}
+				
+				/**
+				 * Migrate send a backup
+				 */
+				function updraft_migrate_go_backup() {
+					var site_id = jQuery('#updraft_remotesites_selector').val();
+					var entities = [ '<?php
+						$entities = $updraftplus->get_backupable_file_entities();
+						echo implode("', '", array_keys($entities));
+						?>' ];
+					var onlythisfileentity = ''; 
+					var arrayLength = entities.length; 
+					for (var i = 0; i < arrayLength; i++) { 
+					  if (jQuery('#remotesend_updraft_include_'+entities[i]).is(':checked')) { 
+						if (onlythisfileentity != '') { onlythisfileentity += ','; } 
+						onlythisfileentity += entities[i]; 
+					  } 
+					  //Do something 
+					} 
+				
+					var backupnow_nodb = jQuery('#remotesend_backupnow_db').is(':checked') ? 0 : 1; 
+				
+					var backupnow_nofiles = 0; 
+					if ('' == onlythisfileentity) { backupnow_nofiles = 1; } 
+				
+					var backupnow_nocloud = 1; 
+					var extradata = {
+						services: 'remotesend/'+site_id
+					};
+				
+					if (jQuery('#remotesend_backupnow_cloud').is(':checked')) { 
+					  backupnow_nocloud = 0; 
+					} 
+				
+					if (backupnow_nodb && backupnow_nofiles) { 
+					  alert(updraftlion.excludedeverything); 
+					  return; 
+					} 
+				
+					setTimeout(function() { 
+					  jQuery('#updraft_lastlogmessagerow').fadeOut('slow', function() { 
+						jQuery(this).fadeIn('slow'); 
+					  }); 
+					}, 1700); 
+					 
+					updraft_backupnow_go(backupnow_nodb, backupnow_nofiles, backupnow_nocloud, onlythisfileentity, extradata, jQuery('#remotesend_backupnow_label').val(), '');
+					jQuery('#updraft-navtab-backups').trigger('click');
+				}
+			
+				function updraft_migrate_receiving_makenew() {
+				
+					var $ = jQuery;
+				
+					var data = {
+						subsubaction: 'updraft_migrate_newdestination',
+						key: $('#updraft_migrate_receiving_new').val()
+					}
+					$('#updraft_migrate_receiving_makenew').html(updraftlion.addingsite);
+					updraft_send_command('doaction', data, function(resp, status, response) {
+						$('#updraft_migrate_receiving_makenew').html(updraftlion.addsite);
+						
 						if (resp.hasOwnProperty('e')) {
 							console.log(resp);
 							alert(resp.e);
@@ -2255,190 +2022,25 @@ class UpdraftPlus_Addons_Migrator_RemoteSend {
 							alert(updraftlion.unexpectedresponse+' '+response);
 							console.log(resp);
 							console.log(response);
+						}					
+					}, { error_callback: function(response, status, error_code, resp) {
+							$('#updraft_migrate_receiving_makenew').html(updraftlion.addsite);
+							if (typeof resp !== 'undefined' && resp.hasOwnProperty('fatal_error')) {
+								console.error(resp.fatal_error_message);
+								alert(resp.fatal_error_message);
+							} else {
+								var error_message = "updraft_send_command: error: "+status+" ("+error_code+")";
+								console.log(error_message);
+								alert(error_message);
+								console.log(response);
+							}					
 						}
-					} catch(err) {
-						console.log(err);
-						alert(updraftlion.unexpectedresponse+' '+response);
-						return;
-					}
-				}, { json_parse: false });
-			}
-		
-			jQuery(document).ready(function($) {
-
-				$('#updraft_migrate_modal_main').on('click', '#updraft_migrate_send_button', function() {
-					$('#updraft_migrate_modal_main').hide();
-					var site_id = $('#updraft_remotesites_selector').val();
-					var site_url = $('#updraft_remotesites_selector option:selected').text();
-					$('#updraft_migrate_modal_alt').html('<p><strong>'+updraftlion.sendtosite+'</strong> '+site_url+'</p><p id="updraft_migrate_testinginprogress">'+updraftlion.testingconnection+'</p>').slideDown('fast');
-
-					var data = {
-						subsubaction: 'updraft_remote_ping_test',
-						id: site_id,
-						url: site_url
-					}
-					updraft_send_command('doaction', data, function(response) {
-						try {
-							resp = $.parseJSON(response);
-							if (resp.hasOwnProperty('e')) {
-								console.log(resp);
-								$('#updraft_migrate_modal_alt').append('<p style="color:red;">'+updraftlion.unexpectedresponse+' '+resp.r+' ('+resp.code+'). '+updraftlion.checkrpcsetup+'</p>');
-								if (resp.hasOwnProperty('moreinfo')) {
-									$('#updraft_migrate_modal_alt').append(resp.moreinfo);
-								}
-// 								alert(updraftlion.unexpectedresponse+' '+resp.r+' ('+resp.code+'). '+updraftlion.checkrpcsetup);
-							} else if (resp.hasOwnProperty('success')) {
-								if (resp.hasOwnProperty('r')) {
-									$('#updraft_migrate_testinginprogress').replaceWith('<p style="">'+resp.r+'</p>');
-								}
-								var entities = [ '<?php
-									$entities = $updraftplus->get_backupable_file_entities();
-									echo implode("', '", array_keys($entities));
-								?>' ];
-								var $mmodal = $("#updraft-migrate-modal");
-								var buttons = {};
-								buttons[updraftlion.send] = function () {
-
-									var onlythisfileentity = '';
-									var arrayLength = entities.length;
-									for (var i = 0; i < arrayLength; i++) {
-										if ($('#remotesend_updraft_include_'+entities[i]).is(':checked')) {
-											if (onlythisfileentity != '') { onlythisfileentity += ','; }
-											onlythisfileentity += entities[i];
-										}
-										//Do something
-									}
-
-									var backupnow_nodb = $('#remotesend_backupnow_db').is(':checked') ? 0 : 1;
-
-									var backupnow_nofiles = 0;
-									if ('' == onlythisfileentity) { backupnow_nofiles = 1; }
-
-									var backupnow_nocloud = 1;
-									var extradata = 'services=remotesend/'+site_id;
-
-									if ($('#remotesend_backupnow_cloud').is(':checked')) {
-// 										extradata = extradata+',cloudalso';
-										backupnow_nocloud = 0;
-									}
-
-									if (backupnow_nodb && backupnow_nofiles) {
-										alert(updraftlion.excludedeverything);
-										return;
-									}
-									
-									$(this).dialog("close");
-
-									setTimeout(function() {
-										$('#updraft_lastlogmessagerow').fadeOut('slow', function() {
-											$(this).fadeIn('slow');
-										});
-									}, 1700);
-									
-									updraft_backupnow_go(backupnow_nodb, backupnow_nofiles, backupnow_nocloud, onlythisfileentity, extradata, $('#remotesend_backupnow_label').val(), '');
-								}
-								buttons[updraftlion.close] = function() { $(this).dialog("close"); };
-								$mmodal.dialog("option", "buttons", buttons);
-
-							}
-						} catch(err) {
-							$('#updraft_migrate_modal_alt').append('<p style="color:red;">'+updraftlion.unexpectedresponse+' '+response+'</p>');
-							console.log(err);
-							console.log(response);
-							return;
-						}
-					}, { json_parse: false });
-				});
-				
-			});
-		</script>
-		<?php
-	}
-
-	public function updraft_migrate_after_widget() {
-
-		?>
-		<div style="margin:8px 4px; padding: 0px 8px 8px; border: 1px dotted;">
-
-		<p style="clear:left; margin-top: 4px; padding-top: 4px;"><strong><?php _e('Or, send a backup to another site', 'updraftplus');?></strong><br>
-		
+					});
+				}
+			</script>
 			<?php
-			echo __("To add a site as a destination for sending to, enter that site's key below.", 'updraftplus').' <a href="#" onclick="alert(\''.esc_js(__('Keys for this site are created in the section below the one you just pressed in.', 'updraftplus').' '.__("So, to get the key for the remote site, open the 'Migrate' window on that site, scroll down, and you can create one there.", 'updraftplus')).'\')">'.__("How do I get a site's key?", 'updraftplus').'</a>';
-			?>
-
-		</p>
-		
-		<div style="clear:both;">
-			<input type="text" id="updraft_migrate_receiving_new" style="width:555px; height:30px;" placeholder="<?php esc_attr(__('Paste key here', 'updraftplus'));?>"> <button class="button-primary" style="height:30px; font-size:16px; width:85px;" id="updraft_migrate_receiving_makenew" onclick="updraft_migrate_receiving_makenew();"><?php _e('Add site', 'updraftplus');?></button>
-		</div>
-
-		<div id="updraft_migrate_receivingsites" style="clear:both; margin-top:10px;">
-			<?php echo $this->get_remotesites_selector();?>
-		</div>
-
-		</div>
-
-		<div style="margin:8px 4px; padding: 0px 8px 8px; border: 1px dotted;">
-
-		<p style="margin-top: 4px; padding-top: 4px;"><strong><?php _e('Or, receive a backup from a remote site', 'updraftplus');?></strong><br>
-			<?php echo htmlspecialchars(__("To allow another site to send a backup to this site, create a key, and then press the 'Migrate' button on the sending site, and copy-and-paste the key there.", 'updraftplus')); ?>
-		</p>
-		
-		<p>
-			
-			<?php _e('Create a key: give this key a unique name (e.g. indicate the site it is for), then press "Create Key":', 'updraftplus'); ?><br>
-			<input id="updraft_migrate_receivingsites_keyname" type="text" placeholder="<?php _e('Enter your chosen name', 'updraftplus');?>" style="width:305px;" value="<?php echo __('Key', 'updraftplus').' - '.date('Y-m-d');?>">
-			
-			<?php _e('Encryption key size:', 'updraftplus');?>
-			<select style="width: 115px;" id="updraft_migrate_receivingsites_keysize">
-				<option value="512"><?php printf(__('%s bits', 'updraftplus').' - '.__('easy to break, fastest', 'updraftplus'), '512');?></option>
-				<option value="1024"><?php printf(__('%s bits', 'updraftplus').' - '.__('faster (possibility for slow PHP installs)', 'updraftplus'), '1024');?></option>
-				<option value="2048" selected="selected"><?php printf(__('%s bytes', 'updraftplus').' - '.__('recommended', 'updraftplus'), '2048');?></option>
-				<option value="4096"><?php printf(__('%s bits', 'updraftplus').' - '.__('slower, strongest', 'updraftplus'), '4096');?></option>
-			</select>
-			
-			<button id="updraft_migrate_receivingsites_createkey" class="button button-primary" style="height:30px; font-size:16px; margin-left: 3px; width:115px;" onclick="updraft_migrate_receivingsites_createkey();"><?php _e('Create key', 'updraftplus');?></button>
-			
-		</p>
-
-		<div id="updraft_migrate_new_key_container" style="display:none;">
-			<?php _e('Your new key:', 'updraftplus'); ?><br>
-			<textarea id="updraft_migrate_new_key" onclick="this.select();" style="width:625px; height:235px; word-wrap:break-word; border: 1px solid #aaa; border-radius: 3px; padding:4px;"></textarea>
-		</div>
-
-		<div id="updraft_migrate_our_keys_container">
-			<?php echo $this->list_our_keys(); ?>
-		</div>
-
-		<?php
-		echo '</div>';
-
-	}
-
-	private function list_our_keys($our_keys = false) {
-		if (false === $our_keys) {
-			$our_keys = UpdraftPlus_Options::get_updraft_option('updraft_migrator_localkeys');
 		}
-
-		if (empty($our_keys)) return '<em>'.__('No keys to allow remote sites to send backup data here have yet been created.', 'updraftplus').'</em>';
-
-		$ret = '';
-		$first_one = true;
-
-		foreach ($our_keys as $k => $key) {
-			if (!is_array($key)) continue;
-			if ($first_one) {
-				$first_one = false;
-				$ret .= '<p><strong>'.__('Existing keys', 'updraftplus').'</strong><br>';
-			}
-			$ret .= htmlspecialchars($key['name']);
-			$ret .= ' - <a href="#" onclick="updraft_migrate_local_key_delete(\''.esc_attr($k).'\'); return false;" class="updraft_migrate_local_key_delete" data-keyid="'.esc_attr($k).'">'.__('Delete', 'updraftplus').'</a>';
-			$ret .= '<br>';
-		}
-
-		if ($ret) $ret .= '</p>';
-
-		return $ret;
-
 	}
 }
+
+$updraftplus_addons_migrator_remotesend = new UpdraftPlus_Addons_Migrator_RemoteSend();

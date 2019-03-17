@@ -3,9 +3,9 @@
 /*
 UpdraftPlus Addon: reporting:Sophisticated reporting options
 Description: Provides various new reporting capabilities
-Version: 2.3
+Version: 2.5
 Shop: /shop/reporting/
-Latest Change: 2.12.35
+Latest Change: 2.15.8
 */
 // @codingStandardsIgnoreEnd
 
@@ -25,17 +25,22 @@ class UpdraftPlus_Addon_Reporting {
 
 	private $syslog;
 
+	/**
+	 * Class constructor
+	 */
 	public function __construct() {
 		add_filter('updraftplus_showbackup_date', array($this, 'showbackup_date'), 10, 5);
 		add_filter('updraft_backupnow_options', array($this, 'backupnow_options'), 10, 2);
 		add_filter('updraftplus_report_form', array($this, 'updraftplus_report_form'));
+		add_action('updraftplus_configprint_expertoptions', array($this, 'configprint_expertoptions'), 9);
 		add_filter('updraftplus_saveemails', array($this, 'saveemails'), 10, 2);
 		add_filter('updraft_report_sendto', array($this, 'updraft_report_sendto'), 10, 5);
 		add_filter('updraftplus_email_whichaddresses', array($this, 'email_whichaddresses'));
-		add_filter('updraftplus_email_wholebackup', array($this, 'email_wholebackup'), 10, 3);
+		add_filter('updraftplus_email_backup', array($this, 'email_backup'), 10, 4);
 		add_filter('updraft_report_subject', array($this, 'updraft_report_subject'), 10, 3);
 		add_filter('updraft_report_body', array($this, 'updraft_report_body'), 10, 6);
 		add_filter('updraft_report_attachments', array($this, 'updraft_report_attachments'));
+		add_filter('updraftplus_email_backup_skip_log_message', array($this, 'backup_skip_log_message'), 10, 4);
 		add_filter('updraft_backupnow_modal_afteroptions', array($this, 'backupnow_modal_afteroptions'), 10, 2);
 		add_action('updraft_final_backup_history', array($this, 'final_backup_history'));
 		add_action('updraft_report_finished', array($this, 'report_finished'));
@@ -44,6 +49,9 @@ class UpdraftPlus_Addon_Reporting {
 		$this->log_facility = (defined('UPDRAFTPLUS_LOG_FACILITY')) ? UPDRAFTPLUS_LOG_FACILITY : LOG_USER;
 	}
 
+	/**
+	 * Runs upon the WordPress action 'init'
+	 */
 	public function init() {
 		if (!class_exists('UpdraftPlus_Options')) return;
 		if (!UpdraftPlus_Options::get_updraft_option('updraft_log_syslog', false) || !function_exists('openlog') || !function_exists('syslog')) return;
@@ -53,19 +61,27 @@ class UpdraftPlus_Addon_Reporting {
 	public function showbackup_date($date, $backup, $jobdata, $key, $simple_format) {
 		if (!is_array($backup) || empty($backup['label'])) return $date;
 		if ($simple_format) {
-			return $date.' - <span class="updraft-backup-label">'.htmlspecialchars($backup['label']).'</span>';
+			return $date.' - '.htmlspecialchars($backup['label']);
 		} else {
 			return $date.'<span class="updraft-backup-label">'.htmlspecialchars($backup['label']).'</span>';
 		}
 	}
 
+	/**
+	 * Runs upon the WP filter updraft_backupnow_modal_afteroptions
+	 *
+	 * @param String $ret	 - unfiltered value to return
+	 * @param String $prefix - prefix to use
+	 *
+	 * @return String
+	 */
 	public function backupnow_modal_afteroptions($ret, $prefix) {
 
-		$ret .= '<p>
+		$ret .= '<p id="'.$prefix.'backupnow_label_container" class="new-backups-only">
 			<label for="'.$prefix.'backupnow_label">'.__('Your label for this backup (optional)', 'updraftplus').':</label> <input type="text" id="'.$prefix.'backupnow_label" name="label" size="40" maxlength="40" value="';
 
 		if ('remotesend_' == $prefix) {
-			$label = preg_replace('#^https?://#', '', network_site_url());
+			$label = preg_replace('#^https?://#i', '', network_site_url());
 			
 			$backup_of = __('Backup of:', 'updraftplus').' ';
 
@@ -151,9 +167,11 @@ class UpdraftPlus_Addon_Reporting {
 
 		$file_entities = $updraftplus->get_backupable_file_entities(true, true);
 
-		$date = get_date_from_gmt(gmdate('Y-m-d H:i:s', $jobdata['backup_time']), 'Y-m-d H:i');
+		$backup_time = empty($jobdata['incremental_run_start']) ? $jobdata['backup_time'] : $jobdata['incremental_run_start'];
+		
+		$date = get_date_from_gmt(gmdate('Y-m-d H:i:s', $backup_time), 'Y-m-d H:i');
 
-		$time_taken = time() - $jobdata['backup_time'];
+		$time_taken = time() - $backup_time;
 		$hrs = floor($time_taken/3600);
 		$mins = floor(($time_taken-3600*$hrs)/60);
 		$secs = $time_taken - 3600*$hrs - 60*$mins;
@@ -347,10 +365,43 @@ class UpdraftPlus_Addon_Reporting {
 		return $send;
 	}
 
-	public function email_wholebackup($doit, $addr, $ind) {
+	/**
+	 * Function for filter updraftplus_email_backup
+	 *
+	 * @param boolean $doit filter value of updraftplus_email_backup
+	 * @param string  $addr email address
+	 * @param integer $ind  index of report box
+	 * @param string  $type backup entity types
+	 * @return boolean filtered value
+	 */
+	public function email_backup($doit, $addr, $ind, $type) {
 		$wholebackup = UpdraftPlus_Options::get_updraft_option('updraft_report_wholebackup', null);
-		if (null === $wholebackup) return true;
-		return (!is_array($wholebackup) || empty($wholebackup[$ind])) ? false : true;
+		$dbbackup = UpdraftPlus_Options::get_updraft_option('updraft_report_dbbackup', null);
+		if (is_array($wholebackup) && !empty($wholebackup[$ind]) && empty($dbbackup[$ind])) {
+			return true;
+		}
+		if ('db' == strtolower(substr($type, 0, 2)) && is_array($dbbackup) && !empty($dbbackup[$ind])) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Function for filter updraftplus_backup_skip_log_message
+	 *
+	 * @param string  $log_message  default log message of updraftplus_backup_skip_log_message filter
+	 * @param string  $addr         email address
+	 * @param integer $ind          index of report box
+	 * @param string  $descrip_type backup entity types
+	 * @return string log message
+	 */
+	public function backup_skip_log_message($log_message, $addr, $ind, $descrip_type) {
+		$wholebackup = UpdraftPlus_Options::get_updraft_option('updraft_report_wholebackup', null);
+		if (!is_array($wholebackup) || empty($wholebackup[$ind])) {
+			return 'You have chosen to not send the backup via the email remote storage option for '.$addr.'. '.$descrip_type.' will not be sent.';
+		} else {
+			return 'You have chosen to only send the database via the email remote storage option for '.$addr.'. '.$descrip_type.' will not be sent.';
+		}
 	}
 
 	public function email_whichaddresses($blurb) {
@@ -371,12 +422,24 @@ class UpdraftPlus_Addon_Reporting {
 				$('#updraft-navtab-settings-content .updraft_report_another').click(function(e) {
 					e.preventDefault();
 
-					$('#updraft-navtab-settings-content .updraft_report_another_p').before('<div id="updraft_reportbox_'+reportbox_index+'" class="updraft_reportbox updraft-hidden" style="display:none;"><button class="updraft_reportbox_delete" reportbox_index="'+reportbox_index+'" type="button">X</button><input type="text" title="'+updraftlion.enteremailhere+'" class="updraft_report_email" name="updraft_email['+reportbox_index+']" value="" /><br><input class="updraft_report_checkbox" type="checkbox" id="updraft_report_warningsonly_'+reportbox_index+'" name="updraft_report_warningsonly['+reportbox_index+']"><label for="updraft_report_warningsonly_'+reportbox_index+'">'+updraftlion.sendonlyonwarnings+'</label><br><div class="updraft_report_wholebackup">\
-<input class="updraft_report_checkbox" type="checkbox" id="updraft_report_wholebackup_'+reportbox_index+'" name="updraft_report_wholebackup['+reportbox_index+']" title="'+updraftlion.emailsizelimits+'"><label for="updraft_report_wholebackup_'+reportbox_index+'" title="'+updraftlion.emailsizelimits+'">'+updraftlion.wholebackup+'</label></div></div>');
+					$('#updraft-navtab-settings-content .updraft_report_another_p').before('<div id="updraft_reportbox_'+reportbox_index+'" class="updraft_reportbox updraft-hidden" style="display:none;"><button class="updraft_reportbox_delete" reportbox_index="'+reportbox_index+'" type="button"><span class="dashicons dashicons-no"></span></button>\
+<input type="text" title="'+updraftlion.enteremailhere+'" class="updraft_report_email" name="updraft_email['+reportbox_index+']" value="" />\
+<label for="updraft_report_warningsonly_'+reportbox_index+'" class="updraft_checkbox"><input class="updraft_report_checkbox" type="checkbox" id="updraft_report_warningsonly_'+reportbox_index+'" name="updraft_report_warningsonly['+reportbox_index+']"> '+updraftlion.sendonlyonwarnings+'</label><div class="updraft_report_wholebackup">\
+<label for="updraft_report_wholebackup_'+reportbox_index+'" title="'+updraftlion.emailsizelimits+'" class="updraft_checkbox"><input class="updraft_report_checkbox" type="checkbox" id="updraft_report_wholebackup_'+reportbox_index+'" name="updraft_report_wholebackup['+reportbox_index+']" title="'+updraftlion.emailsizelimits+'"> '+updraftlion.wholebackup+'</label></div><div class="updraft_report_dbbackup updraft_report_disabled">\
+<label for="updraft_report_dbbackup_'+reportbox_index+'" title="'+updraftlion.emailsizelimits+'" class="updraft_checkbox"><input class="updraft_report_checkbox" type="checkbox" id="updraft_report_dbbackup_'+reportbox_index+'" disabled name="updraft_report_dbbackup['+reportbox_index+']" title="'+updraftlion.emailsizelimits+'"> '+updraftlion.dbbackup+'</label></div></div>');
 					$('#updraft_reportbox_'+reportbox_index).fadeIn();
 
 					reportbox_index++;
 
+				});
+				$('#updraft_report_row').on('change', '.updraft_report_wholebackup .updraft_report_checkbox', function() {
+					var reportbox = $(this).closest('.updraft_reportbox').find('.updraft_report_dbbackup');
+					if ($(this).is(':checked')) {
+						reportbox.removeClass('updraft_report_disabled').find('.updraft_report_checkbox').removeProp('disabled');
+					} else {
+						reportbox.find('.updraft_report_checkbox').prop('checked', false);
+						reportbox.addClass('updraft_report_disabled').find('.updraft_report_checkbox').prop('disabled', true);
+					}
 				});
 			});
 		</script>
@@ -397,6 +460,7 @@ class UpdraftPlus_Addon_Reporting {
 		$updraft_email = UpdraftPlus_Options::get_updraft_option('updraft_email');
 		$updraft_report_warningsonly = UpdraftPlus_Options::get_updraft_option('updraft_report_warningsonly');
 		$updraft_report_wholebackup = UpdraftPlus_Options::get_updraft_option('updraft_report_wholebackup');
+		$updraft_report_dbbackup = UpdraftPlus_Options::get_updraft_option('updraft_report_dbbackup');
 
 		if (is_string($updraft_email)) {
 			$utmp = $updraft_email;
@@ -419,51 +483,67 @@ class UpdraftPlus_Addon_Reporting {
 
 		$ind = 0;
 		foreach ($updraft_email as $ikey => $destination) {
-			$warningsonly = (empty($updraft_report_warningsonly[$ikey])) ? false : true;
-			$wholebackup = (empty($updraft_report_wholebackup[$ikey])) ? false : true;
+			$warningsonly = empty($updraft_report_warningsonly[$ikey]) ? false : true;
+			$wholebackup = empty($updraft_report_wholebackup[$ikey]) ? false : true;
+			$dbbackup = empty($updraft_report_dbbackup[$ikey]) ? false : true;
 			if (!empty($destination)) {
 				$ind++;
-				$out .= $this->report_box_generator($destination, $ind, $warningsonly, $wholebackup);
+				$out .= $this->report_box_generator($destination, $ind, $warningsonly, $wholebackup, $dbbackup);
 			}
 		}
 
-		if (0 === $ind) $out .= $this->report_box_generator('', 0, false, false);
+		if (0 === $ind) $out .= $this->report_box_generator('', 0, false, false, false);
 
-		$out .= '<p class="updraft_report_another_p"><a class="updraft_report_another" href="#updraft_report_row">'.__('Add another address...', 'updraftplus').'</a></p>';
+		$out .= '<p class="updraft_report_another_p"><a class="updraft_report_another updraft_icon_link" href="'.UpdraftPlus::get_current_clean_url().'#updraft_report_row"><span class="dashicons dashicons-plus"></span>'.__('Add another address...', 'updraftplus').'</a></p>';
 
 		$out .= '</td>
 			</tr>';
 
-		$out .= '<tr>
-				<th></th>
-				<td>';
-
-		$out .= '<input type="checkbox" value="1" '.((UpdraftPlus_Options::get_updraft_option('updraft_log_syslog', false)) ? 'checked="checked"' : '').' name="updraft_log_syslog" id="updraft_log_syslog"><label for="updraft_log_syslog">'.__("Log all messages to syslog (only server admins are likely to want this)", 'updraftplus').'</label>';
-
-		$out .= '</td></tr>';
-
-
 		return $out;
+	}
+	
+	/**
+	 * Renders reporting expert settings
+	 */
+	public function configprint_expertoptions() {
+		?>
+		<tr class="expertmode updraft-hidden" style="display:none;">
+			<th><?php _e('Log all messages to syslog', 'updraftplus');?>:</th>
+			<td><input type="checkbox" id="updraft_log_syslog" name="updraft_log_syslog" value="1" <?php if (UpdraftPlus_Options::get_updraft_option('updraft_log_syslog')) echo 'checked="checked"'; ?>> <br><label for="updraft_log_syslog"><?php _e("Log all messages to syslog (only server admins are likely to want this)", 'updraftplus'); ?></label></td>
+		</tr>
+		<?php
 	}
 
 	public function saveemails($rinput, $input) {
 		return $input;
 	}
 
-	private function report_box_generator($addr, $ind, $warningsonly, $wholebackup) {
+	/**
+	 * Generate Email Report Box
+	 *
+	 * @param string  $addr         email address
+	 * @param integer $ind          index of email report
+	 * @param boolean $warningsonly boolean boolean Whether send email of warnings
+	 * @param boolean $wholebackup  boolean Whether email whole backup checkbox is checked or not
+	 * @param boolean $dbbackup     boolean Whether email database backup checkbox is checked or not
+	 * @param string  $out          html
+	 */
+	private function report_box_generator($addr, $ind, $warningsonly, $wholebackup, $dbbackup) {
 
 		$out = '';
 
 		$out .='<div id="updraft_reportbox_'.$ind.'" class="updraft_reportbox">';
 
-		$out .= '<button class="updraft_reportbox_delete" type="button">X</button>';
+		$out .= '<button class="updraft_reportbox_delete" type="button"><span class="dashicons dashicons-no"></span></button>';
 
-		$out .= '<input type="text" title="'.esc_attr(__('To send to more than one address, separate each address with a comma.', 'updraftplus')).'" class="updraft_report_email" name="updraft_email['.$ind.']" value="'.esc_attr($addr).'" /><br>';
+		$out .= '<input type="text" title="'.esc_attr(__('To send to more than one address, separate each address with a comma.', 'updraftplus')).'" class="updraft_report_email" name="updraft_email['.$ind.']" value="'.esc_attr($addr).'" />';
 
-		$out .= '<input '.(($warningsonly) ? 'checked="checked" ' : '').' id="updraft_report_warningsonly_'.$ind.'" class="updraft_report_checkbox"type="checkbox"  name="updraft_report_warningsonly['.$ind.']"><label for="updraft_report_warningsonly_'.$ind.'"> '.__('Send a report only when there are warnings/errors', 'updraftplus').'</label><br>';
+		$out .= '<label for="updraft_report_warningsonly_'.$ind.'" class="updraft_checkbox"><input '.(($warningsonly) ? 'checked="checked" ' : '').' id="updraft_report_warningsonly_'.$ind.'" class="updraft_report_checkbox" type="checkbox"  name="updraft_report_warningsonly['.$ind.']"> '.__('Send a report only when there are warnings/errors', 'updraftplus').'</label>';
 
-		$out .= '<div class="updraft_report_wholebackup"><input '.(($wholebackup) ? 'checked="checked" ' : '').'class="updraft_report_checkbox" type="checkbox" id="updraft_report_wholebackup_'.$ind.'" name="updraft_report_wholebackup['.$ind.']" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s Mb; backups larger than any limits will likely not arrive.', 'updraftplus'), '10-20')).'"><label for="updraft_report_wholebackup_'.$ind.'" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s Mb; backups larger than any limits will likely not arrive.', 'updraftplus'), '10-20')).'"> '.__('When the Email storage method is enabled, also send the entire backup', 'updraftplus').'</label></div>';
+		$out .= '<div class="updraft_report_wholebackup"><label for="updraft_report_wholebackup_'.$ind.'" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s MB; backups larger than any limits will likely not arrive.', 'updraftplus'), '10-20')).'" class="updraft_checkbox"><input '.(($wholebackup) ? 'checked="checked" ' : '').'class="updraft_report_checkbox" type="checkbox" id="updraft_report_wholebackup_'.$ind.'" name="updraft_report_wholebackup['.$ind.']" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s MB; backups larger than any limits will likely not arrive.', 'updraftplus'), '10-20')).'"> '.__('When the Email storage method is enabled, also send the backup', 'updraftplus').'</label></div>';
 
+		$out .= '<div class="updraft_report_dbbackup'.((!$wholebackup) ? ' updraft_report_disabled' : '').'"><label for="updraft_report_dbbackup_'.$ind.'" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s MB; backups larger than any limits will likely not arrive as a result UpdraftPlus will only send Database backups to email.', 'updraftplus'), '10-20')).'" class="updraft_checkbox"><input '.(($dbbackup) ? 'checked="checked" ' : '').'class="updraft_report_checkbox" type="checkbox" '.((!$wholebackup) ? 'disabled ' : '').'id="updraft_report_dbbackup_'.$ind.'" name="updraft_report_dbbackup['.$ind.']" title="'.esc_attr(sprintf(__('Be aware that mail servers tend to have size limits; typically around %s MB; backups larger than any limits will likely not arrive.', 'updraftplus').' '.__('Use this option to only send database backups when sending to email, and skip other components.', 'updraftplus'), '10-20')).'"> '.__('Only email the database backup', 'updraftplus').'</label></div>';
+		
 		$out .= '</div>';
 
 		return $out;

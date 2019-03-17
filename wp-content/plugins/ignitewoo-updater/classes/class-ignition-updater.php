@@ -34,9 +34,10 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  
 // When changing this class name all plugins' IgniteWoo Updater code must also be changed because it looks for this class name
 class IgniteWoo_Updater {
+	
 	public $updater;
 	public $admin;
-	private $token = 'ignitewoo-updater';
+	private $token;
 	private $plugin_url;
 	private $plugin_path;
 	public $version;
@@ -50,7 +51,10 @@ class IgniteWoo_Updater {
 	 * @return  void
 	 */
 	public function __construct ( $file, $version ) {
-
+		global $ignition_updater_token;
+		
+		$this->token = $ignition_updater_token;
+		
 		// If multisite, plugin must be network activated. First make sure the is_plugin_active_for_network function exists
 		if( is_multisite() && ! is_network_admin() ) {
 			remove_action( 'admin_notices', 'ignition_updater_notice' ); // remove admin notices for plugins outside of network admin

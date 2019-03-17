@@ -87,12 +87,12 @@
 					if ( jQuery(this).is(':checked') ) {
 						jQuery('#woocommerce_usps_mediamail_restriction').closest('tr').show();
 						jQuery('#service_options, #packing_options').show();
-						jQuery('#woocommerce_usps_packing_method, #woocommerce_usps_offer_rates').closest('tr').show();
+						jQuery('#woocommerce_usps_packing_method, #woocommerce_usps_shippingrates, #woocommerce_usps_origin').closest('tr').show();
 						jQuery('#woocommerce_usps_packing_method').change();
 					} else {
 						jQuery('#woocommerce_usps_mediamail_restriction').closest('tr').hide();
 						jQuery('#service_options, #packing_options').hide();
-						jQuery('#woocommerce_usps_packing_method, #woocommerce_usps_offer_rates').closest('tr').hide();
+						jQuery('#woocommerce_usps_packing_method, #woocommerce_usps_shippingrates, #woocommerce_usps_origin').closest('tr').hide();
 					}
 				}).change();
 
@@ -100,7 +100,7 @@
 
 					if ( jQuery('#woocommerce_usps_enable_standard_services').is(':checked') ) {
 
-						if ( jQuery(this).val() == 'box_packing' ) {
+						if ( jQuery(this).val() === 'box_packing' ) {
 							jQuery('#packing_options').show();
 							jQuery('#woocommerce_usps_unpacked_item_handling').closest('tr').show();
 						} else {
@@ -108,10 +108,11 @@
 							jQuery('#woocommerce_usps_unpacked_item_handling').closest('tr').hide();
 						}
 
-						if ( jQuery(this).val() == 'weight' )
+						if ( jQuery(this).val() === 'weight' ) {
 							jQuery('#woocommerce_usps_max_weight').closest('tr').show();
-						else
+						} else {
 							jQuery('#woocommerce_usps_max_weight').closest('tr').hide();
+						}
 
 					}
 
@@ -119,19 +120,19 @@
 
 				jQuery('#woocommerce_usps_enable_flat_rate_boxes').change(function(){
 
-					if ( jQuery(this).val() == 'yes' ) {
+					if ( jQuery(this).val() === 'yes' ) {
 						jQuery('#woocommerce_usps_flat_rate_express_title').closest('tr').show();
 						jQuery('#woocommerce_usps_flat_rate_priority_title').closest('tr').show();
 						jQuery('#woocommerce_usps_flat_rate_fee').closest('tr').show();
-					} else if ( jQuery(this).val() == 'no' ) {
+					} else if ( jQuery(this).val() === 'no' ) {
 						jQuery('#woocommerce_usps_flat_rate_express_title').closest('tr').hide();
 						jQuery('#woocommerce_usps_flat_rate_priority_title').closest('tr').hide();
 						jQuery('#woocommerce_usps_flat_rate_fee').closest('tr').hide();
-					} else if ( jQuery(this).val() == 'priority' ) {
+					} else if ( jQuery(this).val() === 'priority' ) {
 						jQuery('#woocommerce_usps_flat_rate_express_title').closest('tr').hide();
 						jQuery('#woocommerce_usps_flat_rate_priority_title').closest('tr').show();
 						jQuery('#woocommerce_usps_flat_rate_fee').closest('tr').show();
-					} else if ( jQuery(this).val() == 'express' ) {
+					} else if ( jQuery(this).val() === 'express' ) {
 						jQuery('#woocommerce_usps_flat_rate_express_title').closest('tr').show();
 						jQuery('#woocommerce_usps_flat_rate_priority_title').closest('tr').hide();
 						jQuery('#woocommerce_usps_flat_rate_fee').closest('tr').show();

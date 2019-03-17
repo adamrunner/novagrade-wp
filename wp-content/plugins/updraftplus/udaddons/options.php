@@ -30,8 +30,9 @@ class UpdraftPlusAddOns_Options2 {
 		// New actions to output the tab title and content
 // add_action('updraftplus_settings_afternavtabs', array($this, 'settings_afternavtabs'));
 		add_filter('updraftplus_addonstab_content', array($this, 'updraftplus_addonstab_content'));
+		add_filter('updraftplus_com_login_options', array($this, 'updraftplus_com_login_options'));
 		
-		 add_action('admin_init', array($this, 'show_admin_notices'));
+		add_action('admin_init', array($this, 'show_admin_notices'));
 		add_action('admin_init', array($this, 'options_init'));
 		register_activation_hook(UDADDONS2_SLUG, array($this, 'options_setdefaults'));
 
@@ -128,12 +129,6 @@ class UpdraftPlusAddOns_Options2 {
 
 		register_setting(UDADDONS2_SLUG.'_options', UDADDONS2_SLUG.'_options', array($this, 'options_validate'));
 
-		add_settings_section(UDADDONS2_SLUG.'_options', __('Connect with your UpdraftPlus.Com account', 'updraftplus'), array($this, 'options_header'), UDADDONS2_SLUG);
-
-		add_settings_field(UDADDONS2_SLUG.'_options_email', __('Email', 'updraftplus'), array($this, 'options_email'), UDADDONS2_SLUG, UDADDONS2_SLUG.'_options');
-
-		add_settings_field(UDADDONS2_SLUG.'_options_password', __('Password', 'updraftplus'), array($this, 'options_password'), UDADDONS2_SLUG, UDADDONS2_SLUG.'_options');
-
 		if (is_multisite() && (isset($_POST['action']) && 'update' == $_POST['action']) && !empty($_POST['updraftplus-addons_options'])) {
 			$this->update_wpmu_options();
 		}
@@ -149,36 +144,6 @@ class UpdraftPlusAddOns_Options2 {
 			);
 			$this->options->update_option(UDADDONS2_SLUG.'_options', $arr);
 		}
-	}
-
-	/**
-	 * Various functions for outputing each of the options fields
-	 *
-	 * @return null
-	 */
-	public function options_email() {
-		$options = $this->options->get_option(UDADDONS2_SLUG.'_options');
-		?>
-		<label for="<?php echo UDADDONS2_SLUG; ?>_options_email">
-		<input id="<?php echo UDADDONS2_SLUG; ?>_options_email" type="text" size="36" name="<?php echo UDADDONS2_SLUG; ?>_options[email]" value="<?php print htmlspecialchars($options['email']); ?>" />
-		<br /><a href="<?php echo $this->mother; ?>/my-account/"><?php _e("Not yet got an account (it's free)? Go get one!", 'updraftplus'); ?></a>
-		</label>
-		<?php
-	}
-
-	public function options_password() {
-		$options = $this->options->get_option(UDADDONS2_SLUG.'_options');
-		$password = isset($options['password']) ? $options['password'] : '';
-		?>
-		<label for="<?php echo UDADDONS2_SLUG; ?>_options_password">
-		<input id="<?php echo UDADDONS2_SLUG; ?>_options_password" type="password" size="36" name="<?php echo UDADDONS2_SLUG; ?>_options[password]" value="<?php print htmlspecialchars($password); ?>" />
-		<br /><a href="<?php echo $this->mother; ?>/my-account/?action=lostpassword"><?php _e('Forgotten your details?', 'updraftplus'); ?></a>
-		</label>
-		<?php
-	}
-
-	public function options_header() {
-		// settings_errors();
 	}
 
 	/**
@@ -222,6 +187,19 @@ class UpdraftPlusAddOns_Options2 {
 	}
 
 	/**
+	 * This function will return the saved options and if there are none returns the default options passed in.
+	 *
+	 * @param array $default_options - an array that includes the default options
+	 *
+	 * @return array                 - returns an array of options
+	 */
+	public function updraftplus_com_login_options($default_options) {
+		$options = $this->options->get_option(UDADDONS2_SLUG.'_options');
+		if (!is_array($options)) return $default_options;
+		return $options;
+	}
+
+	/**
 	 * This is the function outputting the HTML for our options page
 	 *
 	 * @return null
@@ -235,29 +213,10 @@ class UpdraftPlusAddOns_Options2 {
 		$title = htmlspecialchars($this->title);
 		$mother = $this->mother;
 
-		echo <<<ENDHERE
-	<div class="wrap">
+		echo "\t<div class=\"wrap\">\n";
 		
-ENDHERE;
+		global $updraftplus_addons2, $updraftplus_admin;
 
-		$enter_credentials_begin = UpdraftPlus_Options::options_form_begin('', false);
-
-		if (is_multisite()) $enter_credentials_begin .= '<input type="hidden" name="action" value="update">';
-
-		$interested = htmlspecialchars(__('Interested in knowing about your UpdraftPlus.Com password security? Read about it here.', 'updraftplus'));
-
-		$connect = htmlspecialchars(__('Connect', 'updraftplus'));
-
-		$enter_credentials_end = <<<ENDHERE
-			<p style="margin-left: 258px;">
-				<input id="ud_connectsubmit" type="submit" class="button-primary" value="$connect" />
-			</p>
-			<p style="margin-left: 258px; font-size: 70%"><em><a href="https://updraftplus.com/faqs/tell-me-about-my-updraftplus-com-account/">$interested</a></em></p>
-		</form>
-ENDHERE;
-
-		global $updraftplus_addons2;
-// $this->connected = (!empty($options['email']) && !empty($options['password'])) ? $updraftplus_addons2->connection_status() : false;
 		$this->connected = !empty($options['email']) ? $updraftplus_addons2->connection_status() : false;
 
 		if (true !== $this->connected) {
@@ -274,7 +233,11 @@ ENDHERE;
 
 		if ($this->connected) {
 			echo '<p style="clear: both; float: left;">'.__('You are presently <strong>connected</strong> to an UpdraftPlus.Com account.', 'updraftplus');
-			echo ' <a href="#" onclick="jQuery(\'#ud_connectsubmit\').click();">'.__('If you bought new add-ons, then follow this link to refresh your connection', 'updraftplus').'</a>.';
+			
+			// Not translated; it's only seen in development
+			if (false === strpos($this->mother, '//updraftplus.com')) echo ' <strong>(Updates URL: '.$this->mother.')</strong>.';
+			
+			echo ' <a href="'.UpdraftPlus::get_current_clean_url().'" onclick="jQuery(\'.ud_connectsubmit\').click();">'.__('If you bought new add-ons, then follow this link to refresh your connection', 'updraftplus').'</a>.';
 			if (!empty($options['password'])) echo ' '.__("Note that after you have claimed your add-ons, you can remove your password (but not the email address) from the settings below, without affecting this site's access to updates.", 'updraftplus');
 		} else {
 
@@ -318,7 +281,7 @@ ENDHERE;
 			}
 		}
 
-		if (!$this->connected) $this->show_credentials_form($enter_credentials_begin, $enter_credentials_end);
+		if (!$this->connected) $updraftplus_admin->build_credentials_form(UDADDONS2_SLUG);
 
 		$email = isset($options['email']) ? $options['email'] : '';
 		$pass = isset($options['password']) ? base64_encode($options['password']) : '';
@@ -335,6 +298,7 @@ ENDHERE;
 			$notgranted = esc_js(__('Claim not granted - perhaps you have already used this purchase somewhere else, or your paid period for downloading from updraftplus.com has expired?', 'updraftplus'));
 			$notgrantedlogin = esc_js(__('Claim not granted - your account login details were wrong', 'updraftplus'));
 			$ukresponse = esc_js(__('An unknown response was received. Response was:', 'updraftplus'));
+			$addon_installed = __('The claim and installation was successful. You can now use your purchase!', 'updraftplus');
 			echo <<<ENDHERE
 		<script type="text/javascript">
 			function udm_claim(key) {
@@ -352,10 +316,12 @@ ENDHERE;
 				jQuery.post(ajaxurl, data, function(resp) {
 				
 					var response_code;
+					var addons_written = false;
 				
 					try {
-						response = jQuery.parseJSON(resp);
+						response = JSON.parse(resp);
 						response_code = response.hasOwnProperty('code') ? response.code : 'UNKNOWN';
+						addons_written = response.hasOwnProperty('addons_written') ? response.addons_written : false;
 					} catch (e) {
 						console.log(e);
 						response_code = 'PARSE_ERROR';
@@ -366,9 +332,12 @@ ENDHERE;
 					} else if ('OK' == response_code) {
 						// We used to force udm_refresh to 1, before (Oct 2017) the possibility that there was already an updates result in the claim response
 						var new_location = '$href?page=$ourpageslug&tab=addons';
-						if (!response.hasOwnProperty('check_updates') || response.check_updates) {
-							new_location += '&udm_refresh=1';
+						// Aug 2018: The check updates process does not refresh the user_addons list, so the plugin does not recognise the claim was granted. We need to force a refresh when a claim is activated
+						if (addons_written) {
+							alert("$addon_installed");
 						}
+						// Still do the page refresh so that the version number + other UI elements update
+						new_location += '&udm_refresh=1';
 						window.location.href = new_location;
 					} else if ('BADAUTH' == response_code) {
 						alert("$notgrantedlogin");
@@ -376,6 +345,8 @@ ENDHERE;
 						alert("$ukresponse "+response);
 					}
 				});
+				
+				return false;
 			}
 		</script>
 ENDHERE;
@@ -387,7 +358,7 @@ ENDHERE;
 
 		$addons = $updraftplus_addons2->get_available_addons();
 
-				$this->plugin_update_url = 'update-core.php';
+		$this->plugin_update_url = 'update-core.php';
 		// Can we get a direct update URL?
 		$updates_available = get_site_transient('update_plugins');
 
@@ -403,7 +374,21 @@ ENDHERE;
 		$third = '';
 
 		if (is_array($addons)) {
+			// Making $addons['installed'] = true manually.
+			// FIX: It's the "All add-ons" link that was always show as available for activation, because there's no particular "all-addons" add-on.
+			$does_all_addons_installed = true;
 			foreach ($addons as $key => $addon) {
+				if ('all' == $key) continue;
+				if (empty($addon['installed'])) {
+					$does_all_addons_installed = false;
+					break;
+				}
+			}
+			if ($does_all_addons_installed) $addons['all']['installed'] = true;
+			foreach ($addons as $key => $addon) {
+				// check if premium add-on is purchased. If it is then don't display other add-ons.
+				if (!empty($addons['all']['installed']) && ('all' != $key)) continue;
+
 				extract($addon);
 				if (empty($addon['latestversion'])) $latestversion = false;
 				if (empty($addon['installedversion'])) $installedversion = false;
@@ -443,7 +428,7 @@ ENDHERE;
 
 		if ($this->connected) {
 			echo "<hr>";
-			$this->show_credentials_form($enter_credentials_begin, $enter_credentials_end);
+			$updraftplus_admin->build_credentials_form(UDADDONS2_SLUG);
 		}
 
 		echo '</div>';
@@ -473,7 +458,7 @@ ENDHERE;
 	private function addonbox($key, $name, $shopurl, $description, $installedversion, $latestversion = false, $installed = false, $unclaimed = false, $is_assigned = false, $have_all = false) {
 		$urlbase = UPDRAFTPLUS_URL.'/images/addons-images';
 		$mother = $this->mother;
-		if ($installed || ($have_all && 'all' == $key)) {
+		if ($installed && ($is_assigned || ($have_all && 'all' != $key))) {
 			$blurb="<p>";
 			$preblurb="<div style=\"float:right;padding-top:10px;\"><img title=\"".__('You\'ve got it', 'updraftplus')."\" src=\"$urlbase/$key.png\" width=\"100\" height=\"100\" alt=\"".__("You've got it", 'updraftplus')."\"></div>";
 			if ('all' != $key) {
@@ -497,8 +482,6 @@ ENDHERE;
 			} elseif (is_array($unclaimed)) {
 				// Keys: eid = unique ID, status = available|reclaimable
 				// Value of $unclaimed is a unique id, though we won't particularly use it
-				global $updraftplus_addons2;
-				$sid = $updraftplus_addons2->siteid();
 				if (isset($unclaimed['status']) && 'reclaimable' == $unclaimed['status']) {
 					$blurb ='<p><strong>'.__('Available to claim on this site', 'updraftplus').' - <a href="#" onclick="return udm_claim(\''.$key.'\');">'.__('activate it on this site', 'updraftplus').'</a></strong></p>';
 				} else {
@@ -519,48 +502,6 @@ ENDHERE;
 			</div>
 			</div>
 ENDHERE;
-	}
-
-	private function show_credentials_form($enter_credentials_begin, $enter_credentials_end) {
-
-		echo $enter_credentials_begin;
-
-		// We have to duplicate settings_fields() in order to set our referer
-		// settings_fields(UDADDONS2_SLUG.'_options');
-
-		$option_group = UDADDONS2_SLUG.'_options';
-		echo "<input type='hidden' name='option_page' value='" . esc_attr($option_group) . "' />";
-		echo '<input type="hidden" name="action" value="update" />';
-
-		// wp_nonce_field("$option_group-options");
-
-		// This one is used on multisite
-		echo '<input type="hidden" name="tab" value="addons" />';
-
-		$name = "_wpnonce";
-		$action = esc_attr($option_group."-options");
-		$nonce_field = '<input type="hidden" name="' . $name . '" value="' . wp_create_nonce($action) . '" />';
-	
-		echo $nonce_field;
-
-		if (function_exists('wp_unslash')) {
-			$referer = esc_attr(wp_unslash($_SERVER['REQUEST_URI']));
-		} else {
-			$referer = esc_attr(stripslashes_deep($_SERVER['REQUEST_URI']));
-		}
-
-		// This one is used on single site installs
-		if (false === strpos($referer, '?')) {
-			$referer .= '?tab=addons';
-		} else {
-			$referer .= '&tab=addons';
-		}
-
-		echo '<input type="hidden" name="_wp_http_referer" value="'.$referer.'" />';
-		// End of duplication of settings-fields()
-
-		do_settings_sections(UDADDONS2_SLUG);
-		echo $enter_credentials_end;
 	}
 
 	/**
