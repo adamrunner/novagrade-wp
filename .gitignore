@@ -29,3 +29,9 @@ wpdev
 /sitemap.xml
 /sitemap.xml.gz
 .*
+novagrade.tar.gz
+webalizerftp
+webalizer
+awstats
+tmp
+wp-config.php
